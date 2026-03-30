@@ -1,0 +1,2649 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFT1hV0tCJEDdFzq0BQChkcfVMGru9h5I",
+            authDomain: "iamshaoning-qiu.firebaseapp.com",
+            projectId: "iamshaoning-qiu",
+            storageBucket: "iamshaoning-qiu.firebasestorage.app",
+            messagingSenderId: "599860248393",
+            appId: "1:599860248393:web:8c3dce72c200cbafbee498",
+            measurementId: "G-QVG10CDXJR",
+            databaseURL: "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        try {
+            // Initialize Firebase
+            console.log('开始初始化Firebase...');
+            const app = firebase.initializeApp(firebaseConfig);
+            console.log('Firebase App初始化成功:', app);
+            
+            const analytics = firebase.analytics(app);
+            console.log('Firebase Analytics初始化成功');
+            
+            const database = firebase.database(app);
+            console.log('Firebase Database初始化成功:', database);
+            
+            // 全局变量
+            window.firebaseApp = app;
+            window.firebaseDatabase = database;
+            window.firebaseRef = function(db, path) { return db.ref(path); };
+            window.firebaseSet = function(ref, value) { return ref.set(value); };
+            window.firebaseGet = function(ref) { return ref.once('value'); };
+            window.firebaseOnValue = function(ref, callback) { return ref.on('value', callback); };
+            
+            console.log('Firebase初始化完成，所有全局变量已设置');
+        } catch (error) {
+            console.error('Firebase初始化失败:', error);
+            // 初始化失败时，确保全局变量有默认值
+            window.firebaseApp = null;
+            window.firebaseDatabase = null;
+            window.firebaseRef = null;
+            window.firebaseSet = null;
+            window.firebaseGet = null;
+            window.firebaseOnValue = null;
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .shadow-soft {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            }
+        }
+        
+        /* 隐藏浏览器默认的日期和时间选择器图标 */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 针对Firefox的修复 */
+        input[type="date"]::-moz-calendar-picker-indicator,
+        input[type="time"]::-moz-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 确保输入框的点击事件不会被阻止 */
+        input[type="date"]:focus,
+        input[type="time"]:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* 确保输入框的背景是白色 */
+        input[type="date"],
+        input[type="time"] {
+            background-color: white;
+        }
+        
+        /* 确保模态框没有阴影 */
+        .no-shadow {
+            box-shadow: none !important;
+        }
+        
+        /* 确保模态框内容宽度与容器宽度一致 */
+        #modal-content > div {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 为日期和时间选择器按钮添加动画效果 */
+        input[type="date"] + button,
+        input[type="time"] + button {
+            transition: all 0.3s ease;
+        }
+        
+        /* 按钮悬停时的动画效果 */
+        input[type="date"] + button:hover,
+        input[type="time"] + button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        /* 学生选择按钮的动画效果 */
+        #student-buttons button {
+            transition: all 0.3s ease;
+        }
+        
+        /* 学生选择按钮悬停时的动画效果 */
+        #student-buttons button:hover {
+            transform: translateY(-3px);
+            transition: all 0.3s ease;
+        }
+        
+        /* 学生选择按钮选中时的动画效果 */
+        #student-buttons button.bg-primary {
+            transition: all 0.3s ease;
+        }
+        
+        /* 确保页面在出现滚动条时不会发生偏移 */
+        body {
+            overflow-y: scroll;
+        }
+        
+        /* 确保滚动条宽度一致 */
+        html {
+            scrollbar-width: thin;
+        }
+        
+        /* 为WebKit浏览器设置滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-bold text-primary">
+                        <i class="fa fa-calendar-check-o mr-2"></i>课程管理系统
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active">
+                        <i class="fa fa-calendar mr-1"></i> 日历排课
+                    </button>
+                    <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-users mr-1"></i> 学生管理
+                    </button>
+                    <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-bar-chart mr-1"></i> 课时费统计
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 日历页面 -->
+        <div id="calendar-page" class="page active">
+            <!-- 日历控制区 -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-6">
+                    <h2 class="text-2xl font-bold text-gray-800">日历排课</h2>
+                    <div class="flex items-center space-x-4">
+                        <button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h3 id="current-month" class="text-xl font-medium">2026年3月</h3>
+                        <button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-right text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-course-btn" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-plus mr-2"></i> 添加课程
+                </button>
+            </div>
+
+            <!-- 日历网格 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200">
+                    <div class="text-center py-3 font-medium text-gray-700">周日</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周一</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周二</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周三</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周四</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周五</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周六</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7">
+                    <!-- 日历单元格将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 学生页面 -->
+        <div id="students-page" class="page hidden">
+            <!-- 页面标题和添加按钮 -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">学生管理</h2>
+                <div class="flex items-center space-x-3">
+                    <button id="manage-organizations-btn" class="bg-secondary text-white px-4 py-2 rounded-lg flex items-center hover:bg-secondary/90 transition-colors">
+                        <i class="fa fa-building mr-2"></i> 机构管理
+                    </button>
+                    <button id="manage-course-types-btn" class="bg-secondary text-white px-4 py-2 rounded-lg flex items-center hover:bg-secondary/90 transition-colors">
+                        <i class="fa fa-book mr-2"></i> 课型管理
+                    </button>
+                    <button id="add-student-btn" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-primary/90 transition-colors">
+                        <i class="fa fa-plus mr-2"></i> 添加学生
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-grow">
+                        <input type="text" id="student-search" placeholder="搜索学生姓名、机构..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生列表 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">姓名</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">机构</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">课型</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">课时费</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-list" class="bg-white divide-y divide-gray-200">
+                            <!-- 学生列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页面 -->
+        <div id="statistics-page" class="page hidden">
+            <!-- 页面标题 -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">课时费统计</h2>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-white rounded-lg border border-gray-300">
+                        <select id="statistics-year" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
+                            <!-- 年份选项将通过JavaScript动态生成 -->
+                        </select>
+                        <span class="text-gray-400">年</span>
+                        <select id="statistics-month" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
+                            <option value="0">1月</option>
+                            <option value="1">2月</option>
+                            <option value="2">3月</option>
+                            <option value="3">4月</option>
+                            <option value="4">5月</option>
+                            <option value="5">6月</option>
+                            <option value="6">7月</option>
+                            <option value="7">8月</option>
+                            <option value="8">9月</option>
+                            <option value="9">10月</option>
+                            <option value="10">11月</option>
+                            <option value="11">12月</option>
+                        </select>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-300">
+                        <select id="statistics-organization" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
+                            <option value="">全部机构</option>
+                            <!-- 机构选项将通过JavaScript动态生成 -->
+                        </select>
+                    </div>
+                    <button id="export-statistics" class="bg-success text-white px-4 py-2 rounded-lg flex items-center hover:bg-success/90 transition-colors">
+                        <i class="fa fa-download mr-2"></i> 导出数据
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3>
+                            <p id="total-hours" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <i class="fa fa-calendar text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">节课程</div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3>
+                            <p id="total-fee" class="text-3xl font-bold text-primary">¥0</p>
+                        </div>
+                        <div class="bg-green-100 p-2 rounded-lg">
+                            <i class="fa fa-money text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">人民币</div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3>
+                            <p id="total-students" class="text-3xl font-bold text-success">0</p>
+                        </div>
+                        <div class="bg-purple-100 p-2 rounded-lg">
+                            <i class="fa fa-users text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">名学生</div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">机构课节分布</h3>
+                        <div class="text-xs text-gray-500" id="organization-chart-info">0节课程</div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="organization-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">课型课节分布</h3>
+                        <div class="text-xs text-gray-500" id="course-type-chart-info">0节课程</div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="course-type-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细数据表格 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">机构详细数据</h3>
+                        <div class="text-xs text-gray-500" id="organization-table-info">0个机构</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构名称</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="organization-table" class="bg-white divide-y divide-gray-200">
+                                <!-- 机构数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">课型详细数据</h3>
+                        <div class="text-xs text-gray-500" id="course-type-table-info">0种课型</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课型</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="course-type-table" class="bg-white divide-y divide-gray-200">
+                                <!-- 课型数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生详细数据表格 -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-800">学生详细数据</h3>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-xs text-gray-500" id="student-table-info">0名学生</div>
+                        <select id="student-sort" class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="fee-desc">课时费从高到低</option>
+                            <option value="fee-asc">课时费从低到高</option>
+                            <option value="courses-desc">课节数从多到少</option>
+                            <option value="courses-asc">课节数从少到多</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生姓名</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属机构</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课型</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每节课费用</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table" class="bg-white divide-y divide-gray-200">
+                            <!-- 学生数据将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框容器 -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow" id="modal-content">
+            <!-- 模态框内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm">
+        <div class="flex items-center">
+            <div id="notification-icon" class="flex-shrink-0 text-success">
+                <i class="fa fa-check-circle text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p id="notification-message" class="text-sm font-medium text-gray-800"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计控制器 -->
+    <script src="statistics-complete.js"></script>
+    
+    <script>
+        // 全局状态管理
+        const state = {
+            currentDate: new Date(),
+            currentYear: new Date().getFullYear(),
+            currentMonth: new Date().getMonth(),
+            students: [],
+            courses: [],
+            organizations: [],
+            courseTypes: []
+        };
+
+        // 工具函数
+        const utils = {
+            // 生成唯一ID
+            generateId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`,
+            
+            // 生成颜色
+            generateColor: (text) => {
+                // 预定义的美观颜色数组
+                const baseColors = [
+                    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899',
+                    '#06b6d4', '#84cc16', '#f97316', '#8b5cf6', '#0891b2', '#d946ef'
+                ];
+                
+                // 使用简单的哈希算法生成索引
+                let hash = 0;
+                for (let i = 0; i < text.length; i++) {
+                    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                
+                // 确保索引在有效范围内
+                const index = Math.abs(hash) % baseColors.length;
+                return baseColors[index];
+            },
+            
+            // 计算课时数
+            calculateHours: (startTime, endTime) => {
+                const [sh, sm] = startTime.split(':').map(Number);
+                const [eh, em] = endTime.split(':').map(Number);
+                return (eh * 60 + em - sh * 60 - sm) / 60;
+            },
+            
+            // 保存数据（先保存到本地，再同步到服务器）
+            saveData: () => {
+                const data = {
+                    students: state.students,
+                    courses: state.courses,
+                    organizations: state.organizations,
+                    courseTypes: state.courseTypes,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                // 首先保存到本地
+                localStorage.setItem('courseManagerData', JSON.stringify(data));
+                console.log('数据保存到localStorage成功');
+                
+                // 然后同步到服务器
+                if (window.firebaseDatabase) {
+                    const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                    window.firebaseSet(dbRef, data).then(() => {
+                        console.log('数据同步到服务器成功');
+                        notification.show('数据已同步到服务器', 'success');
+                    }).catch((error) => {
+                        console.error('数据同步到服务器失败:', error);
+                        notification.show('数据同步到服务器失败，将在网络恢复后自动同步', 'warning');
+                    });
+                } else {
+                    console.log('服务器不可用，数据仅保存到本地');
+                    notification.show('服务器不可用，数据仅保存到本地', 'warning');
+                }
+            },
+            
+            // 从Firebase加载数据并同步
+            loadData: () => {
+                const defaults = {
+                    organizations: [],
+                    courseTypes: []
+                };
+                
+                console.log('开始加载数据，Firebase Database:', window.firebaseDatabase);
+                
+                if (window.firebaseDatabase) {
+                    // 显示正在从服务器加载数据的通知
+                    notification.show('正在同步数据...', 'info');
+                    console.log('尝试从服务器加载数据...');
+                    const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                    window.firebaseGet(dbRef).then((snapshot) => {
+                        console.log('服务器数据加载成功，快照存在:', snapshot.exists());
+                        
+                        // 获取本地数据
+                        const localDataStr = localStorage.getItem('courseManagerData');
+                        const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                        const localTimestamp = localData && localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
+                        
+                        if (snapshot.exists()) {
+                            const serverData = snapshot.val();
+                            const serverTimestamp = serverData.lastUpdated ? new Date(serverData.lastUpdated).getTime() : 0;
+                            
+                            console.log('本地时间戳:', localTimestamp, '服务器时间戳:', serverTimestamp);
+                            
+                            if (serverTimestamp > localTimestamp) {
+                                // 服务器数据较新，使用服务器数据
+                                console.log('服务器数据较新，加载服务器数据');
+                                state.students = serverData.students || [];
+                                state.courses = serverData.courses || [];
+                                state.organizations = serverData.organizations || defaults.organizations;
+                                state.courseTypes = serverData.courseTypes || defaults.courseTypes;
+                                
+                                // 保存到本地
+                                localStorage.setItem('courseManagerData', JSON.stringify(serverData));
+                                console.log('服务器数据已保存到本地');
+                                
+                                // 显示加载成功的通知
+                                notification.show('已同步服务器最新数据', 'success');
+                            } else if (localTimestamp > serverTimestamp && localData) {
+                                // 本地数据较新，上传到服务器
+                                console.log('本地数据较新，上传到服务器');
+                                window.firebaseSet(dbRef, localData).then(() => {
+                                    console.log('本地数据上传到服务器成功');
+                                    state.students = localData.students || [];
+                                    state.courses = localData.courses || [];
+                                    state.organizations = localData.organizations || defaults.organizations;
+                                    state.courseTypes = localData.courseTypes || defaults.courseTypes;
+                                    notification.show('本地数据已同步到服务器', 'success');
+                                }).catch((error) => {
+                                    console.error('本地数据上传到服务器失败:', error);
+                                    // 使用本地数据
+                                    state.students = localData.students || [];
+                                    state.courses = localData.courses || [];
+                                    state.organizations = localData.organizations || defaults.organizations;
+                                    state.courseTypes = localData.courseTypes || defaults.courseTypes;
+                                    notification.show('本地数据上传失败，使用本地数据', 'warning');
+                                });
+                            } else if (localData) {
+                                // 数据时间戳相同，使用本地数据
+                                console.log('数据时间戳相同，使用本地数据');
+                                state.students = localData.students || [];
+                                state.courses = localData.courses || [];
+                                state.organizations = localData.organizations || defaults.organizations;
+                                state.courseTypes = localData.courseTypes || defaults.courseTypes;
+                                notification.show('数据已是最新', 'success');
+                            } else {
+                                // 两边都没有数据，使用默认数据
+                                console.log('两边都没有数据，使用默认数据');
+                                state.students = [];
+                                state.courses = [];
+                                state.organizations = defaults.organizations;
+                                state.courseTypes = defaults.courseTypes;
+                                notification.show('初始化默认数据', 'info');
+                            }
+                        } else if (localData) {
+                            // 服务器无数据，本地有数据，上传到服务器
+                            console.log('服务器无数据，本地有数据，上传到服务器');
+                            window.firebaseSet(dbRef, localData).then(() => {
+                                console.log('本地数据上传到服务器成功');
+                                state.students = localData.students || [];
+                                state.courses = localData.courses || [];
+                                state.organizations = localData.organizations || defaults.organizations;
+                                state.courseTypes = localData.courseTypes || defaults.courseTypes;
+                                notification.show('本地数据已同步到服务器', 'success');
+                            }).catch((error) => {
+                                console.error('本地数据上传到服务器失败:', error);
+                                // 使用本地数据
+                                state.students = localData.students || [];
+                                state.courses = localData.courses || [];
+                                state.organizations = localData.organizations || defaults.organizations;
+                                state.courseTypes = localData.courseTypes || defaults.courseTypes;
+                                notification.show('本地数据上传失败，使用本地数据', 'warning');
+                            });
+                        } else {
+                            // 两边都没有数据，使用默认数据
+                            console.log('两边都没有数据，使用默认数据');
+                            state.students = [];
+                            state.courses = [];
+                            state.organizations = defaults.organizations;
+                            state.courseTypes = defaults.courseTypes;
+                            notification.show('初始化默认数据', 'info');
+                        }
+                        
+                        // 数据加载完成后重新渲染页面
+                        render.students();
+                        render.calendar();
+                        const yearSelect = document.getElementById('statistics-year');
+                        const monthSelect = document.getElementById('statistics-month');
+                        const organizationSelect = document.getElementById('statistics-organization');
+                        if (yearSelect && monthSelect) {
+                            const year = parseInt(yearSelect.value);
+                            const month = parseInt(monthSelect.value);
+                            const organization = organizationSelect ? organizationSelect.value : '';
+                            render.statistics(year, month, organization);
+                        }
+                    }).catch((error) => {
+                        console.error('从服务器加载数据失败:', error);
+                        // 显示加载失败的通知
+                        notification.show('从服务器加载数据失败，正在加载本地数据...', 'error');
+                        // 失败时从localStorage加载
+                        utils.loadFromLocalStorage();
+                        // 从localStorage加载后重新渲染页面
+                        render.students();
+                        render.calendar();
+                    });
+                } else {
+                    console.log('服务器不可用，从localStorage加载');
+                    // 显示加载本地数据的通知
+                    notification.show('服务器不可用，正在加载本地数据...', 'warning');
+                    // Firebase不可用时从localStorage加载
+                    utils.loadFromLocalStorage();
+                    // 从localStorage加载后重新渲染页面
+                    render.students();
+                    render.calendar();
+                }
+            },
+            
+            // 从localStorage加载数据（备用方法）
+            loadFromLocalStorage: () => {
+                const defaults = {
+                    organizations: [],
+                    courseTypes: []
+                };
+                
+                try {
+                    const data = localStorage.getItem('courseManagerData');
+                    const parsed = data ? JSON.parse(data) : {};
+                    
+                    state.students = parsed.students || [];
+                    state.courses = parsed.courses || [];
+                    state.organizations = parsed.organizations || defaults.organizations;
+                    state.courseTypes = parsed.courseTypes || defaults.courseTypes;
+                    console.log('数据从localStorage加载成功');
+                    // 显示加载本地数据成功的通知
+                    notification.show('本地数据加载成功', 'success');
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    // 使用默认数据
+                    state.students = [];
+                    state.courses = [];
+                    state.organizations = defaults.organizations;
+                    state.courseTypes = defaults.courseTypes;
+                    // 显示加载本地数据失败的通知
+                    notification.show('本地数据加载失败，使用默认数据', 'error');
+                }
+            },
+            
+            // 导出CSV
+            exportCSV: (data, filename) => {
+                const headers = Object.keys(data[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(row => headers.map(header => {
+                        const value = row[header];
+                        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+                    }).join(','))
+                ].join('\n');
+                
+                const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            },
+            
+            // 导出统计数据
+            exportStatisticsData: (year, month, organization = '') => {
+                // 过滤当月课程
+                const filteredCourses = state.courses.filter(course => {
+                    const courseDate = new Date(course.date);
+                    return courseDate.getFullYear() === year && courseDate.getMonth() === month;
+                });
+                
+                const exportData = [];
+                
+                filteredCourses.forEach(course => {
+                    if (course.studentIds && Array.isArray(course.studentIds)) {
+                        // 处理多名学生的课程
+                        course.studentIds.forEach((studentId, index) => {
+                            const student = state.students.find(s => s.id === studentId);
+                            if (student) {
+                                // 机构筛选
+                                if (organization && student.organization !== organization) {
+                                    return;
+                                }
+                                exportData.push({
+                                    日期: course.date,
+                                    时间: `${course.startTime} - ${course.endTime}`,
+                                    学生姓名: student.name,
+                                    所属机构: student.organization,
+                                    课型: student.courseType,
+                                    课时费: student.fee,
+                                    备注: course.note || ''
+                                });
+                            }
+                        });
+                    } else {
+                        // 处理单个学生的课程（兼容旧格式）
+                        const student = state.students.find(s => s.id === course.studentId);
+                        if (student) {
+                            // 机构筛选
+                            if (organization && student.organization !== organization) {
+                                return;
+                            }
+                            exportData.push({
+                                日期: course.date,
+                                时间: `${course.startTime} - ${course.endTime}`,
+                                学生姓名: student.name,
+                                所属机构: student.organization,
+                                课型: student.courseType,
+                                课时费: student.fee,
+                                备注: course.note || ''
+                            });
+                        }
+                    }
+                });
+                
+                if (exportData.length > 0) {
+                    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    const filename = `${year}年${monthNames[month]}课时费统计.csv`;
+                    utils.exportCSV(exportData, filename);
+                    notification.show('数据导出成功');
+                } else {
+                    notification.show('暂无数据可导出', 'error');
+                }
+            },
+            
+            // 导出所有数据
+            exportAllData: () => {
+                const exportData = {
+                    students: state.students,
+                    courses: state.courses,
+                    organizations: state.organizations,
+                    courseTypes: state.courseTypes,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const jsonString = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `课程系统数据_${new Date().toISOString().split('T')[0]}.json`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                notification.show('所有数据导出成功');
+            },
+            
+            // 导入数据
+            importData: (jsonData) => {
+                try {
+                    const data = JSON.parse(jsonData);
+                    
+                    // 导入学生数据
+                    if (data.students && Array.isArray(data.students)) {
+                        state.students = data.students;
+                    }
+                    
+                    // 导入课程数据
+                    if (data.courses && Array.isArray(data.courses)) {
+                        state.courses = data.courses;
+                    }
+                    
+                    // 导入机构数据
+                    if (data.organizations && Array.isArray(data.organizations)) {
+                        state.organizations = data.organizations;
+                    }
+                    
+                    // 导入课型数据
+                    if (data.courseTypes && Array.isArray(data.courseTypes)) {
+                        state.courseTypes = data.courseTypes;
+                    }
+                    
+                    // 保存数据
+                    utils.saveData();
+                    
+                    return true;
+                } catch (error) {
+                    console.error('导入数据失败:', error);
+                    return false;
+                }
+            }
+        };
+
+        // 渲染函数
+        const render = {
+            // 渲染日历
+            calendar: () => {
+                const year = state.currentDate.getFullYear();
+                const month = state.currentDate.getMonth();
+                
+                // 更新月份显示
+                document.getElementById('current-month').textContent = `${year}年${month + 1}月`;
+                
+                // 获取日历网格
+                const grid = document.getElementById('calendar-grid');
+                grid.innerHTML = '';
+                
+                // 计算月份数据
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const today = new Date();
+                
+                // 添加上个月的日期
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const prevYear = month === 0 ? year - 1 : year;
+                const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+                
+                for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const courses = state.courses.filter(c => c.date === dateStr);
+                    grid.appendChild(render.createDayCell(day, dateStr, courses, false, false));
+                }
+                
+                // 添加当前月的日期
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const courses = state.courses.filter(c => c.date === dateStr);
+                    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                    grid.appendChild(render.createDayCell(day, dateStr, courses, true, isToday));
+                }
+                
+                // 添加下个月的日期
+                const totalCells = 42;
+                const cellsAdded = firstDayOfMonth + daysInMonth;
+                const nextMonthCells = totalCells - cellsAdded;
+                
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const nextYear = month === 11 ? year + 1 : year;
+                
+                for (let day = 1; day <= nextMonthCells; day++) {
+                    const dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const courses = state.courses.filter(c => c.date === dateStr);
+                    grid.appendChild(render.createDayCell(day, dateStr, courses, false, false));
+                }
+            },
+            
+            // 创建日期单元格
+            createDayCell: (day, dateStr, courses, isCurrentMonth, isToday) => {
+                const cell = document.createElement('div');
+                const bgClass = isCurrentMonth ? (isToday ? 'bg-blue-50' : 'bg-white') : 'bg-gray-50';
+                const textClass = isCurrentMonth ? (isToday ? 'text-primary font-bold' : '') : 'text-gray-400';
+                
+                cell.className = `border border-gray-200 p-2 min-h-28 ${bgClass} hover:bg-blue-50/50 transition-colors cursor-pointer`;
+                
+                let coursesHTML = '';
+                if (courses.length > 0) {
+                    // 按开始时间排序课程
+                    const sortedCourses = [...courses].sort((a, b) => {
+                        return a.startTime.localeCompare(b.startTime);
+                    });
+                    
+                    coursesHTML = sortedCourses.map(course => {
+                        // 检查是否是新课程格式（多名学生）
+                        if (course.studentIds) {
+                            // 使用第一个学生的机构颜色作为课程标签的主色调
+                            const primaryColor = course.colors[0] || '#6b7280';
+                            return `
+                                <div class="course-item mt-1 p-1 rounded text-xs" 
+                                     style="background-color: ${primaryColor}10; border-left: 3px solid ${primaryColor};"
+                                     onclick="event.stopPropagation(); modal.showCourseDetail('${course.id}')">
+                                    <div class="flex flex-wrap gap-1 mb-1">
+                                        ${course.studentNames.map((name, index) => {
+                                            const color = course.colors[index] || '#9ca3af';
+                                            return `
+                                                <span class="px-1 py-0.5 rounded text-xs" 
+                                                      style="background-color: ${color}20; color: ${color};"
+                                                      title="${name} (${course.organizations[index]})">
+                                                    ${name}
+                                                </span>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                    <div class="opacity-80 text-[10px]">${course.startTime} - ${course.endTime}</div>
+                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${course.note}">${course.note}</div>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            // 兼容旧课程格式（单个学生）
+                            const student = state.students.find(s => s.id === course.studentId);
+                            const color = student ? utils.generateColor(student.organization) : '#9ca3af';
+                            return `
+                                <div class="course-item mt-1 p-1 rounded text-xs" 
+                                     style="background-color: ${color}20; border-left: 3px solid ${color};"
+                                     onclick="event.stopPropagation(); modal.showCourseDetail('${course.id}')">
+                                    <div class="font-medium truncate text-sm" title="${student ? `${student.name} (${student.organization})` : '未知学生'}">
+                                        ${student ? student.name : '未知学生'}
+                                    </div>
+                                    <div class="opacity-80">${course.startTime} - ${course.endTime}</div>
+                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${course.note}">${course.note}</div>` : ''}
+                                </div>
+                            `;
+                        }
+                    }).join('');
+                }
+                
+                cell.innerHTML = `
+                    <div class="text-right ${textClass}">${day}</div>
+                    <div class="mt-1 space-y-1 max-h-[calc(100%-1rem)] overflow-y-auto">
+                        ${coursesHTML}
+                    </div>
+                `;
+                
+                // 点击添加课程
+                cell.onclick = function() {
+                    modal.showAddCourse(dateStr);
+                };
+                
+                return cell;
+            },
+            
+            // 渲染学生列表
+            students: () => {
+                const studentsList = document.getElementById('students-list');
+                const searchTerm = document.getElementById('student-search').value.toLowerCase();
+                
+                // 过滤学生
+                let filteredStudents = state.students;
+                if (searchTerm) {
+                    filteredStudents = filteredStudents.filter(student => 
+                        student.name.toLowerCase().includes(searchTerm) || 
+                        student.organization.toLowerCase().includes(searchTerm) ||
+                        student.courseType.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                // 渲染学生列表
+                if (filteredStudents.length === 0) {
+                    studentsList.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                <i class="fa fa-users-slash text-3xl mb-2"></i>
+                                <p>暂无学生信息</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                studentsList.innerHTML = filteredStudents.map(student => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">${student.name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full" style="background-color: ${utils.generateColor(student.organization)}20; color: ${utils.generateColor(student.organization)}">
+                                ${student.organization}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: ${utils.generateColor(student.courseType)}20; color: ${utils.generateColor(student.courseType)}">
+                                ${student.courseType}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">¥${student.fee}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-primary hover:text-primary/80 mr-3 edit-student" data-id="${student.id}">
+                                <i class="fa fa-pencil"></i> 编辑
+                            </button>
+                            <button class="text-danger hover:text-red-700 delete-student" data-id="${student.id}">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // 使用事件委托添加事件监听
+                studentsList.onclick = (e) => {
+                    const btn = e.target.closest('.edit-student, .delete-student');
+                    if (!btn) return;
+                    
+                    const student = state.students.find(s => s.id === btn.dataset.id);
+                    if (!student) return;
+                    
+                    btn.classList.contains('edit-student') 
+                        ? modal.showEditStudent(student)
+                        : modal.showDeleteStudent(student);
+                };
+            },
+            
+            // 渲染统计页面
+            statistics: (year, month, organization = '') => {
+                console.log('📊 渲染统计页面:', { year, month, organization, courses: state.courses.length, students: state.students.length });
+                
+                // 过滤当月课程
+                const filteredCourses = state.courses.filter(course => {
+                    const courseDate = new Date(course.date);
+                    return courseDate.getFullYear() === year && courseDate.getMonth() === month;
+                });
+                console.log('📊 过滤后课程:', filteredCourses.length);
+                
+                // 初始化统计数据
+                const stats = {
+                    totalCourses: 0,
+                    totalFee: 0,
+                    uniqueStudents: new Set(),
+                    byOrganization: {},
+                    byCourseType: {},
+                    byStudent: {}
+                };
+                
+                // 计算统计数据
+                filteredCourses.forEach(course => {
+                    stats.totalCourses++;
+                    
+                    const processStudent = (studentId) => {
+                        const student = state.students.find(s => s.id === studentId);
+                        if (!student) return;
+                        
+                        // 机构筛选
+                        if (organization && student.organization !== organization) {
+                            return;
+                        }
+                        
+                        const fee = student.fee;
+                        stats.totalFee += fee;
+                        stats.uniqueStudents.add(studentId);
+                        
+                        // 学生统计
+                        if (!stats.byStudent[studentId]) {
+                            stats.byStudent[studentId] = {
+                                name: student.name,
+                                organization: student.organization,
+                                courseType: student.courseType,
+                                fee: 0,
+                                courses: 0
+                            };
+                        }
+                        stats.byStudent[studentId].fee += fee;
+                        stats.byStudent[studentId].courses += 1;
+                        
+                        // 机构统计
+                        if (!stats.byOrganization[student.organization]) {
+                            stats.byOrganization[student.organization] = { fee: 0, courses: 0, students: new Set() };
+                        }
+                        stats.byOrganization[student.organization].fee += fee;
+                        stats.byOrganization[student.organization].courses += 1;
+                        stats.byOrganization[student.organization].students.add(studentId);
+                        
+                        // 课型统计
+                        if (!stats.byCourseType[student.courseType]) {
+                            stats.byCourseType[student.courseType] = { fee: 0, courses: 0, students: new Set() };
+                        }
+                        stats.byCourseType[student.courseType].fee += fee;
+                        stats.byCourseType[student.courseType].courses += 1;
+                        stats.byCourseType[student.courseType].students.add(studentId);
+                    };
+                    
+                    if (course.studentIds && Array.isArray(course.studentIds)) {
+                        console.log('📊 处理多名学生课程:', course.studentIds.length, '名学生');
+                        course.studentIds.forEach(processStudent);
+                    } else if (course.studentId) {
+                        console.log('📊 处理单个学生课程:', course.studentId);
+                        processStudent(course.studentId);
+                    } else {
+                        console.log('📊 跳过无学生课程:', course);
+                    }
+                });
+                
+                // 更新统计卡片
+                const totalHoursEl = document.getElementById('total-hours');
+                const totalFeeEl = document.getElementById('total-fee');
+                const totalStudentsEl = document.getElementById('total-students');
+                const periodEl = document.getElementById('statistics-period');
+                
+                if (totalHoursEl) totalHoursEl.textContent = stats.totalCourses;
+                if (totalFeeEl) totalFeeEl.textContent = `¥${stats.totalFee.toFixed(2)}`;
+                if (totalStudentsEl) totalStudentsEl.textContent = stats.uniqueStudents.size;
+                
+                const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                if (periodEl) periodEl.textContent = `${year}年${monthNames[month]}（${stats.totalCourses}节课程）`;
+                
+                // 更新信息
+                const orgChartInfo = document.getElementById('organization-chart-info');
+                const typeChartInfo = document.getElementById('course-type-chart-info');
+                const orgTableInfo = document.getElementById('organization-table-info');
+                const typeTableInfo = document.getElementById('course-type-table-info');
+                const studentTableInfo = document.getElementById('student-table-info');
+                
+                if (orgChartInfo) orgChartInfo.textContent = `${Object.keys(stats.byOrganization).length}个机构`;
+                if (typeChartInfo) typeChartInfo.textContent = `${Object.keys(stats.byCourseType).length}种课型`;
+                if (orgTableInfo) orgTableInfo.textContent = `${Object.keys(stats.byOrganization).length}个机构`;
+                if (typeTableInfo) typeTableInfo.textContent = `${Object.keys(stats.byCourseType).length}种课型`;
+                if (studentTableInfo) studentTableInfo.textContent = `${stats.uniqueStudents.size}名学生`;
+                
+                // 渲染图表
+                render.chart('organization-chart', stats.byOrganization, '机构课节分布');
+                render.chart('course-type-chart', stats.byCourseType, '课型课节分布');
+                
+                // 渲染表格
+                render.orgTable(stats.byOrganization, stats.totalCourses);
+                render.typeTable(stats.byCourseType, stats.totalCourses);
+                
+                // 渲染学生表格
+                const sortBy = document.getElementById('student-sort')?.value || 'fee-desc';
+                render.studentTable(stats.byStudent, sortBy);
+            },
+            
+            // 渲染图表
+            chart: (canvasId, data, title) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // 销毁现有图表
+                if (window[canvasId] && typeof window[canvasId].destroy === 'function') {
+                    window[canvasId].destroy();
+                }
+                
+                const labels = Object.keys(data);
+                const values = labels.map(label => data[label].courses);
+                const colors = labels.map(label => utils.generateColor(label));
+                
+                // 如果没有数据，显示空图表
+                if (labels.length === 0) {
+                    window[canvasId] = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['暂无数据'],
+                            datasets: [{
+                                data: [1],
+                                backgroundColor: ['#e5e7eb'],
+                                borderColor: ['#d1d5db'],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' },
+                                title: { display: true, text: title, font: { size: 16 } }
+                            }
+                        }
+                    });
+                    return;
+                }
+                
+                window[canvasId] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors,
+                            borderColor: colors.map(c => c + '40'),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: title, font: { size: 16 } },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const label = ctx.label || '';
+                                        const value = ctx.parsed || 0;
+                                        const item = data[label];
+                                        return [
+                                            `${label}: ${value}节`,
+                                            `费用: ¥${item.fee.toFixed(2)}`,
+                                            `学生: ${item.students?.size || 0}人`
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+            
+            // 渲染机构详细数据表格
+            orgTable: (data, totalCourses) => {
+                const tableBody = document.getElementById('organization-table');
+                if (!tableBody) return;
+                
+                tableBody.innerHTML = '';
+                
+                if (Object.keys(data).length === 0) {
+                    tableBody.innerHTML = `
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fa fa-building-o text-4xl mb-2 text-gray-300"></i><p>暂无机构数据</p>
+                        </td></tr>`;
+                    return;
+                }
+                
+                Object.entries(data).sort(([,a], [,b]) => b.courses - a.courses).forEach(([org, stats]) => {
+                    const pct = totalCourses > 0 ? (stats.courses / totalCourses * 100) : 0;
+                    const color = utils.generateColor(org);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="h-3 w-3 rounded-full mr-2 inline-block" style="background-color: ${color}"></span>
+                            <span class="font-medium text-gray-900">${org}</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-900">${stats.courses}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-900">¥${stats.fee.toFixed(2)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-600">${stats.students?.size || 0}人</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="rounded-full h-2" style="width: ${Math.min(pct, 100)}%; background-color: ${color}"></div>
+                                </div>
+                                <span class="text-xs text-gray-500">${pct.toFixed(1)}%</span>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            },
+            
+            // 渲染课型详细数据表格
+            typeTable: (data, totalCourses) => {
+                const tableBody = document.getElementById('course-type-table');
+                if (!tableBody) return;
+                
+                tableBody.innerHTML = '';
+                
+                if (Object.keys(data).length === 0) {
+                    tableBody.innerHTML = `
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fa fa-book text-4xl mb-2 text-gray-300"></i><p>暂无课型数据</p>
+                        </td></tr>`;
+                    return;
+                }
+                
+                Object.entries(data).sort(([,a], [,b]) => b.courses - a.courses).forEach(([type, stats]) => {
+                    const pct = totalCourses > 0 ? (stats.courses / totalCourses * 100) : 0;
+                    const color = utils.generateColor(type);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="h-3 w-3 rounded-full mr-2 inline-block" style="background-color: ${color}"></span>
+                            <span class="font-medium text-gray-900">${type}</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-900">${stats.courses}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-900">¥${stats.fee.toFixed(2)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-600">${stats.students?.size || 0}人</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="rounded-full h-2" style="width: ${Math.min(pct, 100)}%; background-color: ${color}"></div>
+                                </div>
+                                <span class="text-xs text-gray-500">${pct.toFixed(1)}%</span>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            },
+            
+            // 渲染学生详细数据表格
+            studentTable: (data, sortBy = 'fee-desc') => {
+                const tableBody = document.getElementById('student-table');
+                if (!tableBody) {
+                    console.error('Student table not found');
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                
+                // 如果没有数据，显示空状态
+                if (Object.keys(data).length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fa fa-users text-4xl mb-2 text-gray-300"></i>
+                                <p>暂无学生数据</p>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                // 根据排序参数排序
+                let sortedData = Object.entries(data);
+                switch (sortBy) {
+                    case 'fee-desc':
+                        sortedData.sort(([,a], [,b]) => b.fee - a.fee);
+                        break;
+                    case 'fee-asc':
+                        sortedData.sort(([,a], [,b]) => a.fee - b.fee);
+                        break;
+                    case 'courses-desc':
+                        sortedData.sort(([,a], [,b]) => b.courses - a.courses);
+                        break;
+                    case 'courses-asc':
+                        sortedData.sort(([,a], [,b]) => a.courses - b.courses);
+                        break;
+                    default:
+                        sortedData.sort(([,a], [,b]) => b.fee - a.fee);
+                }
+                
+                sortedData.forEach(([studentId, stats]) => {
+                    const color = utils.generateColor(stats.organization);
+                    const perCourseFee = stats.courses > 0 ? (stats.fee / stats.courses) : 0;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="font-medium text-gray-900">${stats.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: ${color}20; color: ${color}">
+                                ${stats.organization}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: ${utils.generateColor(stats.courseType)}20; color: ${utils.generateColor(stats.courseType)}">
+                                ${stats.courseType}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-gray-900">${stats.courses}节</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-medium text-primary">¥${stats.fee.toFixed(2)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">¥${perCourseFee.toFixed(2)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            },
+            
+            // 渲染页面
+            page: (pageId) => {
+                // 隐藏所有页面，显示目标页面
+                document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+                document.getElementById(pageId).classList.remove('hidden');
+                
+                // 更新导航状态
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active', 'bg-gray-100'));
+                document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active', 'bg-gray-100');
+                
+                // 渲染页面内容
+                const renderMap = {
+                    'calendar-page': () => render.calendar(),
+                    'students-page': () => render.students(),
+                    'statistics-page': () => {
+                        const year = parseInt(document.getElementById('statistics-year')?.value) || new Date().getFullYear();
+                        const month = parseInt(document.getElementById('statistics-month')?.value) || new Date().getMonth();
+                        const organization = document.getElementById('statistics-organization')?.value || '';
+                        render.statistics(year, month, organization);
+                    }
+                };
+                renderMap[pageId]?.();
+            }
+        };
+
+        // 模态框管理
+        const modal = {
+            // 显示模态框
+            show: (content) => {
+                const container = document.getElementById('modal-container');
+                const modalContent = document.getElementById('modal-content');
+                
+                modalContent.innerHTML = content;
+                container.classList.remove('hidden');
+                
+                // 添加动画
+                requestAnimationFrame(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                });
+                
+                // 绑定关闭按钮事件（延迟确保DOM已渲染）
+                setTimeout(() => {
+                    modalContent.querySelectorAll('.close-modal').forEach(btn => {
+                        btn.addEventListener('click', modal.hide);
+                    });
+                }, 0);
+                
+                // 点击背景关闭
+                container.onclick = (e) => {
+                    // 确保点击输入框时不会关闭模态框
+                    if (e.target === container && !e.target.closest('input[type="date"]') && !e.target.closest('input[type="time"]')) {
+                        modal.hide();
+                    }
+                };
+                
+                // ESC键关闭
+                document.addEventListener('keydown', modal.handleKeydown);
+            },
+            
+            // 隐藏模态框
+            hide: () => {
+                const container = document.getElementById('modal-container');
+                const modalContent = document.getElementById('modal-content');
+                
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 300);
+                
+                // 移除事件监听
+                document.removeEventListener('keydown', modal.handleKeydown);
+            },
+            
+            // 键盘事件处理
+            handleKeydown: (e) => {
+                if (e.key === 'Escape') {
+                    modal.hide();
+                }
+            },
+            
+            // 显示确认对话框
+            showConfirm: (message, onConfirm) => {
+                const content = `
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
+                                <i class="fa fa-exclamation-triangle text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">确认删除</h3>
+                            <p class="text-gray-600">${message}</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button id="cancel-confirm" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                取消
+                            </button>
+                            <button id="accept-confirm" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                确认删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 添加按钮事件
+                setTimeout(() => {
+                    const cancelBtn = document.getElementById('cancel-confirm');
+                    const acceptBtn = document.getElementById('accept-confirm');
+                    
+                    cancelBtn.addEventListener('click', () => {
+                        modal.hide();
+                    });
+                    
+                    acceptBtn.addEventListener('click', () => {
+                        modal.hide();
+                        if (typeof onConfirm === 'function') {
+                            onConfirm();
+                        }
+                    });
+                    
+                    // 添加回车键确认功能
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter') {
+                            acceptBtn.click();
+                        } else if (event.key === 'Escape') {
+                            cancelBtn.click();
+                        }
+                    });
+                }, 0);
+            },
+            
+            // 显示编辑课程模态框
+            showEditCourse: (course) => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">编辑课程</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="edit-course-form">
+                                <input type="hidden" id="edit-course-id" value="${course.id}">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                                    <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                        <input type="date" id="course-date" value="${course.date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10">
+                                        <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-date').showPicker();">
+                                            <i class="fa fa-calendar"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">学生 (点击选择，可多选)</label>
+                                    <div class="border border-gray-300 rounded-md p-3">
+                                        <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto" id="student-buttons">
+                                            ${state.students.map(student => {
+                                                const isSelected = course.studentIds ? course.studentIds.includes(student.id) : course.studentId === student.id;
+                                                const color = utils.generateColor(student.organization);
+                                                return `
+                                                    <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all ${isSelected ? 'selected bg-opacity-20' : ''}" 
+                                                            data-id="${student.id}" 
+                                                            data-name="${student.name}" 
+                                                            data-organization="${student.organization}" 
+                                                            data-color="${color}"
+                                                            style="border-color: ${color}; color: ${color}; background-color: ${isSelected ? `${color}20` : 'transparent'}"
+                                                            onclick="this.classList.toggle('selected'); this.classList.toggle('bg-opacity-20'); this.style.backgroundColor = this.classList.contains('selected') ? '${color}20' : 'transparent';">
+                                                        ${student.name}
+                                                    </button>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                            <input type="time" id="course-start-time" value="${course.startTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onkeydown="handleTimeInputKeydown(event, 'course-start-time', 'course-end-time')">
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-start-time').showPicker();">
+                                                <i class="fa fa-clock-o"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                            <input type="time" id="course-end-time" value="${course.endTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onkeydown="handleTimeInputKeydown(event, 'course-end-time', 'course-start-time')">
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-end-time').showPicker();">
+                                                <i class="fa fa-clock-o"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                                    <textarea id="course-note" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary" rows="2">${course.note || ''}</textarea>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="button" class="close-modal px-4 py-2 text-gray-700 mr-2">取消</button>
+                                    <button type="button" id="save-course" class="bg-primary text-white px-4 py-2 rounded-lg">保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 绑定保存按钮事件
+                document.getElementById('save-course').addEventListener('click', () => {
+                    const courseId = document.getElementById('edit-course-id').value;
+                    const date = document.getElementById('course-date').value;
+                    const selectedStudents = Array.from(document.querySelectorAll('.student-btn.selected'));
+                    const startTime = document.getElementById('course-start-time').value;
+                    const endTime = document.getElementById('course-end-time').value;
+                    const note = document.getElementById('course-note').value;
+                    
+                    // 验证输入
+                    if (!date || selectedStudents.length === 0 || !startTime || !endTime) {
+                        notification.show('请填写完整信息', 'error');
+                        return;
+                    }
+                    
+                    // 验证时间
+                    if (startTime >= endTime) {
+                        notification.show('结束时间必须晚于开始时间', 'error');
+                        return;
+                    }
+                    
+                    const updatedCourse = {
+                        ...course,
+                        date,
+                        studentIds: selectedStudents.map(btn => btn.dataset.id),
+                        studentNames: selectedStudents.map(btn => btn.dataset.name),
+                        organizations: selectedStudents.map(btn => btn.dataset.organization),
+                        colors: selectedStudents.map(btn => btn.dataset.color),
+                        startTime,
+                        endTime,
+                        note,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    const courseIndex = state.courses.findIndex(c => c.id === courseId);
+                    if (courseIndex !== -1) {
+                        state.courses[courseIndex] = updatedCourse;
+                        utils.saveData();
+                        render.calendar();
+                        modal.hide();
+                        
+                        notification.show('课程更新成功');
+                    }
+                });
+            },
+            
+            // 显示添加课程模态框
+            showAddCourse: (date) => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">添加课程</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="add-course-form">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                                    <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                        <input type="date" id="course-date" value="${date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10">
+                                        <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-date').showPicker();">
+                                            <i class="fa fa-calendar"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">学生 (点击选择，可多选)</label>
+                                    <div class="border border-gray-300 rounded-md p-3">
+                                        <div class="flex flex-wrap gap-2" id="student-buttons">
+                                            ${state.students.map(student => {
+                                                const color = utils.generateColor(student.organization);
+                                                return `
+                                                    <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all"
+                                                            data-id="${student.id}"
+                                                            data-name="${student.name}"
+                                                            data-organization="${student.organization}"
+                                                            data-color="${color}"
+                                                            style="border-color: ${color}; color: ${color}; background-color: transparent;"
+                                                            onclick="this.classList.toggle('selected'); this.classList.toggle('bg-opacity-20'); this.style.backgroundColor = this.classList.contains('selected') ? '${color}20' : 'transparent';">
+                                                        ${student.name}
+                                                    </button>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                            <input type="time" id="course-start-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onkeydown="handleTimeInputKeydown(event, 'course-start-time', 'course-end-time')">
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-start-time').showPicker();">
+                                                <i class="fa fa-clock-o"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                            <input type="time" id="course-end-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onkeydown="handleTimeInputKeydown(event, 'course-end-time', 'course-start-time')">
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-end-time').showPicker();">
+                                                <i class="fa fa-clock-o"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                                    <textarea id="course-note" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="button" class="close-modal px-4 py-2 text-gray-700 mr-2">取消</button>
+                                    <button type="button" id="add-course-save" class="bg-primary text-white px-4 py-2 rounded-lg">保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 绑定保存按钮事件
+                document.getElementById('add-course-save').addEventListener('click', () => {
+                    const date = document.getElementById('course-date').value;
+                    const selectedStudents = Array.from(document.querySelectorAll('.student-btn.selected'));
+                    const startTime = document.getElementById('course-start-time').value;
+                    const endTime = document.getElementById('course-end-time').value;
+                    const note = document.getElementById('course-note').value;
+                    
+                    // 验证输入
+                    if (!date || selectedStudents.length === 0 || !startTime || !endTime) {
+                        notification.show('请填写完整信息', 'error');
+                        return;
+                    }
+                    
+                    // 验证时间
+                    if (startTime >= endTime) {
+                        notification.show('结束时间必须晚于开始时间', 'error');
+                        return;
+                    }
+                    
+                    const course = {
+                        id: utils.generateId(),
+                        date,
+                        studentIds: selectedStudents.map(btn => btn.dataset.id),
+                        studentNames: selectedStudents.map(btn => btn.dataset.name),
+                        organizations: selectedStudents.map(btn => btn.dataset.organization),
+                        colors: selectedStudents.map(btn => btn.dataset.color),
+                        startTime,
+                        endTime,
+                        note,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    state.courses.push(course);
+                    utils.saveData();
+                    render.calendar();
+                    modal.hide();
+                    
+                    notification.show(`课程添加成功，共 ${selectedStudents.length} 名学生`);
+                });
+                
+                // 回车键保存课程
+                const courseInputs = ['course-date', 'course-start-time', 'course-end-time', 'course-note'];
+                courseInputs.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('keypress', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                document.getElementById('add-course-save').click();
+                            }
+                        });
+                    }
+                });
+            },
+            
+            // 显示课程详情模态框
+            showCourseDetail: (courseId) => {
+                const course = state.courses.find(c => c.id === courseId);
+                if (!course) return;
+                
+                let studentsContent = '';
+                let totalFee = 0;
+                
+                if (course.studentIds) {
+                    // 多名学生的课程
+                    studentsContent = `
+                        <div class="flex flex-wrap gap-2">
+                            ${course.studentNames.map((name, index) => {
+                                const student = state.students.find(s => s.id === course.studentIds[index]);
+                                const fee = student ? student.fee : 0;
+                                totalFee += fee;
+                                return `
+                                    <span class="px-2 py-1 rounded text-xs" 
+                                          style="background-color: ${course.colors[index]}20; color: ${course.colors[index]};"
+                                          title="${name} (${course.organizations[index]}) - ¥${fee.toFixed(2)}">
+                                        ${name}
+                                    </span>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                } else {
+                    // 单个学生的课程
+                    const student = state.students.find(s => s.id === course.studentId);
+                    if (student) {
+                        const fee = student.fee;
+                        totalFee = fee;
+                        const color = utils.generateColor(student.organization);
+                        studentsContent = `
+                            <span class="px-2 py-1 rounded text-xs" 
+                                  style="background-color: ${color}20; color: ${color};"
+                                  title="${student.name} (${student.organization})">
+                                ${student.name}
+                            </span>
+                        `;
+                    }
+                }
+                
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">课程详情</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-sm text-gray-500">学生</p>
+                                    <div class="mt-1">${studentsContent}</div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">日期</p>
+                                    <p>${course.date}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">时间</p>
+                                    <p>${course.startTime} - ${course.endTime}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">课时费</p>
+                                    <p class="font-medium text-primary">¥${totalFee.toFixed(2)}</p>
+                                </div>
+                                ${course.note ? `
+                                    <div>
+                                        <p class="text-sm text-gray-500">备注</p>
+                                        <p>${course.note}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex justify-end mt-6 space-x-3">
+                                <button id="edit-course" class="bg-primary text-white px-4 py-2 rounded-lg">编辑课程</button>
+                                <button id="delete-course" class="bg-danger text-white px-4 py-2 rounded-lg">删除课程</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 添加编辑按钮事件
+                document.getElementById('edit-course').addEventListener('click', () => {
+                    modal.showEditCourse(course);
+                });
+                
+                // 添加删除按钮事件
+                document.getElementById('delete-course').addEventListener('click', () => {
+                    modal.showConfirm('确定要删除这节课程吗？', () => {
+                        state.courses = state.courses.filter(c => c.id !== courseId);
+                        utils.saveData();
+                        render.calendar();
+                        modal.hide();
+                        notification.show('课程删除成功');
+                    });
+                });
+            },
+            
+            // 显示添加学生模态框
+            showAddStudent: () => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">添加学生</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="add-student-form">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                                    <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
+                                    <select id="student-organization" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                        ${state.organizations.map(org => `<option value="${org}">${org}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">课型</label>
+                                    <select id="student-course-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                        ${state.courseTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">每节课费用</label>
+                                    <input type="number" id="student-fee" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="button" class="close-modal px-4 py-2 text-gray-700 mr-2">取消</button>
+                                    <button type="button" id="add-student-save" class="bg-primary text-white px-4 py-2 rounded-lg">保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 绑定保存按钮事件
+                document.getElementById('add-student-save').addEventListener('click', () => {
+                    const name = document.getElementById('student-name').value.trim();
+                    const organization = document.getElementById('student-organization').value;
+                    const courseType = document.getElementById('student-course-type').value;
+                    const feeInput = document.getElementById('student-fee').value;
+                    const fee = parseFloat(feeInput);
+                    
+                    // 验证输入
+                    if (!name || !organization || !courseType || feeInput === '' || isNaN(fee) || fee < 0) {
+                        notification.show('请填写完整信息', 'error');
+                        return;
+                    }
+                    
+                    const student = {
+                        id: utils.generateId(),
+                        name,
+                        organization,
+                        courseType,
+                        fee,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    state.students.push(student);
+                    utils.saveData();
+                    render.students();
+                    modal.hide();
+                    
+                    notification.show('学生信息添加成功');
+                });
+                
+                // 回车键保存学生
+                const studentInputs = ['student-name', 'student-organization', 'student-course-type', 'student-fee'];
+                studentInputs.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('keypress', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                document.getElementById('add-student-save').click();
+                            }
+                        });
+                    }
+                });
+            },
+            
+            // 显示编辑学生模态框
+            showEditStudent: (student) => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">编辑学生</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="edit-student-form">
+                                <input type="hidden" id="edit-student-id" value="${student.id}">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                                    <input type="text" id="edit-student-name" value="${student.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
+                                    <select id="edit-student-organization" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                        ${state.organizations.map(org => `<option value="${org}" ${org === student.organization ? 'selected' : ''}>${org}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">课型</label>
+                                    <select id="edit-student-course-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                        ${state.courseTypes.map(type => `<option value="${type}" ${type === student.courseType ? 'selected' : ''}>${type}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">每节课费用</label>
+                                    <input type="number" id="edit-student-fee" value="${student.fee}" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="button" class="close-modal px-4 py-2 text-gray-700 mr-2">取消</button>
+                                    <button type="button" id="edit-student-save" class="bg-primary text-white px-4 py-2 rounded-lg">保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 绑定保存按钮事件
+                document.getElementById('edit-student-save').addEventListener('click', () => {
+                    const id = document.getElementById('edit-student-id').value;
+                    const name = document.getElementById('edit-student-name').value.trim();
+                    const organization = document.getElementById('edit-student-organization').value;
+                    const courseType = document.getElementById('edit-student-course-type').value;
+                    const feeInput = document.getElementById('edit-student-fee').value;
+                    const fee = parseFloat(feeInput);
+                    
+                    // 验证输入
+                    if (!name || !organization || !courseType || feeInput === '' || isNaN(fee) || fee < 0) {
+                        notification.show('请填写完整信息', 'error');
+                        return;
+                    }
+                    
+                    const studentIndex = state.students.findIndex(s => s.id === id);
+                    if (studentIndex !== -1) {
+                        const oldStudent = state.students[studentIndex];
+                        const isOrganizationChanged = oldStudent.organization !== organization;
+                        const isNameChanged = oldStudent.name !== name;
+                        
+                        state.students[studentIndex] = {
+                            ...state.students[studentIndex],
+                            name,
+                            organization,
+                            courseType,
+                            fee,
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        // 如果机构或姓名改变，更新相关课程的颜色和名称信息
+                        if (isOrganizationChanged || isNameChanged) {
+                            const newColor = utils.generateColor(organization);
+                            
+                            state.courses.forEach(course => {
+                                // 处理多名学生的课程
+                                if (course.studentIds) {
+                                    const studentPos = course.studentIds.indexOf(id);
+                                    if (studentPos !== -1) {
+                                        // 更新学生姓名和颜色
+                                        course.studentNames[studentPos] = name;
+                                        course.organizations[studentPos] = organization;
+                                        course.colors[studentPos] = newColor;
+                                    }
+                                } else {
+                                    // 处理单个学生的课程（兼容旧格式）
+                                    if (course.studentId === id) {
+                                        // 对于旧格式课程，我们在渲染时会动态计算颜色，所以这里不需要更新
+                                        // 但如果课程中有存储学生姓名，也需要更新
+                                        if (course.studentName) {
+                                            course.studentName = name;
+                                        }
+                                        if (course.organization) {
+                                            course.organization = organization;
+                                        }
+                                        if (course.color) {
+                                            course.color = newColor;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        utils.saveData();
+                        render.students();
+                        render.calendar(); // 更新日历中的颜色
+                        modal.hide();
+                        
+                        notification.show('学生信息更新成功');
+                    }
+                });
+            },
+            
+            // 显示机构管理模态框
+            showManageOrganizations: () => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">机构管理</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <input type="text" id="new-organization" placeholder="输入新机构名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <button id="add-organization" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有机机构</h4>
+                                <div id="organizations-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                    ${state.organizations.map(org => `
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                            <span>${org}</span>
+                                            <button class="text-danger hover:text-red-700 delete-organization" data-org="${org}">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="button" class="close-modal px-4 py-2 text-gray-700">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 自动激活输入框
+                setTimeout(() => {
+                    document.getElementById('new-organization').focus();
+                }, 100);
+                
+                // 添加机构
+                document.getElementById('add-organization').addEventListener('click', () => {
+                    const newOrg = document.getElementById('new-organization').value.trim();
+                    if (newOrg && !state.organizations.includes(newOrg)) {
+                        state.organizations.push(newOrg);
+                        utils.saveData();
+                        modal.showManageOrganizations(); // 重新渲染
+                        notification.show('机构添加成功');
+                    }
+                });
+                
+                // 回车键添加机构
+                document.getElementById('new-organization').addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        document.getElementById('add-organization').click();
+                    }
+                });
+                
+                // 删除机构
+                document.querySelectorAll('.delete-organization').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const org = button.dataset.org;
+                        const usedByStudents = state.students.some(s => s.organization === org);
+                        if (usedByStudents) {
+                            notification.show('该机构正在被使用，无法删除', 'error');
+                            return;
+                        }
+                        state.organizations = state.organizations.filter(o => o !== org);
+                        utils.saveData();
+                        modal.showManageOrganizations(); // 重新渲染
+                        notification.show('机构删除成功');
+                    });
+                });
+            },
+            
+            // 显示课型管理模态框
+            showManageCourseTypes: () => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">课型管理</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <input type="text" id="new-course-type" placeholder="输入新课型名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <button id="add-course-type" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有课型</h4>
+                                <div id="course-types-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                    ${state.courseTypes.map(type => `
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                            <span>${type}</span>
+                                            <button class="text-danger hover:text-red-700 delete-course-type" data-type="${type}">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="button" class="close-modal px-4 py-2 text-gray-700">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 自动激活输入框
+                setTimeout(() => {
+                    document.getElementById('new-course-type').focus();
+                }, 100);
+                
+                // 添加课型
+                document.getElementById('add-course-type').addEventListener('click', () => {
+                    const newType = document.getElementById('new-course-type').value.trim();
+                    if (newType && !state.courseTypes.includes(newType)) {
+                        state.courseTypes.push(newType);
+                        utils.saveData();
+                        modal.showManageCourseTypes(); // 重新渲染
+                        notification.show('课型添加成功');
+                    }
+                });
+                
+                // 回车键添加课型
+                document.getElementById('new-course-type').addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        document.getElementById('add-course-type').click();
+                    }
+                });
+                
+                // 删除课型
+                document.querySelectorAll('.delete-course-type').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const type = button.dataset.type;
+                        const usedByStudents = state.students.some(s => s.courseType === type);
+                        if (usedByStudents) {
+                            notification.show('该课型正在被使用，无法删除', 'error');
+                            return;
+                        }
+                        state.courseTypes = state.courseTypes.filter(t => t !== type);
+                        utils.saveData();
+                        modal.showManageCourseTypes(); // 重新渲染
+                        notification.show('课型删除成功');
+                    });
+                });
+            },
+            
+            // 显示删除学生模态框
+            showDeleteStudent: (student) => {
+                const content = `
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
+                                <i class="fa fa-exclamation-triangle text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">确认删除</h3>
+                            <p class="text-gray-600 mb-2">确定要删除学生 <strong>${student.name}</strong> 吗？</p>
+                            <p class="text-sm text-gray-500">删除后，该学生的所有课程信息也将被删除，不可撤销！</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button id="cancel-confirm" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                取消
+                            </button>
+                            <button id="accept-confirm" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                确认删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 添加按钮事件
+                setTimeout(() => {
+                    const cancelBtn = document.getElementById('cancel-confirm');
+                    const acceptBtn = document.getElementById('accept-confirm');
+                    
+                    cancelBtn.addEventListener('click', () => {
+                        modal.hide();
+                    });
+                    
+                    acceptBtn.addEventListener('click', () => {
+                        // 删除相关课程（处理新旧两种格式）
+                        state.courses = state.courses.filter(course => {
+                            // 新格式：studentIds 数组
+                            if (course.studentIds && Array.isArray(course.studentIds)) {
+                                return !course.studentIds.includes(student.id);
+                            }
+                            // 旧格式：单个 studentId
+                            return course.studentId !== student.id;
+                        });
+                        
+                        // 删除学生
+                        state.students = state.students.filter(s => s.id !== student.id);
+                        
+                        utils.saveData();
+                        render.students();
+                        render.calendar();
+                        modal.hide();
+                        
+                        notification.show('学生删除成功');
+                    });
+                    
+                    // 添加回车键确认功能
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter') {
+                            acceptBtn.click();
+                        } else if (event.key === 'Escape') {
+                            cancelBtn.click();
+                        }
+                    });
+                }, 0);
+            }
+        };
+
+        // 处理时间输入框的键盘事件
+        function handleTimeInputKeydown(event, currentId, otherId) {
+            if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                event.preventDefault();
+                document.getElementById(otherId).focus();
+            }
+        }
+
+        // 通知系统
+        const notification = {
+            // 显示通知
+            show: (message, type = 'success') => {
+                const el = document.getElementById('notification');
+                const icon = document.getElementById('notification-icon');
+                const msgEl = document.getElementById('notification-message');
+                
+                const icons = {
+                    error: { icon: 'fa-exclamation-circle', class: 'text-danger' },
+                    warning: { icon: 'fa-exclamation-triangle', class: 'text-warning' },
+                    success: { icon: 'fa-check-circle', class: 'text-success' }
+                };
+                const config = icons[type] || icons.success;
+                
+                icon.innerHTML = `<i class="fa ${config.icon} text-xl"></i>`;
+                icon.className = `flex-shrink-0 ${config.class}`;
+                msgEl.textContent = message;
+                
+                // 显示通知
+                el.classList.remove('translate-x-full', 'opacity-0');
+                
+                // 自动隐藏
+                setTimeout(() => el.classList.add('translate-x-full', 'opacity-0'), 3000);
+            }
+        };
+
+        // 事件监听
+        const events = {
+            // 初始化事件监听
+            init: () => {
+                // 导航切换
+                document.querySelectorAll('[data-page]').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const pageId = this.dataset.page;
+                        render.page(pageId);
+                    });
+                });
+                
+                // 月份导航
+                document.getElementById('prev-month').addEventListener('click', () => {
+                    // 使用更可靠的方式创建新日期
+                    const year = state.currentDate.getFullYear();
+                    const month = state.currentDate.getMonth();
+                    // 直接创建新日期，避免 setMonth 的副作用
+                    const newDate = new Date(year, month - 1, 1);
+                    state.currentDate = newDate;
+                    render.calendar();
+                });
+                
+                document.getElementById('next-month').addEventListener('click', () => {
+                    // 使用更可靠的方式创建新日期
+                    const year = state.currentDate.getFullYear();
+                    const month = state.currentDate.getMonth();
+                    // 直接创建新日期，避免 setMonth 的副作用
+                    const newDate = new Date(year, month + 1, 1);
+                    state.currentDate = newDate;
+                    render.calendar();
+                });
+                
+                // 添加课程按钮
+                document.getElementById('add-course-btn').addEventListener('click', () => {
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    modal.showAddCourse(dateStr);
+                });
+                
+                // 添加学生按钮
+                document.getElementById('add-student-btn').addEventListener('click', () => {
+                    modal.showAddStudent();
+                });
+                
+                // 机构管理按钮
+                document.getElementById('manage-organizations-btn').addEventListener('click', () => {
+                    modal.showManageOrganizations();
+                });
+                
+                // 课型管理按钮
+                document.getElementById('manage-course-types-btn').addEventListener('click', () => {
+                    modal.showManageCourseTypes();
+                });
+                
+                // 学生搜索
+                document.getElementById('student-search').addEventListener('input', () => {
+                    render.students();
+                });
+                
+                // 统计页面年份选择
+                const yearSelect = document.getElementById('statistics-year');
+                const currentYear = new Date().getFullYear();
+                for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = `${year}年`;
+                    if (year === currentYear) {
+                        option.selected = true;
+                    }
+                    yearSelect.appendChild(option);
+                }
+                
+                // 统计页面月份选择
+                const monthSelect = document.getElementById('statistics-month');
+                monthSelect.value = new Date().getMonth();
+                
+                // 统计页面筛选
+                yearSelect.addEventListener('change', () => {
+                    const year = parseInt(yearSelect.value);
+                    const month = parseInt(monthSelect.value);
+                    const organization = document.getElementById('statistics-organization')?.value || '';
+                    render.statistics(year, month, organization);
+                });
+                
+                monthSelect.addEventListener('change', () => {
+                    const year = parseInt(yearSelect.value);
+                    const month = parseInt(monthSelect.value);
+                    const organization = document.getElementById('statistics-organization')?.value || '';
+                    render.statistics(year, month, organization);
+                });
+                
+                // 学生排序
+                const studentSortSelect = document.getElementById('student-sort');
+                if (studentSortSelect) {
+                    studentSortSelect.addEventListener('change', () => {
+                        const year = parseInt(yearSelect.value);
+                        const month = parseInt(monthSelect.value);
+                        const organization = document.getElementById('statistics-organization')?.value || '';
+                        render.statistics(year, month, organization);
+                    });
+                }
+                
+                // 机构选择
+                const organizationSelect = document.getElementById('statistics-organization');
+                if (organizationSelect) {
+                    // 初始化机构选项
+                    organizationSelect.innerHTML = '<option value="">全部机构</option>';
+                    state.organizations.forEach(org => {
+                        const option = document.createElement('option');
+                        option.value = org;
+                        option.textContent = org;
+                        organizationSelect.appendChild(option);
+                    });
+                    
+                    // 添加事件监听器
+                    organizationSelect.addEventListener('change', () => {
+                        const year = parseInt(yearSelect.value);
+                        const month = parseInt(monthSelect.value);
+                        const organization = organizationSelect.value;
+                        render.statistics(year, month, organization);
+                    });
+                }
+                
+                // 导出统计数据
+                document.getElementById('export-statistics').addEventListener('click', () => {
+                    const year = parseInt(yearSelect.value);
+                    const month = parseInt(monthSelect.value);
+                    const organization = document.getElementById('statistics-organization')?.value || '';
+                    utils.exportStatisticsData(year, month, organization);
+                });
+            }
+        };
+
+        // 初始化应用
+        function init() {
+            // 初始化事件监听
+            events.init();
+            
+            // 渲染初始页面框架
+            render.page('calendar-page');
+            
+            // 加载数据（会自动重新渲染页面）
+            console.log('开始加载数据...');
+            utils.loadData();
+            
+            // 添加Firebase实时监听
+            if (window.firebaseDatabase) {
+                const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                window.firebaseOnValue(dbRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        console.log('收到Firebase实时更新:', data);
+                        // 简化数据比较，确保即使微小变化也能触发更新
+                        const hasChanged = 
+                            JSON.stringify(data.students) !== JSON.stringify(state.students) ||
+                            JSON.stringify(data.courses) !== JSON.stringify(state.courses) ||
+                            JSON.stringify(data.organizations) !== JSON.stringify(state.organizations) ||
+                            JSON.stringify(data.courseTypes) !== JSON.stringify(state.courseTypes);
+                        
+                        if (hasChanged) {
+                            state.students = data.students || [];
+                            state.courses = data.courses || [];
+                            state.organizations = data.organizations || [];
+                            state.courseTypes = data.courseTypes || [];
+                            console.log('数据从Firebase实时更新，重新渲染页面');
+                            // 重新渲染页面
+                            render.students();
+                            render.calendar();
+                            const yearSelect = document.getElementById('statistics-year');
+                            const monthSelect = document.getElementById('statistics-month');
+                            const organizationSelect = document.getElementById('statistics-organization');
+                            if (yearSelect && monthSelect) {
+                                const year = parseInt(yearSelect.value);
+                                const month = parseInt(monthSelect.value);
+                                const organization = organizationSelect ? organizationSelect.value : '';
+                                render.statistics(year, month, organization);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 如果没有学生数据，显示引导提示
+            setTimeout(() => {
+                if (state.students.length === 0) {
+                    notification.show('欢迎使用课程管理系统，请先添加学生信息', 'info');
+                }
+            }, 2000);
+        }
+
+        // 启动应用
+        init();
+        
+        // 程序关闭前同步数据
+        window.addEventListener('beforeunload', function() {
+            // 只在Firebase可用时执行
+            if (window.firebaseDatabase) {
+                try {
+                    // 获取本地数据
+                    const localDataStr = localStorage.getItem('courseManagerData');
+                    const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                    const localTimestamp = localData && localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
+                    
+                    if (localTimestamp > 0) {
+                        // 比较服务器数据时间戳
+                        const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                        window.firebaseGet(dbRef).then((snapshot) => {
+                            if (snapshot.exists()) {
+                                const serverData = snapshot.val();
+                                const serverTimestamp = serverData.lastUpdated ? new Date(serverData.lastUpdated).getTime() : 0;
+                                
+                                // 如果本地数据较新，同步到服务器
+                                if (localTimestamp > serverTimestamp) {
+                                    window.firebaseSet(dbRef, localData).then(() => {
+                                        console.log('程序关闭前，本地数据已同步到服务器');
+                                    }).catch((error) => {
+                                        console.error('程序关闭前同步数据失败:', error);
+                                    });
+                                } else {
+                                    console.log('服务器数据较新，无需同步');
+                                }
+                            } else {
+                                // 服务器无数据，上传本地数据
+                                window.firebaseSet(dbRef, localData).then(() => {
+                                    console.log('程序关闭前，本地数据已上传到服务器');
+                                }).catch((error) => {
+                                    console.error('程序关闭前上传数据失败:', error);
+                                });
+                            }
+                        }).catch((error) => {
+                            console.error('获取服务器数据失败:', error);
+                        });
+                    }
+                } catch (error) {
+                    console.error('同步数据时出错:', error);
+                }
+            }
+        });
+    </script>
+
+</body></html>
