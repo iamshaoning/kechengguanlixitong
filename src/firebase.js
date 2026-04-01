@@ -6,16 +6,16 @@ if (!GLOBAL_DEBUG) {
     console.warn = () => {};
 }
 
-// Firebase配置 - 使用环境变量
+// Firebase配置 - 使用环境变量，如果不存在则使用备用配置
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAFT1hV0tCJEDdFzq0BQChkcfVMGru9h5I",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "iamshaoning-qiu.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "iamshaoning-qiu",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "iamshaoning-qiu.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "599860248393",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:599860248393:web:8c3dce72c200cbafbee498",
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-QVG10CDXJR",
+    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
 // 安全检查：确保Firebase配置存在
