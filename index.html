@@ -761,9 +761,9 @@
     </main>
     
     <!-- 登录模态框 -->
-    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity: 0; transition: opacity 0.8s ease-in-out;">
-        <div id="auth-background" class="absolute inset-0 transition-all duration-1500 ease-in-out" style="background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientFlow 15s ease infinite;"></div>
-        <div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-800 ease-out scale-95 opacity-0" id="auth-container">
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity: 0; transition: opacity 0.3s ease-out;">
+        <div id="auth-background" class="absolute inset-0" style="background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientFlow 15s ease infinite;"></div>
+        <div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-300 ease-out scale-95 opacity-0" id="auth-container">
             <div class="flex items-center justify-center mb-4">
                 <img src="./logo.png" alt="课程管理系统" class="h-32 w-auto">
             </div>
@@ -5507,13 +5507,24 @@
             // 管理登录界面显示/隐藏
             function showAuthModal() {
                 const authModal = document.getElementById('auth-modal');
+                const authBackground = document.getElementById('auth-background');
                 const authContainer = document.getElementById('auth-container');
                 
+                // 重置到初始状态
+                authModal.style.opacity = '0';
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-95', 'opacity-0');
+                
+                // 显示模态框
                 authModal.style.display = 'flex';
-                setTimeout(() => {
-                    authContainer.classList.remove('scale-95', 'opacity-0');
-                    authContainer.classList.add('scale-100', 'opacity-100');
-                }, 10);
+                
+                // 强制重绘
+                authModal.offsetHeight;
+                
+                // 快速渐显背景和登录框
+                authModal.style.opacity = '1';
+                authContainer.classList.remove('scale-95', 'opacity-0');
+                authContainer.classList.add('scale-100', 'opacity-100');
             }
             
             function hideAuthModal() {
@@ -5523,8 +5534,14 @@
                 authContainer.classList.remove('scale-100', 'opacity-100');
                 authContainer.classList.add('scale-95', 'opacity-0');
                 setTimeout(() => {
-                    authModal.style.display = 'none';
-                }, 500);
+                    authModal.style.opacity = '0';
+                    setTimeout(() => {
+                        authModal.style.display = 'none';
+                        // 重置状态
+                        authContainer.classList.remove('scale-95', 'opacity-0');
+                        authContainer.classList.add('scale-95', 'opacity-0');
+                    }, 300);
+                }, 200);
             }
             
             // 切换登录/注册标签
@@ -5862,20 +5879,19 @@
                 const authContainer = document.getElementById('auth-container');
                 const authBackground = document.getElementById('auth-background');
                 
-                // 先让登录框缩小并淡出（更长的动画）
+                // 先让登录框缩小并淡出
                 authContainer.classList.remove('scale-100', 'opacity-100');
                 authContainer.classList.add('scale-90', 'opacity-0');
                 
-                // 然后让背景渐隐（更长的动画）
+                // 然后让背景渐隐
                 setTimeout(() => {
                     authModal.style.opacity = '0';
-                    authBackground.style.opacity = '0';
                     setTimeout(() => {
                         authModal.style.display = 'none';
                         authModal.style.pointerEvents = 'none'; // 禁用点击事件
-                        // 重置背景样式，以便下次使用
-                        authModal.style.opacity = '1';
-                        authBackground.style.opacity = '1';
+                        // 重置容器状态，为下次显示做准备
+                        authContainer.classList.remove('scale-90', 'opacity-0');
+                        authContainer.classList.add('scale-95', 'opacity-0');
                     }, 800);
                 }, 400);
             }
@@ -5939,17 +5955,23 @@
                 registerForm.classList.add('hidden');
             }
             
-            // 立即显示登录界面
+            // 显示登录界面，带渐显效果
             const authModal = document.getElementById('auth-modal');
             const authBackground = document.getElementById('auth-background');
             const authContainer = document.getElementById('auth-container');
             if (authModal && authBackground && authContainer) {
                 // 重新启用点击事件
                 authModal.style.pointerEvents = 'auto';
-                // 直接显示模态框，避免动画导致的闪烁
+                // 重置到初始状态
+                authModal.style.opacity = '0';
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-95', 'opacity-0');
+                // 先设置 display: flex
                 authModal.style.display = 'flex';
+                // 强制重绘，然后应用动画
+                authModal.offsetHeight;
+                // 渐显
                 authModal.style.opacity = '1';
-                authBackground.style.opacity = '1';
                 authContainer.classList.remove('scale-95', 'opacity-0');
                 authContainer.classList.add('scale-100', 'opacity-100');
             }
