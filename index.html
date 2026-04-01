@@ -8,7 +8,6 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script>
     <script type="module">
         // 全局调试控制 - 设置为false禁用所有console输出
@@ -27,7 +26,6 @@
             storageBucket: "iamshaoning-qiu.firebasestorage.app",
             messagingSenderId: "599860248393",
             appId: "1:599860248393:web:8c3dce72c200cbafbee498",
-            measurementId: "G-QVG10CDXJR",
             databaseURL: "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
 
@@ -45,9 +43,6 @@
                 console.log('开始初始化Firebase...');
                 const app = firebase.initializeApp(firebaseConfig);
                 console.log('Firebase App初始化成功:', app);
-                
-                const analytics = firebase.analytics(app);
-                console.log('Firebase Analytics初始化成功');
                 
                 const database = firebase.database(app);
                 console.log('Firebase Database初始化成功:', database);
