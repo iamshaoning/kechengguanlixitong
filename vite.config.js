@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig({
   base: './',
@@ -8,6 +9,12 @@ export default defineConfig({
       output: {
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
+    }
+  },
+  publicDir: 'public',
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
     }
   }
 })
