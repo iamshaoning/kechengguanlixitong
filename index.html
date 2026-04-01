@@ -5115,25 +5115,31 @@
             // 初始化事件监听
             events.init();
             
-            // 检测登录状态
-            const auth = window.firebaseAuth;
-            if (auth) {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        // 用户已登录，加载渲染系统
-                        console.log('用户已登录，加载渲染系统...');
-                        loadSystem();
-                    } else {
-                        // 用户未登录，只显示登录框，不加载渲染系统
-                        console.log('用户未登录，只显示登录框');
-                        updateUIForUnauth();
-                    }
-                });
-            } else {
-                // Firebase Auth初始化失败，显示登录框
-                console.log('Firebase Auth初始化失败，显示登录框');
-                updateUIForUnauth();
-            }
+            // 等待 Firebase 加载完成
+            const waitForFirebase = () => {
+                const auth = window.firebaseAuth;
+                if (auth) {
+                    // Firebase 已加载，检测登录状态
+                    auth.onAuthStateChanged((user) => {
+                        if (user) {
+                            // 用户已登录，加载渲染系统
+                            console.log('用户已登录，加载渲染系统...');
+                            loadSystem();
+                        } else {
+                            // 用户未登录，只显示登录框，不加载渲染系统
+                            console.log('用户未登录，只显示登录框');
+                            updateUIForUnauth();
+                        }
+                    });
+                } else {
+                    // Firebase 还未加载，等待后重试
+                    console.log('等待 Firebase 加载...');
+                    setTimeout(waitForFirebase, 100);
+                }
+            };
+            
+            // 开始等待 Firebase
+            waitForFirebase();
         }
         
         // 显示系统框架
