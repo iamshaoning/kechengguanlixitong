@@ -5052,16 +5052,17 @@
                 if (auth) {
                     // Firebase 已加载，检测登录状态
                     auth.onAuthStateChanged((user) => {
-                        if (user) {
-                            // 用户已登录，加载渲染系统
-                            console.log('用户已登录，加载渲染系统...');
-                            loadSystem();
-                        } else {
-                            // 用户未登录，只显示登录框，不加载渲染系统
-                            console.log('用户未登录，只显示登录框');
-                            updateUIForUnauth();
-                        }
-                    });
+                    if (user) {
+                        // 用户已登录，更新UI并加载渲染系统
+                        console.log('用户已登录，更新UI并加载渲染系统...');
+                        updateUIForAuth(user);
+                        loadSystem();
+                    } else {
+                        // 用户未登录，只显示登录框，不加载渲染系统
+                        console.log('用户未登录，只显示登录框');
+                        updateUIForUnauth();
+                    }
+                });
                 } else {
                     // Firebase 还未加载，等待后重试
                     console.log('等待 Firebase 加载...');
