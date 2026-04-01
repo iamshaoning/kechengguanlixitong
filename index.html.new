@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script>
+    <script type="module">
+        // 全局调试控制 - 设置为false禁用所有console输出
+        const GLOBAL_DEBUG = false;
+        if (!GLOBAL_DEBUG) {
+            console.log = () => {};
+            console.error = () => {};
+            console.warn = () => {};
+        }
+        
+        // Firebase配置 - 使用环境变量
+        const firebaseConfig = {
+            apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAFT1hV0tCJEDdFzq0BQChkcfVMGru9h5I",
+            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "iamshaoning-qiu.firebaseapp.com",
+            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "iamshaoning-qiu",
+            storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "iamshaoning-qiu.firebasestorage.app",
+            messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "599860248393",
+            appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:599860248393:web:8c3dce72c200cbafbee498",
+            measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-QVG10CDXJR",
+            databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        // 安全检查：确保Firebase配置存在
+        console.log('Firebase配置:', firebaseConfig);
+        console.log('环境变量:', import.meta.env);
+        if (!firebaseConfig.apiKey) {
+            console.error('Firebase配置缺失，请检查API密钥');
+        }
+
+        try {
+            // 检查是否已初始化
+            if (!window.firebaseApp) {
+                // Initialize Firebase
+                console.log('开始初始化Firebase...');
+                const app = firebase.initializeApp(firebaseConfig);
+                console.log('Firebase App初始化成功:', app);
+                
+                const analytics = firebase.analytics(app);
+                console.log('Firebase Analytics初始化成功');
+                
+                const database = firebase.database(app);
+                console.log('Firebase Database初始化成功:', database);
+                
+                const auth = firebase.auth(app);
+                console.log('Firebase Auth初始化成功:', auth);
+                
+                // 全局变量
+                window.firebaseApp = app;
+                window.firebaseDatabase = database;
+                window.firebaseAuth = auth;
+                window.firebaseRef = function(db, path) { return db.ref(path); };
+                window.firebaseSet = function(ref, value) { return ref.set(value); };
+                window.firebaseGet = function(ref) { return ref.once('value'); };
+                window.firebaseOnValue = function(ref, callback) { return ref.on('value', callback); };
+                
+                console.log('Firebase初始化完成，所有全局变量已设置');
+            } else {
+                console.log('Firebase已初始化，跳过重复初始化');
+            }
+        } catch (error) {
+            console.error('Firebase初始化失败:', error);
+            // 初始化失败时，确保全局变量有默认值
+            window.firebaseApp = null;
+            window.firebaseDatabase = null;
+            window.firebaseAuth = null;
+            window.firebaseRef = null;
+            window.firebaseSet = null;
+            window.firebaseGet = null;
+            window.firebaseOnValue = null;
+            // 显示用户友好的错误提示
+            if (typeof notification !== 'undefined') {
+                notification.show('Firebase初始化失败，将使用本地存储', 'error');
+            }
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .shadow-soft {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            }
+        }
+        
+        /* 隐藏浏览器默认的日期和时间选择器图标 */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 针对Firefox的修复 */
+        input[type="date"]::-moz-calendar-picker-indicator,
+        input[type="time"]::-moz-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 确保模态框内容宽度与容器宽度一致 */
+        #modal-content > div {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 确保页面在出现滚动条时不会发生偏移 */
+        body {
+            overflow-y: scroll;
+        }
+        
+        /* 确保滚动条宽度一致 */
+        html {
+            scrollbar-width: thin;
+        }
+        
+        /* 为WebKit浏览器设置滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* 隐藏数字输入框的上下调节箭头 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* 针对Firefox的修复 */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        
+        /* 隐藏下拉菜单的下箭头 */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+        }
+        
+        /* 日历单元格选中状态 */
+        .calendar-cell-selected {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            border: 2px solid #3b82f6 !important;
+        }
+        
+        /* 课程标签选中状态 */
+        .course-item-selected {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            border-left: 4px solid #3b82f6 !important;
+        }
+        
+        /* 渐变流动动画 */
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        /* 页面切换动画 */
+        .page {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .page.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        /* 导航标签动画 */
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .nav-item:hover::before {
+            width: 80%;
+        }
+        
+        .nav-item.active::before {
+            width: 100%;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .nav-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item i {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+        
+        .nav-item.active i {
+            transform: scale(1.15);
+        }
+        
+        /* 按钮点击动画 */
+        button, .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        button:active, .btn:active {
+            transform: scale(0.95);
+        }
+        
+        button:not(:active), .btn:not(:active) {
+            transform: scale(1);
+        }
+        
+        /* 日历月份切换动画 */
+        .calendar-grid {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-left {
+            animation: slideLeft 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-right {
+            animation: slideRight 0.3s ease-in-out;
+        }
+        
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 模态框动画 */
+        .modal-backdrop {
+            transition: opacity 0.4s ease-in-out;
+        }
+        
+        .modal-content {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* 自定义下拉菜单 */
+        .custom-select {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-select-trigger {
+            padding: 8px 32px 8px 12px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .custom-select-trigger:hover {
+            border-color: #3b82f6;
+        }
+        
+        .custom-select-trigger.active {
+            border-color: #3b82f6;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .custom-select-trigger span {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .custom-select-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #6b7280;
+            transition: transform 0.3s ease;
+        }
+        
+        .custom-select-trigger.active .custom-select-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 100%;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-select-options.open {
+            max-height: 200px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+        }
+        
+        .custom-select-options.open::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .custom-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .custom-option:hover {
+            background: #f3f4f6;
+        }
+        
+        .custom-option.selected {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        /* 统计页面筛选下拉菜单固定宽度 */
+        #statistics-year-wrapper {
+            width: 90px;
+        }
+        
+        #statistics-year-wrapper .custom-select-trigger {
+            width: 90px;
+            justify-content: center;
+        }
+        
+        #statistics-month-wrapper {
+            width: 70px;
+        }
+        
+        #statistics-month-wrapper .custom-select-trigger {
+            width: 70px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper {
+            width: 120px;
+        }
+        
+        #statistics-organization-wrapper .custom-select-trigger {
+            width: 120px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper .custom-select-options {
+            min-width: 120px;
+        }
+        
+        /* 输入框聚焦动画 */
+        input:focus, textarea:focus {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* 卡片悬停动画 */
+        .hover-card {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 输入框placeholder样式 */
+        input::placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-webkit-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-moz-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input:-ms-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" style="opacity: 0; transition: opacity 0.5s ease-in-out;">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200" style="display: none;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <img src="/logo.png" alt="课程管理系统" class="h-14 w-auto mr-1">
+                        <h1 class="text-xl font-bold text-primary">课程管理系统</h1>
+                    </div>
+                    <div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors">
+                        <span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span>
+                        <span id="sync-text" class="text-gray-500">未同步</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active">
+                        <i class="fa fa-calendar mr-1"></i> 日历排课
+                    </button>
+                    <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-users mr-1"></i> 学生管理
+                    </button>
+                    <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-bar-chart mr-1"></i> 课时费统计
+                    </button>
+                    <!-- 用户认证 -->
+                    <div class="flex items-center space-x-2">
+                        <div id="user-info" class="text-sm text-gray-600"></div>
+                        <button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display: none;">
+        <!-- 日历页面 -->
+        <div id="calendar-page" class="page active">
+            <!-- 日历控制区 -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-6">
+                    <h2 class="text-2xl font-bold text-gray-800">日历排课</h2>
+                    <div class="flex items-center space-x-4">
+                        <button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h3 id="current-month" class="text-xl font-medium">2026年3月</h3>
+                        <button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-right text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-course-btn" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-plus mr-2"></i> 添加课程
+                </button>
+            </div>
+
+            <!-- 日历网格 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200">
+                    <div class="text-center py-3 font-medium text-gray-700">周日</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周一</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周二</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周三</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周四</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周五</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周六</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7">
+                    <!-- 日历单元格将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 学生页面 -->
+        <div id="students-page" class="page hidden">
+            <!-- 页面标题和添加按钮 -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">学生管理</h2>
+                <button id="add-student-btn" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-plus mr-2"></i> 添加学生
+                </button>
+            </div>
+
+            <!-- 搜索和筛选 -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="student-search" placeholder="搜索学生姓名、电话或机构..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                        <i class="fa fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">排序方式</label>
+                        <select id="student-sort" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                            <option value="name">按姓名</option>
+                            <option value="phone">按电话</option>
+                            <option value="organization">按机构</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生列表 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">电话</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="student-list">
+                            <!-- 学生列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页面 -->
+        <div id="statistics-page" class="page hidden">
+            <!-- 页面标题和筛选 -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">课时费统计</h2>
+                <div class="flex items-center space-x-4">
+                    <div id="statistics-year-wrapper" class="custom-select">
+                        <div class="custom-select-trigger">
+                            <span id="statistics-year-value">2026</span>
+                            <span class="custom-select-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                        <div class="custom-select-options">
+                            <!-- 年份选项将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    <div id="statistics-month-wrapper" class="custom-select">
+                        <div class="custom-select-trigger">
+                            <span id="statistics-month-value">3</span>
+                            <span class="custom-select-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                        <div class="custom-select-options">
+                            <!-- 月份选项将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    <div id="statistics-organization-wrapper" class="custom-select">
+                        <div class="custom-select-trigger">
+                            <span id="statistics-organization-value">所有机构</span>
+                            <span class="custom-select-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                        <div class="custom-select-options">
+                            <!-- 机构选项将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover-card">
+                    <h3 class="text-gray-500 text-sm font-medium">总课时</h3>
+                    <p class="text-3xl font-bold text-gray-900 mt-1" id="total-hours">0</p>
+                    <p class="text-gray-500 text-sm mt-2">节</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover-card">
+                    <h3 class="text-gray-500 text-sm font-medium">总课时费</h3>
+                    <p class="text-3xl font-bold text-gray-900 mt-1" id="total-fee">¥0</p>
+                    <p class="text-gray-500 text-sm mt-2">元</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover-card">
+                    <h3 class="text-gray-500 text-sm font-medium">平均课时费</h3>
+                    <p class="text-3xl font-bold text-gray-900 mt-1" id="average-fee">¥0</p>
+                    <p class="text-gray-500 text-sm mt-2">元/节</p>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">课时费趋势</h3>
+                    <div class="h-64">
+                        <canvas id="fee-trend-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">机构分布</h3>
+                    <div class="h-64">
+                        <canvas id="organization-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细列表 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时长</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">费用</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="statistics-list">
+                            <!-- 统计列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 认证模态框 -->
+    <div id="auth-modal" class="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center z-50">
+        <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20" style="min-height: 600px; display: flex; flex-direction: column; justify-content: center;">
+            <!-- Logo -->
+            <div class="flex items-center justify-center mb-4">
+                <img src="/logo.png" alt="课程管理系统" class="h-32 w-auto">
+            </div>
+            
+            <!-- 标签页 -->
+            <div id="auth-tabs" class="flex gap-2 mb-8">
+                <button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow: 3px 3px 3px rgba(59, 130, 246, 0.5);">登录</button>
+                <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow: 3px 3px 3px rgba(147, 51, 234, 0.5);">注册</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <div id="login-form" class="transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                    <span id="login-btn-text">登 录</span>
+                    <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="register-form" class="hidden transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                    <span id="register-btn-text">注 册</span>
+                    <span id="register-loading" class="hidden ml-2">
+                        <i class="fa fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框容器 -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <!-- 模态框内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i id="notification-icon" class="fa fa-info-circle text-blue-500 text-xl"></i>
+            </div>
+            <div class="ml-3 flex-1">
+                <h3 id="notification-title" class="text-sm font-medium text-gray-900">通知</h3>
+                <div class="mt-1 text-sm text-gray-500">
+                    <p id="notification-message">这是一条通知消息</p>
+                </div>
+            </div>
+            <div class="ml-4 flex-shrink-0 flex">
+                <button id="notification-close" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <span class="sr-only">关闭</span>
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态管理
+        const state = {
+            students: [],
+            courses: [],
+            selectedDate: new Date(),
+            selectedCourse: null,
+            selectedStudent: null,
+            currentPage: 'calendar-page',
+            user: null
+        };
+
+        // 工具函数
+        const utils = {
+            // 日期格式化
+            formatDate(date) {
+                return date.toISOString().split('T')[0];
+            },
+            formatTime(date) {
+                return date.toTimeString().split(' ')[0].substring(0, 5);
+            },
+            formatDateTime(date) {
+                return `${this.formatDate(date)} ${this.formatTime(date)}`;
+            },
+            // 计算两个时间之间的分钟数
+            getMinutesBetween(startTime, endTime) {
+                const start = new Date(startTime);
+                const end = new Date(endTime);
+                return (end - start) / (1000 * 60);
+            },
+            // 生成唯一ID
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            },
+            // 验证邮箱格式
+            validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            },
+            // 验证密码强度
+            validatePassword(password) {
+                return password.length >= 6;
+            }
+        };
+
+        // 通知系统
+        const notification = {
+            show(message, type = 'info', duration = 3000
