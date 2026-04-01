@@ -4,6 +4,16 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'bg-primary', 'bg-primary/90', 'hover:bg-primary/90', 'text-primary',
+    'bg-secondary', 'bg-secondary/90', 'hover:bg-secondary/90',
+    'bg-success', 'bg-success/90', 'hover:bg-success/90', 'text-success',
+    'bg-danger', 'bg-danger/90', 'hover:bg-danger/90', 'text-danger',
+    'bg-warning', 'bg-warning/90', 'hover:bg-warning/90', 'text-warning',
+    'bg-info', 'bg-info/90', 'hover:bg-info/90', 'text-info',
+    'focus:ring-primary', 'focus:border-primary',
+    'ring-primary'
+  ],
   theme: {
     extend: {
       colors: {
