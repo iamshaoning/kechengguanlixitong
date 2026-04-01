@@ -6,54 +6,10 @@
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script>
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFT1hV0tCJEDdFzq0BQChkcfVMGru9h5I",
-            authDomain: "iamshaoning-qiu.firebaseapp.com",
-            projectId: "iamshaoning-qiu",
-            storageBucket: "iamshaoning-qiu.firebasestorage.app",
-            messagingSenderId: "599860248393",
-            appId: "1:599860248393:web:8c3dce72c200cbafbee498",
-            measurementId: "G-QVG10CDXJR",
-            databaseURL: "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
-
-        try {
-            // Initialize Firebase
-            console.log('开始初始化Firebase...');
-            const app = firebase.initializeApp(firebaseConfig);
-            console.log('Firebase App初始化成功:', app);
-            
-            const analytics = firebase.analytics(app);
-            console.log('Firebase Analytics初始化成功');
-            
-            const database = firebase.database(app);
-            console.log('Firebase Database初始化成功:', database);
-            
-            // 全局变量
-            window.firebaseApp = app;
-            window.firebaseDatabase = database;
-            window.firebaseRef = function(db, path) { return db.ref(path); };
-            window.firebaseSet = function(ref, value) { return ref.set(value); };
-            window.firebaseGet = function(ref) { return ref.once('value'); };
-            window.firebaseOnValue = function(ref, callback) { return ref.on('value', callback); };
-            
-            console.log('Firebase初始化完成，所有全局变量已设置');
-        } catch (error) {
-            console.error('Firebase初始化失败:', error);
-            // 初始化失败时，确保全局变量有默认值
-            window.firebaseApp = null;
-            window.firebaseDatabase = null;
-            window.firebaseRef = null;
-            window.firebaseSet = null;
-            window.firebaseGet = null;
-            window.firebaseOnValue = null;
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -83,9 +39,6 @@
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(255, 255, 255, 0.2);
             }
-            .transition-all-300 {
-                transition: all 0.3s ease;
-            }
             .shadow-soft {
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             }
@@ -103,24 +56,6 @@
             display: none;
         }
         
-        /* 确保输入框的点击事件不会被阻止 */
-        input[type="date"]:focus,
-        input[type="time"]:focus {
-            outline: 2px solid #3b82f6;
-            outline-offset: 2px;
-        }
-        
-        /* 确保输入框的背景是白色 */
-        input[type="date"],
-        input[type="time"] {
-            background-color: white;
-        }
-        
-        /* 确保模态框没有阴影 */
-        .no-shadow {
-            box-shadow: none !important;
-        }
-        
         /* 确保模态框内容宽度与容器宽度一致 */
         #modal-content > div {
             width: 100% !important;
@@ -129,35 +64,6 @@
             background: none !important;
             border: none !important;
             box-shadow: none !important;
-        }
-        
-        /* 为日期和时间选择器按钮添加动画效果 */
-        input[type="date"] + button,
-        input[type="time"] + button {
-            transition: all 0.3s ease;
-        }
-        
-        /* 按钮悬停时的动画效果 */
-        input[type="date"] + button:hover,
-        input[type="time"] + button:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-        
-        /* 学生选择按钮的动画效果 */
-        #student-buttons button {
-            transition: all 0.3s ease;
-        }
-        
-        /* 学生选择按钮悬停时的动画效果 */
-        #student-buttons button:hover {
-            transform: translateY(-3px);
-            transition: all 0.3s ease;
-        }
-        
-        /* 学生选择按钮选中时的动画效果 */
-        #student-buttons button.bg-primary {
-            transition: all 0.3s ease;
         }
         
         /* 确保页面在出现滚动条时不会发生偏移 */
@@ -220,17 +126,335 @@
             background-color: rgba(59, 130, 246, 0.2) !important;
             border-left: 4px solid #3b82f6 !important;
         }
+        
+        /* 渐变流动动画 */
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        /* 页面切换动画 */
+        .page {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .page.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        /* 导航标签动画 */
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .nav-item:hover::before {
+            width: 80%;
+        }
+        
+        .nav-item.active::before {
+            width: 100%;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .nav-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item i {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+        
+        .nav-item.active i {
+            transform: scale(1.15);
+        }
+        
+        /* 按钮点击动画 */
+        button, .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        button:active, .btn:active {
+            transform: scale(0.95);
+        }
+        
+        button:not(:active), .btn:not(:active) {
+            transform: scale(1);
+        }
+        
+        /* 日历月份切换动画 */
+        .calendar-grid {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-left {
+            animation: slideLeft 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-right {
+            animation: slideRight 0.3s ease-in-out;
+        }
+        
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 模态框动画 */
+        .modal-backdrop {
+            transition: opacity 0.4s ease-in-out;
+        }
+        
+        .modal-content {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+
+        
+        /* 自定义下拉菜单 */
+        .custom-select {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-select-trigger {
+            padding: 8px 32px 8px 12px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .custom-select-trigger:hover {
+            border-color: #3b82f6;
+        }
+        
+        .custom-select-trigger.active {
+            border-color: #3b82f6;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .custom-select-trigger span {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .custom-select-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #6b7280;
+            transition: transform 0.3s ease;
+        }
+        
+        .custom-select-trigger.active .custom-select-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 100%;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-select-options.open {
+            max-height: 200px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+        }
+        
+        .custom-select-options.open::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .custom-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .custom-option:hover {
+            background: #f3f4f6;
+        }
+        
+        .custom-option.selected {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        /* 统计页面筛选下拉菜单固定宽度 */
+        #statistics-year-wrapper {
+            width: 90px;
+        }
+        
+        #statistics-year-wrapper .custom-select-trigger {
+            width: 90px;
+            justify-content: center;
+        }
+        
+        #statistics-month-wrapper {
+            width: 70px;
+        }
+        
+        #statistics-month-wrapper .custom-select-trigger {
+            width: 70px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper {
+            width: 120px;
+        }
+        
+        #statistics-organization-wrapper .custom-select-trigger {
+            width: 120px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper .custom-select-options {
+            min-width: 120px;
+        }
+        
+        /* 输入框聚焦动画 */
+        input:focus, textarea:focus {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* 卡片悬停动画 */
+        .hover-card {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 输入框placeholder样式 */
+        input::placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-webkit-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-moz-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input:-ms-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
     </style>
+  <script type="module" crossorigin src="/assets/index-Ci-jIhjF.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen" style="opacity: 0; transition: opacity 0.5s ease-in-out;">
     <!-- 导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white shadow-sm border-b border-gray-200" style="display: none;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-4">
-                    <h1 class="text-xl font-bold text-primary">
-                        <i class="fa fa-calendar-check-o mr-2"></i>课程管理系统
-                    </h1>
+                    <div class="flex items-center">
+                        <img src="/assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-14 w-auto mr-1">
+                        <h1 class="text-xl font-bold text-primary">课程管理系统</h1>
+                    </div>
                     <div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors">
                         <span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span>
                         <span id="sync-text" class="text-gray-500">未同步</span>
@@ -246,13 +470,18 @@
                     <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         <i class="fa fa-bar-chart mr-1"></i> 课时费统计
                     </button>
+                    <!-- 用户认证 -->
+                    <div class="flex items-center space-x-2">
+                        <div id="user-info" class="text-sm text-gray-600"></div>
+                        <button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- 主内容区 -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display: none;">
         <!-- 日历页面 -->
         <div id="calendar-page" class="page active">
             <!-- 日历控制区 -->
@@ -343,31 +572,49 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">课时费统计</h2>
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center space-x-2 bg-white rounded-lg border border-gray-300">
-                        <select id="statistics-year" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
-                            <!-- 年份选项将通过JavaScript动态生成 -->
-                        </select>
-                        <span class="text-gray-400">年</span>
-                        <select id="statistics-month" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
-                            <option value="0">1月</option>
-                            <option value="1">2月</option>
-                            <option value="2">3月</option>
-                            <option value="3">4月</option>
-                            <option value="4">5月</option>
-                            <option value="5">6月</option>
-                            <option value="6">7月</option>
-                            <option value="7">8月</option>
-                            <option value="8">9月</option>
-                            <option value="9">10月</option>
-                            <option value="10">11月</option>
-                            <option value="11">12月</option>
-                        </select>
+                    <div class="flex items-center space-x-2 px-2 py-1">
+                        <!-- 自定义年份下拉菜单 -->
+                        <div class="custom-select" id="statistics-year-wrapper">
+                            <div class="custom-select-trigger" id="statistics-year-trigger">
+                                <span>2024年</span>
+                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                            </div>
+                            <div class="custom-select-options" id="statistics-year-options">
+                                <!-- 年份选项将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                        <!-- 自定义月份下拉菜单 -->
+                        <div class="custom-select" id="statistics-month-wrapper">
+                            <div class="custom-select-trigger" id="statistics-month-trigger">
+                                <span>1月</span>
+                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                            </div>
+                            <div class="custom-select-options" id="statistics-month-options">
+                                <div class="custom-option selected" data-value="0">1月</div>
+                                <div class="custom-option" data-value="1">2月</div>
+                                <div class="custom-option" data-value="2">3月</div>
+                                <div class="custom-option" data-value="3">4月</div>
+                                <div class="custom-option" data-value="4">5月</div>
+                                <div class="custom-option" data-value="5">6月</div>
+                                <div class="custom-option" data-value="6">7月</div>
+                                <div class="custom-option" data-value="7">8月</div>
+                                <div class="custom-option" data-value="8">9月</div>
+                                <div class="custom-option" data-value="9">10月</div>
+                                <div class="custom-option" data-value="10">11月</div>
+                                <div class="custom-option" data-value="11">12月</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg border border-gray-300">
-                        <select id="statistics-organization" class="px-4 py-2 border-0 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-transparent">
-                            <option value="">全部机构</option>
+                    <!-- 自定义机构下拉菜单 -->
+                    <div class="custom-select" id="statistics-organization-wrapper">
+                        <div class="custom-select-trigger" id="statistics-organization-trigger">
+                            <span>全部机构</span>
+                            <i class="custom-select-arrow fa fa-chevron-down"></i>
+                        </div>
+                        <div class="custom-select-options" id="statistics-organization-options">
+                            <div class="custom-option selected" data-value="">全部机构</div>
                             <!-- 机构选项将通过JavaScript动态生成 -->
-                        </select>
+                        </div>
                     </div>
                     <button id="export-statistics" class="bg-success text-white px-4 py-2 rounded-lg flex items-center hover:bg-success/90 transition-colors">
                         <i class="fa fa-download mr-2"></i> 导出数据
@@ -377,7 +624,7 @@
 
             <!-- 统计卡片 -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
                             <h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3>
@@ -389,7 +636,7 @@
                     </div>
                     <div class="mt-3 text-xs text-gray-400">节课程</div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
                             <h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3>
@@ -401,7 +648,7 @@
                     </div>
                     <div class="mt-3 text-xs text-gray-400">人民币</div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
                             <h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3>
@@ -466,10 +713,61 @@
 
         </div>
     </main>
+    
+    <!-- 登录模态框 -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity: 0; transition: opacity 0.8s ease-in-out;">
+        <div id="auth-background" class="absolute inset-0 transition-all duration-1500 ease-in-out" style="background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientFlow 15s ease infinite;"></div>
+        <div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-800 ease-out scale-95 opacity-0" id="auth-container">
+            <div class="flex items-center justify-center mb-4">
+                <img src="/assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-32 w-auto">
+            </div>
+            <div id="auth-tabs" class="flex gap-2 mb-8">
+                <button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow: 3px 3px 3px rgba(59, 130, 246, 0.5);">登录</button>
+                <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow: 3px 3px 3px rgba(147, 51, 234, 0.5);">注册</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <div id="login-form" class="transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                    <span id="login-btn-text">登 录</span>
+                    <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="register-form" class="hidden transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                    <span id="register-btn-text">注 册</span>
+                    <span id="register-loading" class="hidden ml-2">
+                        <i class="fa fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+            
 
+        </div>
+    </div>
+
+
+    
     <!-- 模态框容器 -->
-    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
-        <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow" id="modal-content">
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);">
             <!-- 模态框内容将通过JavaScript动态生成 -->
         </div>
     </div>
@@ -497,7 +795,7 @@
     </div>
 
     <!-- 统计控制器 -->
-    <script src="statistics-complete.js"></script>
+
     
     <script>
         // 全局状态管理
@@ -514,6 +812,17 @@
         const utils = {
             // 生成唯一ID
             generateId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`,
+            
+            // 转义HTML特殊字符，防止XSS攻击
+            escapeHtml: (unsafe) => {
+                if (!unsafe) return '';
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            },
             
             // 生成颜色
             generateColor: (text) => {
@@ -532,6 +841,17 @@
                 // 确保索引在有效范围内
                 const index = Math.abs(hash) % baseColors.length;
                 return baseColors[index];
+            },
+            
+            // 获取统计页面参数
+            getStatisticsParams: () => {
+                const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                const organization = organizationValue || '';
+                return { year, month, organization };
             },
             
             // 计算课时数
@@ -592,10 +912,12 @@
                 // 本地数据改变，将同步状态设置为未同步
                 utils.updateSyncStatus('default', '未同步');
                 
-                // 然后同步到服务器
-                if (window.firebaseDatabase) {
+                // 然后同步到服务器（仅当用户已登录时）
+                const auth = window.firebaseAuth;
+                if (window.firebaseDatabase && auth && auth.currentUser) {
                     utils.updateSyncStatus('syncing', '正在同步...');
-                    const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                    const userId = auth.currentUser.uid;
+                    const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
                     window.firebaseSet(dbRef, data).then(() => {
                         console.log('数据同步到服务器成功');
                         utils.updateSyncStatus('success', '同步成功');
@@ -604,8 +926,8 @@
                         utils.updateSyncStatus('error', '同步失败');
                     });
                 } else {
-                    console.log('服务器不可用，数据仅保存到本地');
-                    utils.updateSyncStatus('error', '服务器不可用');
+                    console.log('用户未登录或服务器不可用，数据仅保存到本地');
+                    utils.updateSyncStatus('default', '未登录');
                 }
             },
             
@@ -617,11 +939,16 @@
                 
                 console.log('开始加载数据，Firebase Database:', window.firebaseDatabase);
                 
-                if (window.firebaseDatabase) {
+                // 检查用户是否已登录
+                const auth = window.firebaseAuth;
+                const isLoggedIn = auth && auth.currentUser;
+                
+                if (window.firebaseDatabase && isLoggedIn) {
                     // 显示正在从服务器加载数据的状态
                     utils.updateSyncStatus('syncing', '正在同步...');
-                    console.log('尝试从服务器加载数据...');
-                    const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                    console.log('用户已登录，尝试从服务器加载数据...');
+                    const userId = auth.currentUser.uid;
+                    const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
                     window.firebaseGet(dbRef).then((snapshot) => {
                         console.log('服务器数据加载成功，快照存在:', snapshot.exists());
                         
@@ -636,14 +963,35 @@
                             
                             console.log('本地时间戳:', localTimestamp, '服务器时间戳:', serverTimestamp);
                             
-                            if (localData && localTimestamp !== serverTimestamp) {
-                                // 数据冲突，显示比较界面
-                                console.log('检测到数据冲突，显示比较界面');
-                                modal.showDataConflict(localData, serverData);
-                                utils.updateSyncStatus('success', '同步成功');
-                            } else if (serverTimestamp > localTimestamp) {
-                                // 服务器数据较新，使用服务器数据
-                                console.log('服务器数据较新，加载服务器数据');
+                            if (localData) {
+                                // 本地有数据，比较数据是否不同
+                                const hasChanged = 
+                                    JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
+                                    JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
+                                    JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations);
+                                
+                                if (hasChanged) {
+                                    // 数据不同，显示比较界面
+                                    console.log('检测到数据不同，显示比较界面');
+                                    modal.showDataConflict(localData, serverData);
+                                    utils.updateSyncStatus('success', '同步成功');
+                                } else {
+                                    // 数据相同，使用本地数据
+                                    console.log('数据相同，使用本地数据');
+                                    state.students = localData.students || [];
+                                    state.courses = localData.courses || [];
+                                    state.organizations = localData.organizations || defaults.organizations;
+                                    utils.updateSyncStatus('success', '同步成功');
+                                    
+                                    // 数据加载完成后重新渲染页面
+                                    render.students();
+                                    render.calendar();
+                                    const { year, month, organization } = utils.getStatisticsParams();
+                                    render.statistics(year, month, organization);
+                                }
+                            } else {
+                                // 本地无数据，使用服务器数据
+                                console.log('本地无数据，使用服务器数据');
                                 state.students = serverData.students || [];
                                 state.courses = serverData.courses || [];
                                 state.organizations = serverData.organizations || defaults.organizations;
@@ -657,98 +1005,8 @@
                                 // 数据加载完成后重新渲染页面
                                 render.students();
                                 render.calendar();
-                                const yearSelect = document.getElementById('statistics-year');
-                                const monthSelect = document.getElementById('statistics-month');
-                                const organizationSelect = document.getElementById('statistics-organization');
-                                if (yearSelect && monthSelect) {
-                                    const year = parseInt(yearSelect.value);
-                                    const month = parseInt(monthSelect.value);
-                                    const organization = organizationSelect ? organizationSelect.value : '';
-                                    render.statistics(year, month, organization);
-                                }
-                            } else if (localTimestamp > serverTimestamp && localData) {
-                                // 本地数据较新，上传到服务器
-                                console.log('本地数据较新，上传到服务器');
-                                window.firebaseSet(dbRef, localData).then(() => {
-                                    console.log('本地数据上传到服务器成功');
-                                    state.students = localData.students || [];
-                                    state.courses = localData.courses || [];
-                                    state.organizations = localData.organizations || defaults.organizations;
-                                    utils.updateSyncStatus('success', '同步成功');
-                                    
-                                    // 数据加载完成后重新渲染页面
-                                    render.students();
-                                    render.calendar();
-                                    const yearSelect = document.getElementById('statistics-year');
-                                    const monthSelect = document.getElementById('statistics-month');
-                                    const organizationSelect = document.getElementById('statistics-organization');
-                                    if (yearSelect && monthSelect) {
-                                        const year = parseInt(yearSelect.value);
-                                        const month = parseInt(monthSelect.value);
-                                        const organization = organizationSelect ? organizationSelect.value : '';
-                                        render.statistics(year, month, organization);
-                                    }
-                                }).catch((error) => {
-                                    console.error('本地数据上传到服务器失败:', error);
-                                    // 使用本地数据
-                                    state.students = localData.students || [];
-                                    state.courses = localData.courses || [];
-                                    state.organizations = localData.organizations || defaults.organizations;
-                                    utils.updateSyncStatus('error', '同步失败');
-                                    
-                                    // 数据加载完成后重新渲染页面
-                                    render.students();
-                                    render.calendar();
-                                    const yearSelect = document.getElementById('statistics-year');
-                                    const monthSelect = document.getElementById('statistics-month');
-                                    const organizationSelect = document.getElementById('statistics-organization');
-                                    if (yearSelect && monthSelect) {
-                                        const year = parseInt(yearSelect.value);
-                                        const month = parseInt(monthSelect.value);
-                                        const organization = organizationSelect ? organizationSelect.value : '';
-                                        render.statistics(year, month, organization);
-                                    }
-                                });
-                            } else if (localData) {
-                                // 数据时间戳相同，使用本地数据
-                                console.log('数据时间戳相同，使用本地数据');
-                                state.students = localData.students || [];
-                                state.courses = localData.courses || [];
-                                state.organizations = localData.organizations || defaults.organizations;
-                                utils.updateSyncStatus('success', '同步成功');
-                                
-                                // 数据加载完成后重新渲染页面
-                                render.students();
-                                render.calendar();
-                                const yearSelect = document.getElementById('statistics-year');
-                                const monthSelect = document.getElementById('statistics-month');
-                                const organizationSelect = document.getElementById('statistics-organization');
-                                if (yearSelect && monthSelect) {
-                                    const year = parseInt(yearSelect.value);
-                                    const month = parseInt(monthSelect.value);
-                                    const organization = organizationSelect ? organizationSelect.value : '';
-                                    render.statistics(year, month, organization);
-                                }
-                            } else {
-                                // 两边都没有数据，使用默认数据
-                                console.log('两边都没有数据，使用默认数据');
-                                state.students = [];
-                                state.courses = [];
-                                state.organizations = defaults.organizations;
-                                utils.updateSyncStatus('success', '同步成功');
-                                
-                                // 数据加载完成后重新渲染页面
-                                render.students();
-                                render.calendar();
-                                const yearSelect = document.getElementById('statistics-year');
-                                const monthSelect = document.getElementById('statistics-month');
-                                const organizationSelect = document.getElementById('statistics-organization');
-                                if (yearSelect && monthSelect) {
-                                    const year = parseInt(yearSelect.value);
-                                    const month = parseInt(monthSelect.value);
-                                    const organization = organizationSelect ? organizationSelect.value : '';
-                                    render.statistics(year, month, organization);
-                                }
+                                const { year, month, organization } = utils.getStatisticsParams();
+                                render.statistics(year, month, organization);
                             }
                         } else if (localData) {
                             // 服务器无数据，本地有数据，上传到服务器
@@ -763,15 +1021,8 @@
                                 // 数据加载完成后重新渲染页面
                                 render.students();
                                 render.calendar();
-                                const yearSelect = document.getElementById('statistics-year');
-                                const monthSelect = document.getElementById('statistics-month');
-                                const organizationSelect = document.getElementById('statistics-organization');
-                                if (yearSelect && monthSelect) {
-                                    const year = parseInt(yearSelect.value);
-                                    const month = parseInt(monthSelect.value);
-                                    const organization = organizationSelect ? organizationSelect.value : '';
-                                    render.statistics(year, month, organization);
-                                }
+                                const { year, month, organization } = utils.getStatisticsParams();
+                                render.statistics(year, month, organization);
                             }).catch((error) => {
                                 console.error('本地数据上传到服务器失败:', error);
                                 // 使用本地数据
@@ -783,15 +1034,8 @@
                                 // 数据加载完成后重新渲染页面
                                 render.students();
                                 render.calendar();
-                                const yearSelect = document.getElementById('statistics-year');
-                                const monthSelect = document.getElementById('statistics-month');
-                                const organizationSelect = document.getElementById('statistics-organization');
-                                if (yearSelect && monthSelect) {
-                                    const year = parseInt(yearSelect.value);
-                                    const month = parseInt(monthSelect.value);
-                                    const organization = organizationSelect ? organizationSelect.value : '';
-                                    render.statistics(year, month, organization);
-                                }
+                                const { year, month, organization } = utils.getStatisticsParams();
+                                render.statistics(year, month, organization);
                             });
                         } else {
                             // 两边都没有数据，使用默认数据
@@ -804,15 +1048,13 @@
                             // 数据加载完成后重新渲染页面
                             render.students();
                             render.calendar();
-                            const yearSelect = document.getElementById('statistics-year');
-                            const monthSelect = document.getElementById('statistics-month');
-                            const organizationSelect = document.getElementById('statistics-organization');
-                            if (yearSelect && monthSelect) {
-                                const year = parseInt(yearSelect.value);
-                                const month = parseInt(monthSelect.value);
-                                const organization = organizationSelect ? organizationSelect.value : '';
-                                render.statistics(year, month, organization);
-                            }
+                            const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                            const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                            const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                            const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                            const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                            const organization = organizationValue || '';
+                            render.statistics(year, month, organization);
                         }
                     }).catch((error) => {
                         console.error('从服务器加载数据失败:', error);
@@ -823,12 +1065,24 @@
                         // 从localStorage加载后重新渲染页面
                         render.students();
                         render.calendar();
+                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                        const organization = organizationValue || '';
+                        render.statistics(year, month, organization);
                     });
                 } else {
-                    console.log('服务器不可用，从localStorage加载');
-                    // 显示服务器不可用的状态
-                    utils.updateSyncStatus('error', '服务器不可用');
-                    // Firebase不可用时从localStorage加载
+                    // 用户未登录或服务器不可用，从localStorage加载
+                    if (!isLoggedIn) {
+                        console.log('用户未登录，从localStorage加载');
+                        utils.updateSyncStatus('default', '未登录');
+                    } else {
+                        console.log('服务器不可用，从localStorage加载');
+                        utils.updateSyncStatus('error', '服务器不可用');
+                    }
+                    // 从localStorage加载
                     utils.loadFromLocalStorage();
                     // 从localStorage加载后重新渲染页面
                     render.students();
@@ -1504,54 +1758,33 @@
             
             // 导出所有数据
             exportAllData: () => {
-                const exportData = {
-                    students: state.students,
-                    courses: state.courses,
-                    organizations: state.organizations,
-                    exportDate: new Date().toISOString()
-                };
-                
-                const jsonString = JSON.stringify(exportData, null, 2);
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.setAttribute('href', url);
-                link.setAttribute('download', `课程系统数据_${new Date().toISOString().split('T')[0]}.json`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                try {
+                    const exportData = {
+                        students: state.students,
+                        courses: state.courses,
+                        organizations: state.organizations,
+                        exportDate: new Date().toISOString()
+                    };
+                    
+                    const jsonString = JSON.stringify(exportData, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `课程系统数据_${new Date().toISOString().split('T')[0]}.json`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    notification.show('数据导出成功');
+                } catch (error) {
+                    console.error('导出数据失败:', error);
+                    notification.show('导出数据失败: ' + error.message, 'error');
+                }
             },
             
-            // 导入数据
-            importData: (jsonData) => {
-                try {
-                    const data = JSON.parse(jsonData);
-                    
-                    // 导入学生数据
-                    if (data.students && Array.isArray(data.students)) {
-                        state.students = data.students;
-                    }
-                    
-                    // 导入课程数据
-                    if (data.courses && Array.isArray(data.courses)) {
-                        state.courses = data.courses;
-                    }
-                    
-                    // 导入机构数据
-                    if (data.organizations && Array.isArray(data.organizations)) {
-                        state.organizations = data.organizations;
-                    }
-                    
-                    // 保存数据
-                    utils.saveData();
-                    
-                    return true;
-                } catch (error) {
-                    console.error('导入数据失败:', error);
-                    return false;
-                }
-            }
+
         };
 
         // 渲染函数
@@ -1566,7 +1799,9 @@
                 
                 // 获取日历网格
                 const grid = document.getElementById('calendar-grid');
-                grid.innerHTML = '';
+                
+                // 使用文档片段减少DOM操作
+                const fragment = document.createDocumentFragment();
                 
                 // 计算月份数据
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1582,7 +1817,7 @@
                     const day = daysInPrevMonth - i;
                     const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const courses = state.courses.filter(c => c.date === dateStr);
-                    grid.appendChild(render.createDayCell(day, dateStr, courses, false, false));
+                    fragment.appendChild(render.createDayCell(day, dateStr, courses, false, false));
                 }
                 
                 // 添加当前月的日期
@@ -1590,7 +1825,7 @@
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const courses = state.courses.filter(c => c.date === dateStr);
                     const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
-                    grid.appendChild(render.createDayCell(day, dateStr, courses, true, isToday));
+                    fragment.appendChild(render.createDayCell(day, dateStr, courses, true, isToday));
                 }
                 
                 // 添加下个月的日期
@@ -1604,8 +1839,12 @@
                 for (let day = 1; day <= nextMonthCells; day++) {
                     const dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const courses = state.courses.filter(c => c.date === dateStr);
-                    grid.appendChild(render.createDayCell(day, dateStr, courses, false, false));
+                    fragment.appendChild(render.createDayCell(day, dateStr, courses, false, false));
                 }
+                
+                // 一次性添加所有单元格，减少DOM重排
+                grid.innerHTML = '';
+                grid.appendChild(fragment);
             },
             
             // 创建日期单元格
@@ -1689,19 +1928,19 @@
                     const currentDateStr = dateStr;
                     
                     setTimeout(() => {
-                        if (currentCell._clickCount === 1) {
-                            // 单击 - 选择日期
-                            // 移除其他单元格的选中状态
-                            document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                                el.classList.remove('calendar-cell-selected');
-                            });
-                            // 移除课程的选中状态
-                            document.querySelectorAll('.course-item-selected').forEach(el => {
-                                el.classList.remove('course-item-selected');
-                            });
-                            // 添加选中状态
-                            currentCell.classList.add('calendar-cell-selected');
-                        } else if (currentCell._clickCount === 2) {
+                        // 无论是单击还是双击，都先触发选中效果
+                        // 移除其他单元格的选中状态
+                        document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                            el.classList.remove('calendar-cell-selected');
+                        });
+                        // 移除课程的选中状态
+                        document.querySelectorAll('.course-item-selected').forEach(el => {
+                            el.classList.remove('course-item-selected');
+                        });
+                        // 添加选中状态
+                        currentCell.classList.add('calendar-cell-selected');
+                        
+                        if (currentCell._clickCount === 2) {
                             // 双击 - 添加课程
                             modal.showAddCourse(currentDateStr);
                         }
@@ -2036,22 +2275,26 @@
                 console.log('📊 渲染统计页面:', { year, month, organization, courses: state.courses.length, students: state.students.length });
                 
                 // 填充机构筛选下拉菜单
-                const organizationSelect = document.getElementById('statistics-organization');
-                if (organizationSelect) {
+                const organizationOptions = document.getElementById('statistics-organization-options');
+                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                if (organizationOptions) {
                     // 保存当前选中的值
-                    const currentValue = organizationSelect.value;
+                    const currentValue = getCustomSelectValue('statistics-organization-wrapper');
                     // 清空现有选项，只保留"全部机构"
-                    organizationSelect.innerHTML = '<option value="">全部机构</option>';
+                    organizationOptions.innerHTML = '<div class="custom-option ' + (currentValue === '' ? 'selected' : '') + '" data-value="">全部机构</div>';
                     // 添加所有机构选项
                     state.organizations.forEach(org => {
-                        const option = document.createElement('option');
-                        option.value = org;
-                        option.textContent = org;
-                        if (org === currentValue) {
-                            option.selected = true;
-                        }
-                        organizationSelect.appendChild(option);
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'custom-option' + (org === currentValue ? ' selected' : '');
+                        optionDiv.dataset.value = org;
+                        optionDiv.textContent = org;
+                        organizationOptions.appendChild(optionDiv);
                     });
+                    // 更新触发器显示文本
+                    if (organizationTrigger) {
+                        const selectedOption = organizationOptions.querySelector('.custom-option.selected');
+                        organizationTrigger.textContent = selectedOption ? selectedOption.textContent : '全部机构';
+                    }
                 }
                 
                 // 过滤当月课程
@@ -2690,22 +2933,44 @@
             
             // 渲染页面
             page: (pageId) => {
-                // 隐藏所有页面，显示目标页面
-                document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-                document.getElementById(pageId).classList.remove('hidden');
+                const pages = document.querySelectorAll('.page');
+                const targetPage = document.getElementById(pageId);
+                
+                // 找到当前激活的页面
+                const currentPage = document.querySelector('.page.active');
                 
                 // 更新导航状态
                 document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active', 'bg-gray-100'));
                 document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active', 'bg-gray-100');
+                
+                // 如果有当前页面，先淡出
+                if (currentPage && currentPage !== targetPage) {
+                    currentPage.classList.remove('active');
+                    currentPage.classList.add('hidden');
+                }
+                
+                // 显示目标页面并添加动画
+                if (targetPage) {
+                    targetPage.classList.remove('hidden');
+                    // 强制重绘以确保动画生效
+                    targetPage.offsetHeight;
+                    targetPage.classList.add('active');
+                }
                 
                 // 渲染页面内容
                 const renderMap = {
                     'calendar-page': () => render.calendar(),
                     'students-page': () => render.students(),
                     'statistics-page': () => {
-                        const year = parseInt(document.getElementById('statistics-year')?.value) || new Date().getFullYear();
-                        const month = parseInt(document.getElementById('statistics-month')?.value) || new Date().getMonth();
-                        const organization = document.getElementById('statistics-organization')?.value || '';
+                        // 获取自定义下拉菜单的值
+                        const yearWrapper = document.getElementById('statistics-year-wrapper');
+                        const monthWrapper = document.getElementById('statistics-month-wrapper');
+                        const yearSelected = yearWrapper?.querySelector('.custom-option.selected');
+                        const monthSelected = monthWrapper?.querySelector('.custom-option.selected');
+                        const year = yearSelected ? parseInt(yearSelected.dataset.value) : new Date().getFullYear();
+                        const month = monthSelected ? parseInt(monthSelected.dataset.value) : new Date().getMonth();
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const organization = organizationValue || '';
                         render.statistics(year, month, organization);
                     }
                 };
@@ -2723,10 +2988,12 @@
                 modalContent.innerHTML = content;
                 container.classList.remove('hidden');
                 
-                // 添加动画
+                // 添加动画 - 增强版
                 requestAnimationFrame(() => {
-                    modalContent.classList.remove('scale-95', 'opacity-0');
-                    modalContent.classList.add('scale-100', 'opacity-100');
+                    container.classList.remove('opacity-0');
+                    container.classList.add('opacity-100');
+                    modalContent.classList.remove('scale-90', 'opacity-0', 'translate-y-4');
+                    modalContent.classList.add('scale-100', 'opacity-100', 'translate-y-0');
                 });
                 
                 // 绑定关闭按钮事件（延迟确保DOM已渲染）
@@ -2753,12 +3020,14 @@
                 const container = document.getElementById('modal-container');
                 const modalContent = document.getElementById('modal-content');
                 
-                modalContent.classList.remove('scale-100', 'opacity-100');
-                modalContent.classList.add('scale-95', 'opacity-0');
+                container.classList.remove('opacity-100');
+                container.classList.add('opacity-0');
+                modalContent.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
+                modalContent.classList.add('scale-90', 'opacity-0', 'translate-y-4');
                 
                 setTimeout(() => {
                     container.classList.add('hidden');
-                }, 300);
+                }, 400);
                 
                 // 移除事件监听
                 document.removeEventListener('keydown', modal.handleKeydown);
@@ -2779,7 +3048,6 @@
                             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
                                 <i class="fa fa-exclamation-triangle text-2xl"></i>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">确认删除</h3>
                             <p class="text-gray-600">${message}</p>
                         </div>
                         <div class="flex space-x-3">
@@ -3482,9 +3750,8 @@
                         
                         studentsContent = `
                             <span class="px-2 py-1 rounded text-xs" 
-                                  style="background-color: ${color}20; color: ${color};"
-                                  title="${student.name} (${student.organization}) - ¥${fee.toFixed(2)}">
-                                ${student.name}
+                                  style="background-color: ${color}20; color: ${color};">
+                                ${utils.escapeHtml(student.name)}
                             </span>
                         `;
                     }
@@ -3552,19 +3819,33 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
                                     <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
                                 </div>
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
-                                    <select id="student-organization" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                        ${state.organizations.map(org => `<option value="${org}">${org}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
-                                    <select id="student-grade" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                        <option value="初一">初一</option>
-                                        <option value="初二">初二</option>
-                                        <option value="初三">初三</option>
-                                    </select>
+                                <div class="mb-4 flex space-x-4">
+                                    <div class="w-1/2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
+                                        <div class="custom-select w-full" id="student-organization-wrapper">
+                                            <div class="custom-select-trigger" id="student-organization-trigger">
+                                                <span>${state.organizations[0] || '请选择机构'}</span>
+                                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                                            </div>
+                                            <div class="custom-select-options" id="student-organization-options">
+                                                ${state.organizations.map((org, index) => `<div class="custom-option ${index === 0 ? 'selected' : ''}" data-value="${org}">${org}</div>`).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
+                                        <div class="custom-select w-full" id="student-grade-wrapper">
+                                            <div class="custom-select-trigger" id="student-grade-trigger">
+                                                <span>初一</span>
+                                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                                            </div>
+                                            <div class="custom-select-options" id="student-grade-options">
+                                                <div class="custom-option selected" data-value="初一">初一</div>
+                                                <div class="custom-option" data-value="初二">初二</div>
+                                                <div class="custom-option" data-value="初三">初三</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">课型</label>
@@ -3616,8 +3897,34 @@
                 
                 // 绑定保存按钮事件
                 document.getElementById('add-student-save').addEventListener('click', () => {
-                    const name = document.getElementById('student-name').value.trim();
-                    const organization = document.getElementById('student-organization').value;
+                    const name = utils.escapeHtml(document.getElementById('student-name').value.trim());
+                    const organization = getCustomSelectValue('student-organization-wrapper');
+                    const grade = getCustomSelectValue('student-grade-wrapper');
+                    
+                    // 验证姓名
+                    if (!name) {
+                        notification.show('请输入学生姓名', 'error');
+                        document.getElementById('student-name').focus();
+                        return;
+                    }
+                    
+                    if (name.length < 2 || name.length > 20) {
+                        notification.show('姓名长度应在2-20个字符之间', 'error');
+                        document.getElementById('student-name').focus();
+                        return;
+                    }
+                    
+                    // 验证机构
+                    if (!organization) {
+                        notification.show('请选择机构', 'error');
+                        return;
+                    }
+                    
+                    // 验证年级
+                    if (!grade) {
+                        notification.show('请选择年级', 'error');
+                        return;
+                    }
                     
                     // 获取课型选择
                     const oneOnOneChecked = document.getElementById('lesson-type-one-on-one').checked;
@@ -3638,7 +3945,8 @@
                         const feeInput = document.getElementById('fee-one-on-one').value;
                         const fee = parseFloat(feeInput);
                         if (feeInput === '' || isNaN(fee) || fee < 0) {
-                            notification.show('请填写一对一每节课费用', 'error');
+                            notification.show('请填写有效的一对一费用', 'error');
+                            document.getElementById('fee-one-on-one').focus();
                             return;
                         }
                         fees['一对一'] = fee;
@@ -3650,13 +3958,12 @@
                         fees['多人课'] = 0;
                     }
                     
-                    // 验证输入
-                    if (!name || !organization) {
-                        notification.show('请填写完整信息', 'error');
+                    // 检查学生是否已存在
+                    const existingStudent = state.students.find(s => s.name === name && s.organization === organization);
+                    if (existingStudent) {
+                        notification.show('该学生已存在', 'error');
                         return;
                     }
-                    
-                    const grade = document.getElementById('student-grade').value;
                     
                     const student = {
                         id: utils.generateId(),
@@ -3673,11 +3980,27 @@
                     render.students();
                     modal.hide();
                     
-                    notification.show('学生信息添加成功');
+                    notification.show(`学生 ${name} 添加成功`);
+                });
+                
+                // 添加实时验证
+                document.getElementById('student-name').addEventListener('input', (e) => {
+                    const name = e.target.value.trim();
+                    if (name.length > 20) {
+                        e.target.value = name.substring(0, 20);
+                        notification.show('姓名长度不能超过20个字符', 'warning');
+                    }
+                });
+                
+                document.getElementById('fee-one-on-one').addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    if (value && (isNaN(value) || parseFloat(value) < 0)) {
+                        notification.show('费用必须为非负数', 'warning');
+                    }
                 });
                 
                 // 回车键保存学生
-                const studentInputs = ['student-name', 'student-organization', 'lesson-type-one-on-one', 'lesson-type-group', 'fee-one-on-one', 'fee-group'];
+                const studentInputs = ['student-name', 'lesson-type-one-on-one', 'lesson-type-group', 'fee-one-on-one', 'fee-group'];
                 studentInputs.forEach(id => {
                     const element = document.getElementById(id);
                     if (element) {
@@ -3689,6 +4012,9 @@
                         });
                     }
                 });
+                
+                // 初始化自定义下拉菜单
+                initCustomSelects();
             },
             
             // 显示编辑学生模态框
@@ -3712,19 +4038,33 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
                                     <input type="text" id="edit-student-name" value="${student.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
                                 </div>
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
-                                    <select id="edit-student-organization" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                        ${state.organizations.map(org => `<option value="${org}" ${org === student.organization ? 'selected' : ''}>${org}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
-                                    <select id="edit-student-grade" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                        <option value="初一" ${student.grade === '初一' ? 'selected' : ''}>初一</option>
-                                        <option value="初二" ${student.grade === '初二' ? 'selected' : ''}>初二</option>
-                                        <option value="初三" ${student.grade === '初三' ? 'selected' : ''}>初三</option>
-                                    </select>
+                                <div class="mb-4 flex space-x-4">
+                                    <div class="w-1/2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">机构</label>
+                                        <div class="custom-select w-full" id="edit-student-organization-wrapper">
+                                            <div class="custom-select-trigger" id="edit-student-organization-trigger">
+                                                <span>${student.organization}</span>
+                                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                                            </div>
+                                            <div class="custom-select-options" id="edit-student-organization-options">
+                                                ${state.organizations.map(org => `<div class="custom-option ${org === student.organization ? 'selected' : ''}" data-value="${org}">${org}</div>`).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
+                                        <div class="custom-select w-full" id="edit-student-grade-wrapper">
+                                            <div class="custom-select-trigger" id="edit-student-grade-trigger">
+                                                <span>${student.grade}</span>
+                                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                                            </div>
+                                            <div class="custom-select-options" id="edit-student-grade-options">
+                                                <div class="custom-option ${student.grade === '初一' ? 'selected' : ''}" data-value="初一">初一</div>
+                                                <div class="custom-option ${student.grade === '初二' ? 'selected' : ''}" data-value="初二">初二</div>
+                                                <div class="custom-option ${student.grade === '初三' ? 'selected' : ''}" data-value="初三">初三</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">课型</label>
@@ -3769,11 +4109,14 @@
                     }
                 });
                 
+                // 初始化自定义下拉菜单
+                initCustomSelects();
+                
                 // 绑定保存按钮事件
                 document.getElementById('edit-student-save').addEventListener('click', () => {
                     const id = document.getElementById('edit-student-id').value;
-                    const name = document.getElementById('edit-student-name').value.trim();
-                    const organization = document.getElementById('edit-student-organization').value;
+                    const name = utils.escapeHtml(document.getElementById('edit-student-name').value.trim());
+                    const organization = getCustomSelectValue('edit-student-organization-wrapper');
                     
                     // 获取课型选择
                     const oneOnOneChecked = document.getElementById('edit-lesson-type-one-on-one').checked;
@@ -3818,7 +4161,7 @@
                         const isOrganizationChanged = oldStudent.organization !== organization;
                         const isNameChanged = oldStudent.name !== name;
                         
-                        const grade = document.getElementById('edit-student-grade').value;
+                        const grade = getCustomSelectValue('edit-student-grade-wrapper');
                     
                     state.students[studentIndex] = {
                         ...state.students[studentIndex],
@@ -3891,14 +4234,19 @@
                                 </div>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有机机构</h4>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有机构</h4>
                                 <div id="organizations-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
                                     ${state.organizations.map(org => `
-                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                            <span>${org}</span>
-                                            <button class="text-danger hover:text-red-700 delete-organization" data-org="${org}">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-org="${org}">
+                                            <span class="org-name">${org}</span>
+                                            <div class="flex items-center space-x-2">
+                                                <button class="text-primary hover:text-blue-700 edit-organization" data-org="${org}">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button class="text-danger hover:text-red-700 delete-organization" data-org="${org}">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -3912,71 +4260,273 @@
                 
                 modal.show(content);
                 
-                // 自动激活输入框
+                // 自动激活输入框并绑定事件
                 setTimeout(() => {
                     document.getElementById('new-organization').focus();
+                    
+                    // 使用事件委托处理机构管理操作
+                    const organizationsList = document.getElementById('organizations-list');
+                    if (organizationsList) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        organizationsList.onclick = null;
+                        
+                        organizationsList.onclick = (event) => {
+                            const editButton = event.target.closest('.edit-organization');
+                            const deleteButton = event.target.closest('.delete-organization');
+                            
+                            if (editButton) {
+                                event.stopPropagation();
+                                const org = editButton.dataset.org;
+                                // 找到外层的机构项div（排除按钮本身）
+                                let orgItem = editButton.closest('[data-org]');
+                                // 如果找到的是按钮本身，继续向上查找
+                                while (orgItem && orgItem.tagName === 'BUTTON') {
+                                    orgItem = orgItem.parentElement.closest('[data-org]');
+                                }
+                                if (!orgItem) {
+                                    console.error('找不到机构项元素');
+                                    return;
+                                }
+                                const orgNameSpan = orgItem.querySelector('.org-name');
+                                if (!orgNameSpan) {
+                                    console.error('找不到机构名称元素');
+                                    return;
+                                }
+                                
+                                // 创建编辑输入框
+                                const input = document.createElement('input');
+                                input.type = 'text';
+                                input.value = org;
+                                input.className = 'flex-grow px-2 py-1 border border-gray-300 rounded text-sm';
+                                
+                                // 替换文本为输入框
+                                orgNameSpan.replaceWith(input);
+                                input.focus();
+                                input.select();
+                                
+                                // 保存按钮
+                                const saveBtn = document.createElement('button');
+                                saveBtn.className = 'text-success hover:text-green-700 ml-2';
+                                saveBtn.innerHTML = '<i class="fa fa-check"></i>';
+                                
+                                // 取消按钮
+                                const cancelBtn = document.createElement('button');
+                                cancelBtn.className = 'text-gray-500 hover:text-gray-700 ml-2';
+                                cancelBtn.innerHTML = '<i class="fa fa-times"></i>';
+                                
+                                // 替换编辑和删除按钮为保存和取消按钮
+                                const btnContainer = editButton.parentElement;
+                                if (!btnContainer) {
+                                    console.error('找不到按钮容器');
+                                    return;
+                                }
+                                // 使用 replaceChildren 更安全地替换子元素
+                                btnContainer.replaceChildren(saveBtn, cancelBtn);
+                                
+                                // 保存编辑
+                                const saveEdit = () => {
+                                    const newOrg = input.value.trim();
+                                    
+                                    // 如果没有修改或为空，直接返回
+                                    if (!newOrg || newOrg === org) {
+                                        modal.showManageOrganizations(); // 重新渲染
+                                        return;
+                                    }
+                                    
+                                    // 检查是否已存在
+                                    if (state.organizations.includes(newOrg)) {
+                                        notification.show('该机构名称已存在', 'error');
+                                        return;
+                                    }
+                                    
+                                    // 更新机构名称
+                                    const orgIndex = state.organizations.indexOf(org);
+                                    if (orgIndex !== -1) {
+                                        state.organizations[orgIndex] = newOrg;
+                                        
+                                        // 更新所有学生的机构名称
+                                        state.students.forEach(student => {
+                                            if (student.organization === org) {
+                                                student.organization = newOrg;
+                                            }
+                                        });
+                                        
+                                        // 生成新的机构颜色
+                                        const newColor = utils.generateColor(newOrg);
+                                        
+                                        // 更新所有课程的机构名称和颜色
+                                        state.courses.forEach(course => {
+                                            // 处理单个学生的课程
+                                            if (course.organization === org) {
+                                                course.organization = newOrg;
+                                                // 更新单个学生课程的颜色
+                                                if (course.color) {
+                                                    course.color = newColor;
+                                                }
+                                            }
+                                            
+                                            // 处理多名学生的课程
+                                            if (course.organizations) {
+                                                course.organizations = course.organizations.map((o, index) => {
+                                                    if (o === org) {
+                                                        // 更新颜色数组中对应位置的颜色
+                                                        if (course.colors && course.colors[index]) {
+                                                            course.colors[index] = newColor;
+                                                        }
+                                                        return newOrg;
+                                                    }
+                                                    return o;
+                                                });
+                                            }
+                                        });
+                                        
+                                        utils.saveData();
+                                        notification.show('机构修改成功');
+                                        
+                                        // 更新统计页面的机构筛选下拉菜单
+                                        const organizationOptions = document.getElementById('statistics-organization-options');
+                                        const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                                        if (organizationOptions) {
+                                            const currentValue = getCustomSelectValue('statistics-organization-wrapper');
+                                            organizationOptions.innerHTML = '<div class="custom-option ' + (currentValue === '' ? 'selected' : '') + '" data-value="">全部机构</div>';
+                                            state.organizations.forEach(o => {
+                                                const optionDiv = document.createElement('div');
+                                                optionDiv.className = 'custom-option' + (o === currentValue ? ' selected' : '');
+                                                optionDiv.dataset.value = o;
+                                                optionDiv.textContent = o;
+                                                organizationOptions.appendChild(optionDiv);
+                                            });
+                                            if (organizationTrigger) {
+                                                const selectedOption = organizationOptions.querySelector('.custom-option.selected');
+                                                organizationTrigger.textContent = selectedOption ? selectedOption.textContent : '全部机构';
+                                            }
+                                        }
+                                        
+                                        // 重新渲染学生列表和日历
+                                        render.students();
+                                        render.calendar();
+                                    }
+                                    modal.showManageOrganizations(); // 重新渲染
+                                };
+                                
+                                // 取消编辑
+                                const cancelEdit = () => {
+                                    modal.showManageOrganizations(); // 重新渲染
+                                };
+                                
+                                // 绑定保存按钮点击事件
+                                saveBtn.addEventListener('click', saveEdit);
+                                
+                                // 绑定取消按钮点击事件
+                                cancelBtn.addEventListener('click', cancelEdit);
+                                
+                                // 绑定回车键保存
+                                input.addEventListener('keypress', (event) => {
+                                    if (event.key === 'Enter') {
+                                        event.preventDefault();
+                                        saveEdit();
+                                    }
+                                });
+                                
+                                // 绑定ESC键取消
+                                input.addEventListener('keydown', (event) => {
+                                    if (event.key === 'Escape') {
+                                        event.preventDefault();
+                                        cancelEdit();
+                                    }
+                                });
+                                
+                                // 失去焦点时保存
+                                input.addEventListener('blur', saveEdit);
+                            } else if (deleteButton) {
+                                event.stopPropagation();
+                                const org = deleteButton.dataset.org;
+                                const usedByStudents = state.students.some(s => s.organization === org);
+                                if (usedByStudents) {
+                                    notification.show('该机构正在被使用，无法删除', 'error');
+                                    return;
+                                }
+                                state.organizations = state.organizations.filter(o => o !== org);
+                                utils.saveData();
+                                modal.showManageOrganizations(); // 重新渲染
+                                notification.show('机构删除成功');
+                                
+                                // 更新统计页面的机构筛选下拉菜单
+                                const organizationOptions = document.getElementById('statistics-organization-options');
+                                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                                if (organizationOptions) {
+                                    // 重新生成机构选项
+                                    organizationOptions.innerHTML = '<div class="custom-option selected" data-value="">全部机构</div>';
+                                    state.organizations.forEach(org => {
+                                        const optionDiv = document.createElement('div');
+                                        optionDiv.className = 'custom-option';
+                                        optionDiv.dataset.value = org;
+                                        optionDiv.textContent = org;
+                                        organizationOptions.appendChild(optionDiv);
+                                    });
+                                    // 更新触发器显示文本
+                                    if (organizationTrigger) {
+                                        organizationTrigger.textContent = '全部机构';
+                                    }
+                                }
+                            }
+                        };
+                    }
+                    
+                    // 添加机构
+                    const addOrganizationBtn = document.getElementById('add-organization');
+                    if (addOrganizationBtn) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        addOrganizationBtn.onclick = null;
+                        addOrganizationBtn.onclick = () => {
+                            const newOrg = document.getElementById('new-organization').value.trim();
+                            if (newOrg && !state.organizations.includes(newOrg)) {
+                                state.organizations.push(newOrg);
+                                utils.saveData();
+                                modal.showManageOrganizations(); // 重新渲染
+                                notification.show('机构添加成功');
+                                
+                                // 更新统计页面的机构筛选下拉菜单
+                                const organizationOptions = document.getElementById('statistics-organization-options');
+                                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                                if (organizationOptions) {
+                                    // 重新生成机构选项
+                                    organizationOptions.innerHTML = '<div class="custom-option selected" data-value="">全部机构</div>';
+                                    state.organizations.forEach(org => {
+                                        const optionDiv = document.createElement('div');
+                                        optionDiv.className = 'custom-option';
+                                        optionDiv.dataset.value = org;
+                                        optionDiv.textContent = org;
+                                        organizationOptions.appendChild(optionDiv);
+                                    });
+                                    // 更新触发器显示文本
+                                    if (organizationTrigger) {
+                                        organizationTrigger.textContent = '全部机构';
+                                    }
+                                }
+                            }
+                        };
+                    }
+                    
+                    // 回车键添加机构
+                    const newOrganizationInput = document.getElementById('new-organization');
+                    if (newOrganizationInput) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        newOrganizationInput.onkeypress = null;
+                        newOrganizationInput.onkeypress = (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                document.getElementById('add-organization').click();
+                            }
+                        };
+                    }
                 }, 100);
                 
-                // 添加机构
-                document.getElementById('add-organization').addEventListener('click', () => {
-                    const newOrg = document.getElementById('new-organization').value.trim();
-                    if (newOrg && !state.organizations.includes(newOrg)) {
-                        state.organizations.push(newOrg);
-                        utils.saveData();
-                        modal.showManageOrganizations(); // 重新渲染
-                        notification.show('机构添加成功');
-                        
-                        // 更新统计页面的机构筛选下拉菜单
-                        const organizationSelect = document.getElementById('statistics-organization');
-                        if (organizationSelect) {
-                            // 重新生成机构选项
-                            organizationSelect.innerHTML = '<option value="">全部机构</option>';
-                            state.organizations.forEach(org => {
-                                const option = document.createElement('option');
-                                option.value = org;
-                                option.textContent = org;
-                                organizationSelect.appendChild(option);
-                            });
-                        }
-                    }
-                });
-                
-                // 回车键添加机构
-                document.getElementById('new-organization').addEventListener('keypress', (event) => {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        document.getElementById('add-organization').click();
-                    }
-                });
-                
-                // 删除机构
-                document.querySelectorAll('.delete-organization').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const org = button.dataset.org;
-                        const usedByStudents = state.students.some(s => s.organization === org);
-                        if (usedByStudents) {
-                            notification.show('该机构正在被使用，无法删除', 'error');
-                            return;
-                        }
-                        state.organizations = state.organizations.filter(o => o !== org);
-                        utils.saveData();
-                        modal.showManageOrganizations(); // 重新渲染
-                        notification.show('机构删除成功');
-                        
-                        // 更新统计页面的机构筛选下拉菜单
-                        const organizationSelect = document.getElementById('statistics-organization');
-                        if (organizationSelect) {
-                            // 重新生成机构选项
-                            organizationSelect.innerHTML = '<option value="">全部机构</option>';
-                            state.organizations.forEach(org => {
-                                const option = document.createElement('option');
-                                option.value = org;
-                                option.textContent = org;
-                                organizationSelect.appendChild(option);
-                            });
-                        }
-                    });
-                });
+
+        
+        
+        
+        
             },
             
             // 显示删除学生模态框
@@ -3987,9 +4537,8 @@
                             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
                                 <i class="fa fa-exclamation-triangle text-2xl"></i>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">确认删除</h3>
-                            <p class="text-gray-600 mb-2">确定要删除学生 <strong>${student.name}</strong> 吗？</p>
-                            <p class="text-sm text-gray-500">删除后，该学生的所有课程信息也将被删除，不可撤销！</p>
+                            <p class="text-gray-600 mb-2">删除学生 <strong>${student.name}</strong> 后</p>
+                            <p class="text-gray-600 mb-2">相关课程也将全部删除</p>
                         </div>
                         <div class="flex space-x-3">
                             <button id="cancel-confirm" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
@@ -4140,9 +4689,11 @@
                             state.courses = localData.courses || [];
                             state.organizations = localData.organizations || [];
                             // 上传到服务器
-                            if (window.firebaseDatabase) {
+                            const auth = window.firebaseAuth;
+                            if (window.firebaseDatabase && auth && auth.currentUser) {
                                 utils.updateSyncStatus('syncing', '正在同步...');
-                                const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                                const userId = auth.currentUser.uid;
+                                const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
                                 window.firebaseSet(dbRef, localData).then(() => {
                                     console.log('本地数据上传到服务器成功');
                                     utils.updateSyncStatus('success', '同步成功');
@@ -4157,15 +4708,13 @@
                         // 重新渲染页面
                         render.students();
                         render.calendar();
-                        const yearSelect = document.getElementById('statistics-year');
-                        const monthSelect = document.getElementById('statistics-month');
-                        const organizationSelect = document.getElementById('statistics-organization');
-                        if (yearSelect && monthSelect) {
-                            const year = parseInt(yearSelect.value);
-                            const month = parseInt(monthSelect.value);
-                            const organization = organizationSelect ? organizationSelect.value : '';
-                            render.statistics(year, month, organization);
-                        }
+                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                        const organization = organizationValue || '';
+                        render.statistics(year, month, organization);
                     });
                     
                     useServerBtn.addEventListener('click', () => {
@@ -4182,15 +4731,13 @@
                         // 重新渲染页面
                         render.students();
                         render.calendar();
-                        const yearSelect = document.getElementById('statistics-year');
-                        const monthSelect = document.getElementById('statistics-month');
-                        const organizationSelect = document.getElementById('statistics-organization');
-                        if (yearSelect && monthSelect) {
-                            const year = parseInt(yearSelect.value);
-                            const month = parseInt(monthSelect.value);
-                            const organization = organizationSelect ? organizationSelect.value : '';
-                            render.statistics(year, month, organization);
-                        }
+                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                        const organization = organizationValue || '';
+                        render.statistics(year, month, organization);
                     });
                 }, 0);
             }
@@ -4377,51 +4924,75 @@
                     render.students();
                 });
                 
-                // 统计页面年份选择
-                const yearSelect = document.getElementById('statistics-year');
+                // 统计页面年份选择 - 自定义下拉菜单
+                const yearOptions = document.getElementById('statistics-year-options');
+                const yearTrigger = document.querySelector('#statistics-year-wrapper .custom-select-trigger span');
                 const currentYear = new Date().getFullYear();
-                for (let year = currentYear - 5; year <= currentYear + 5; year++) {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.textContent = `${year}年`;
-                    if (year === currentYear) {
-                        option.selected = true;
+                let selectedYear = currentYear;
+                
+                if (yearOptions) {
+                    yearOptions.innerHTML = '';
+                    for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'custom-option';
+                        optionDiv.dataset.value = year;
+                        optionDiv.textContent = `${year}年`;
+                        if (year === currentYear) {
+                            optionDiv.classList.add('selected');
+                            if (yearTrigger) yearTrigger.textContent = `${year}年`;
+                        }
+                        yearOptions.appendChild(optionDiv);
                     }
-                    yearSelect.appendChild(option);
                 }
                 
-                // 统计页面月份选择
-                const monthSelect = document.getElementById('statistics-month');
-                monthSelect.value = new Date().getMonth();
+                // 统计页面月份选择 - 自定义下拉菜单
+                const monthWrapper = document.getElementById('statistics-month-wrapper');
+                const monthTrigger = monthWrapper?.querySelector('.custom-select-trigger span');
+                const currentMonth = new Date().getMonth();
                 
-                // 统计页面筛选
-                yearSelect.addEventListener('change', () => {
-                    const year = parseInt(yearSelect.value);
-                    const month = parseInt(monthSelect.value);
-                    const organization = document.getElementById('statistics-organization')?.value || '';
-                    render.statistics(year, month, organization);
-                });
+                if (monthWrapper) {
+                    // 设置当前月份
+                    const monthOptions = monthWrapper.querySelectorAll('.custom-option');
+                    monthOptions.forEach((opt, index) => {
+                        if (index === currentMonth) {
+                            opt.classList.add('selected');
+                            if (monthTrigger) monthTrigger.textContent = opt.textContent;
+                        } else {
+                            opt.classList.remove('selected');
+                        }
+                    });
+                }
                 
-                monthSelect.addEventListener('change', () => {
-                    const year = parseInt(yearSelect.value);
-                    const month = parseInt(monthSelect.value);
-                    const organization = document.getElementById('statistics-organization')?.value || '';
-                    render.statistics(year, month, organization);
-                });
+                // 统计页面筛选 - 自定义下拉菜单事件
+                const yearWrapper = document.getElementById('statistics-year-wrapper');
+                if (yearWrapper) {
+                    yearWrapper.addEventListener('change', (e) => {
+                        selectedYear = parseInt(e.detail.value);
+                        const month = currentMonth;
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const organization = organizationValue || '';
+                        render.statistics(selectedYear, month, organization);
+                    });
+                }
+                
+                if (monthWrapper) {
+                    monthWrapper.addEventListener('change', (e) => {
+                        const month = parseInt(e.detail.value);
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const organization = organizationValue || '';
+                        render.statistics(selectedYear, month, organization);
+                    });
+                }
                 
                 // 学生排序
                 const studentSortSelect = document.getElementById('student-sort');
                 if (studentSortSelect) {
                     studentSortSelect.addEventListener('change', () => {
-                        const year = parseInt(yearSelect.value);
-                        const month = parseInt(monthSelect.value);
-                        const organization = document.getElementById('statistics-organization')?.value || '';
-                        render.statistics(year, month, organization);
+                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                        const organization = organizationValue || '';
+                        render.statistics(selectedYear, currentMonth, organization);
                     });
                 }
-                
-                // 机构选择
-                const organizationSelect = document.getElementById('statistics-organization');
                 
                 // 同步状态点击事件
                 const syncStatus = document.getElementById('sync-status');
@@ -4431,39 +5002,142 @@
                         utils.loadData();
                     });
                 }
-                if (organizationSelect) {
-                    // 初始化机构选项
-                    organizationSelect.innerHTML = '<option value="">全部机构</option>';
+                // 初始化机构下拉菜单选项
+                const organizationOptions = document.getElementById('statistics-organization-options');
+                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                const organizationWrapper = document.getElementById('statistics-organization-wrapper');
+                if (organizationOptions && organizationWrapper) {
+                    // 清空现有选项，只保留"全部机构"
+                    organizationOptions.innerHTML = '<div class="custom-option selected" data-value="">全部机构</div>';
+                    // 添加所有机构选项
                     state.organizations.forEach(org => {
-                        const option = document.createElement('option');
-                        option.value = org;
-                        option.textContent = org;
-                        organizationSelect.appendChild(option);
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'custom-option';
+                        optionDiv.dataset.value = org;
+                        optionDiv.textContent = org;
+                        organizationOptions.appendChild(optionDiv);
                     });
-                    
-                    // 添加事件监听器
-                    organizationSelect.addEventListener('change', () => {
-                        const year = parseInt(yearSelect.value);
-                        const month = parseInt(monthSelect.value);
-                        const organization = organizationSelect.value;
-                        render.statistics(year, month, organization);
-                    });
+                    // 更新触发器显示文本
+                    if (organizationTrigger) {
+                        organizationTrigger.textContent = '全部机构';
+                    }
+                    // 重新初始化自定义下拉菜单以绑定事件
+                    initCustomSelects();
                 }
                 
                 // 导出统计数据
                 document.getElementById('export-statistics').addEventListener('click', () => {
-                    const year = parseInt(yearSelect.value);
-                    const month = parseInt(monthSelect.value);
-                    const organization = document.getElementById('statistics-organization')?.value || '';
+                    const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                    const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                    const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                    const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                    const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                    const organization = organizationValue || '';
                     utils.exportStatisticsData(year, month, organization);
                 });
+                
+                // 初始化自定义下拉菜单
+                initCustomSelects();
             }
         };
 
         // 初始化应用
         function init() {
+            
             // 初始化事件监听
             events.init();
+            
+            // 检测登录状态
+            const auth = window.firebaseAuth;
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // 用户已登录，加载渲染系统
+                        console.log('用户已登录，加载渲染系统...');
+                        loadSystem();
+                    } else {
+                        // 用户未登录，只显示登录框，不加载渲染系统
+                        console.log('用户未登录，只显示登录框');
+                        updateUIForUnauth();
+                    }
+                });
+            } else {
+                // Firebase Auth初始化失败，显示登录框
+                console.log('Firebase Auth初始化失败，显示登录框');
+                updateUIForUnauth();
+            }
+        }
+        
+        // 显示系统框架
+        function showSystemFrame() {
+            const body = document.body;
+            const nav = document.querySelector('nav');
+            const main = document.querySelector('main');
+            if (body && nav && main) {
+                body.style.opacity = '1';
+                nav.style.display = 'block';
+                main.style.display = 'block';
+            }
+        }
+        
+        // 设置Firebase实时监听
+        function setupFirebaseListeners() {
+            const auth = window.firebaseAuth;
+            if (window.firebaseDatabase && auth && auth.currentUser) {
+                const userId = auth.currentUser.uid;
+                const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
+                window.firebaseOnValue(dbRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        console.log('收到Firebase实时更新:', data);
+                        
+                        // 检查数据是否有变化
+                        const hasChanged = 
+                            JSON.stringify(data.students) !== JSON.stringify(state.students) ||
+                            JSON.stringify(data.courses) !== JSON.stringify(state.courses) ||
+                            JSON.stringify(data.organizations) !== JSON.stringify(state.organizations);
+                        
+                        if (hasChanged) {
+                            updateFromFirebase(data);
+                        }
+                    }
+                });
+            } else {
+                console.log('用户未登录，不启用Firebase实时监听');
+            }
+        }
+        
+        // 从Firebase更新数据并重新渲染
+        function updateFromFirebase(data) {
+            state.students = data.students || [];
+            state.courses = data.courses || [];
+            state.organizations = data.organizations || [];
+            console.log('数据从Firebase实时更新，重新渲染页面');
+            
+            // 重新渲染页面 - 只渲染当前可见的页面
+            const studentsPage = document.getElementById('students-page');
+            const calendarPage = document.getElementById('calendar-page');
+            if (studentsPage && !studentsPage.classList.contains('hidden')) {
+                render.students();
+            }
+            if (calendarPage && !calendarPage.classList.contains('hidden')) {
+                render.calendar();
+            }
+            
+            // 重新渲染统计页面
+            const yearValue = getCustomSelectValue('statistics-year-wrapper');
+            const monthValue = getCustomSelectValue('statistics-month-wrapper');
+            const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+            const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+            const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+            const organization = organizationValue || '';
+            render.statistics(year, month, organization);
+        }
+        
+        // 加载渲染系统
+        function loadSystem() {
+            // 显示系统框架
+            showSystemFrame();
             
             // 渲染初始页面框架
             render.page('calendar-page');
@@ -4473,47 +5147,7 @@
             utils.loadData();
             
             // 添加Firebase实时监听
-            if (window.firebaseDatabase) {
-                const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
-                window.firebaseOnValue(dbRef, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        console.log('收到Firebase实时更新:', data);
-                        // 简化数据比较，确保即使微小变化也能触发更新
-                        const hasChanged = 
-                            JSON.stringify(data.students) !== JSON.stringify(state.students) ||
-                            JSON.stringify(data.courses) !== JSON.stringify(state.courses) ||
-                            JSON.stringify(data.organizations) !== JSON.stringify(state.organizations);
-                        
-                        if (hasChanged) {
-                            state.students = data.students || [];
-                            state.courses = data.courses || [];
-                            state.organizations = data.organizations || [];
-                            console.log('数据从Firebase实时更新，重新渲染页面');
-                            // 重新渲染页面 - 只渲染当前可见的页面
-                            const studentsPage = document.getElementById('students-page');
-                            const calendarPage = document.getElementById('calendar-page');
-                            if (studentsPage && !studentsPage.classList.contains('hidden')) {
-                                render.students();
-                            }
-                            if (calendarPage && !calendarPage.classList.contains('hidden')) {
-                                render.calendar();
-                            }
-                            const yearSelect = document.getElementById('statistics-year');
-                            const monthSelect = document.getElementById('statistics-month');
-                            const organizationSelect = document.getElementById('statistics-organization');
-                            if (yearSelect && monthSelect) {
-                                const year = parseInt(yearSelect.value);
-                                const month = parseInt(monthSelect.value);
-                                const organization = organizationSelect ? organizationSelect.value : '';
-                                render.statistics(year, month, organization);
-                            }
-                        }
-                    }
-                });
-            }
-            
-
+            setupFirebaseListeners();
         }
 
         // 处理课程标签点击事件
@@ -4528,22 +5162,22 @@
             const currentCourseId = courseId;
             
             setTimeout(() => {
-                if (element._clickCount === 1) {
-                    // 单击 - 选择课程
-                    // 移除其他课程的选中状态
-                    document.querySelectorAll('.course-item-selected').forEach(el => {
-                        el.classList.remove('course-item-selected');
-                    });
-                    // 移除日期的选中状态
-                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                        el.classList.remove('calendar-cell-selected');
-                    });
-                    // 添加选中状态
-                    element.classList.add('course-item-selected');
-                    // 使选中的课程标签获得焦点，以便响应键盘事件
-                    element.tabIndex = 0;
-                    element.focus();
-                } else if (element._clickCount === 2) {
+                // 无论是单击还是双击，都先触发选中效果
+                // 移除其他课程的选中状态
+                document.querySelectorAll('.course-item-selected').forEach(el => {
+                    el.classList.remove('course-item-selected');
+                });
+                // 移除日期的选中状态
+                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                    el.classList.remove('calendar-cell-selected');
+                });
+                // 添加选中状态
+                element.classList.add('course-item-selected');
+                // 使选中的课程标签获得焦点，以便响应键盘事件
+                element.tabIndex = 0;
+                element.focus();
+                
+                if (element._clickCount === 2) {
                     // 双击 - 触发课程编辑
                     const course = state.courses.find(c => c.id === currentCourseId);
                     if (course) {
@@ -4749,6 +5383,8 @@
         
         // 启动应用
         init();
+        initAuth();
+
         
         // 全局点击事件，点击其他地方时隐藏右键菜单
         document.addEventListener('click', function(e) {
@@ -4758,10 +5394,14 @@
             }
         });
         
-        // 程序关闭前同步数据
+        // 程序关闭前同步数据（仅当用户已登录时）
         window.addEventListener('beforeunload', function() {
-            // 只在Firebase可用时执行
-            if (window.firebaseDatabase) {
+            // 检查用户是否已登录
+            const auth = window.firebaseAuth;
+            const isLoggedIn = auth && auth.currentUser;
+            
+            // 只在Firebase可用且用户已登录时执行
+            if (window.firebaseDatabase && isLoggedIn) {
                 try {
                     // 获取本地数据
                     const localDataStr = localStorage.getItem('courseManagerData');
@@ -4770,7 +5410,8 @@
                     
                     if (localTimestamp > 0) {
                         // 比较服务器数据时间戳
-                        const dbRef = window.firebaseRef(window.firebaseDatabase, 'courseManagerData');
+                        const userId = auth.currentUser.uid;
+                        const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
                         window.firebaseGet(dbRef).then((snapshot) => {
                             if (snapshot.exists()) {
                                 const serverData = snapshot.val();
@@ -4801,8 +5442,568 @@
                 } catch (error) {
                     console.error('同步数据时出错:', error);
                 }
+            } else {
+                console.log('用户未登录，程序关闭前不同步数据');
             }
         });
+        
+        // 初始化认证
+        function initAuth() {
+            console.log('开始初始化认证...');
+            
+            // 管理登录界面显示/隐藏
+            function showAuthModal() {
+                const authModal = document.getElementById('auth-modal');
+                const authContainer = document.getElementById('auth-container');
+                
+                authModal.style.display = 'flex';
+                setTimeout(() => {
+                    authContainer.classList.remove('scale-95', 'opacity-0');
+                    authContainer.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+            
+            function hideAuthModal() {
+                const authModal = document.getElementById('auth-modal');
+                const authContainer = document.getElementById('auth-container');
+                
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    authModal.style.display = 'none';
+                }, 500);
+            }
+            
+            // 切换登录/注册标签
+            document.getElementById('login-tab').addEventListener('click', () => {
+                // 标签页样式切换动画
+                document.getElementById('login-tab').classList.remove('border-transparent', 'bg-blue-500/30');
+                document.getElementById('login-tab').classList.add('border-blue-500', 'bg-blue-500/40', 'scale-105');
+                document.getElementById('register-tab').classList.remove('border-purple-500', 'bg-purple-500/40');
+                document.getElementById('register-tab').classList.add('border-transparent', 'bg-purple-500/30', 'scale-95');
+                
+                // 表单切换动画
+                const registerForm = document.getElementById('register-form');
+                const loginForm = document.getElementById('login-form');
+                
+                registerForm.style.opacity = '0';
+                registerForm.style.transform = 'translateX(20px)';
+                
+                setTimeout(() => {
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                    loginForm.style.opacity = '0';
+                    loginForm.style.transform = 'translateX(-20px)';
+                    
+                    setTimeout(() => {
+                        loginForm.style.opacity = '1';
+                        loginForm.style.transform = 'translateX(0)';
+                        // 恢复标签页缩放
+                        document.getElementById('login-tab').classList.remove('scale-105');
+                        document.getElementById('register-tab').classList.remove('scale-95');
+                    }, 50);
+                }, 200);
+            });
+            
+            document.getElementById('register-tab').addEventListener('click', () => {
+                // 标签页样式切换动画
+                document.getElementById('register-tab').classList.remove('border-transparent', 'bg-purple-500/30');
+                document.getElementById('register-tab').classList.add('border-purple-500', 'bg-purple-500/40', 'scale-105');
+                document.getElementById('login-tab').classList.remove('border-blue-500', 'bg-blue-500/40');
+                document.getElementById('login-tab').classList.add('border-transparent', 'bg-blue-500/30', 'scale-95');
+                
+                // 表单切换动画
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                
+                loginForm.style.opacity = '0';
+                loginForm.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                    registerForm.style.opacity = '0';
+                    registerForm.style.transform = 'translateX(20px)';
+                    
+                    setTimeout(() => {
+                        registerForm.style.opacity = '1';
+                        registerForm.style.transform = 'translateX(0)';
+                        // 恢复标签页缩放
+                        document.getElementById('register-tab').classList.remove('scale-105');
+                        document.getElementById('login-tab').classList.remove('scale-95');
+                    }, 50);
+                }, 200);
+            });
+            
+            // 登录功能
+            function handleLogin() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    notification.show('请输入邮箱和密码', 'error');
+                    return;
+                }
+                
+                const auth = window.firebaseAuth;
+                if (!auth) {
+                    notification.show('认证服务初始化失败', 'error');
+                    return;
+                }
+                
+                // 显示加载状态
+                const loginBtnText = document.getElementById('login-btn-text');
+                const loginLoading = document.getElementById('login-loading');
+                const loginSubmit = document.getElementById('login-submit');
+                
+                if (loginBtnText && loginLoading && loginSubmit) {
+                    loginBtnText.textContent = '登录中...';
+                    loginLoading.classList.remove('hidden');
+                    loginSubmit.disabled = true;
+                    loginSubmit.classList.add('opacity-80', 'cursor-not-allowed');
+                }
+                
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // 登录成功
+                        const user = userCredential.user;
+                        console.log('登录成功:', user);
+                        
+                        // 立即显示成功通知
+                        notification.show('登录成功');
+                        
+                        // 异步执行界面切换，不阻塞通知显示
+                        requestAnimationFrame(() => {
+                            hideAuthModal();
+                            updateUIForAuth(user);
+                            
+                            // 登录成功后加载渲染系统并同步数据
+                            console.log('登录成功，加载渲染系统并同步数据...');
+                            loadSystem();
+                        });
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        console.error('登录失败:', errorMessage);
+                        notification.show('登录失败: ' + errorMessage, 'error');
+                        
+                        // 恢复按钮状态
+                        if (loginBtnText && loginLoading && loginSubmit) {
+                            loginBtnText.textContent = '登 录';
+                            loginLoading.classList.add('hidden');
+                            loginSubmit.disabled = false;
+                            loginSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+                        }
+                    });
+            }
+            
+            document.getElementById('login-submit').addEventListener('click', handleLogin);
+            
+            // 添加回车键登录支持
+            document.getElementById('login-email').addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    document.getElementById('login-password').focus();
+                }
+            });
+            
+            document.getElementById('login-password').addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    handleLogin();
+                }
+            });
+            
+            // 注册功能
+            document.getElementById('register-submit').addEventListener('click', () => {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                
+                if (!email || !password) {
+                    notification.show('请输入邮箱和密码', 'error');
+                    return;
+                }
+                
+                const auth = window.firebaseAuth;
+                if (!auth) {
+                    notification.show('认证服务初始化失败', 'error');
+                    return;
+                }
+                
+                // 显示加载状态
+                const registerBtnText = document.getElementById('register-btn-text');
+                const registerLoading = document.getElementById('register-loading');
+                const registerSubmit = document.getElementById('register-submit');
+                
+                if (registerBtnText && registerLoading && registerSubmit) {
+                    registerBtnText.textContent = '注册中...';
+                    registerLoading.classList.remove('hidden');
+                    registerSubmit.disabled = true;
+                    registerSubmit.classList.add('opacity-80', 'cursor-not-allowed');
+                }
+                
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // 注册成功
+                        const user = userCredential.user;
+                        console.log('注册成功:', user);
+                        
+                        // 显示注册成功通知
+                        notification.show('注册成功', 'info');
+                        
+                        // 立即开始表单切换，不等待邮件发送
+                        // 更新标签页样式
+                        const loginTab = document.getElementById('login-tab');
+                        const registerTab = document.getElementById('register-tab');
+                        if (loginTab && registerTab) {
+                            loginTab.classList.remove('border-transparent', 'bg-blue-500/30');
+                            loginTab.classList.add('border-blue-500', 'bg-blue-500/40', 'scale-105');
+                            registerTab.classList.remove('border-purple-500', 'bg-purple-500/40');
+                            registerTab.classList.add('border-transparent', 'bg-purple-500/30', 'scale-95');
+                        }
+                        
+                        // 切换表单动画
+                        const registerForm = document.getElementById('register-form');
+                        const loginForm = document.getElementById('login-form');
+                        if (registerForm && loginForm) {
+                            // 隐藏注册表单
+                            registerForm.style.opacity = '0';
+                            registerForm.style.transform = 'translateX(20px)';
+                            
+                            setTimeout(() => {
+                                registerForm.classList.add('hidden');
+                                // 显示登录表单
+                                loginForm.classList.remove('hidden');
+                                loginForm.style.opacity = '0';
+                                loginForm.style.transform = 'translateX(-20px)';
+                                
+                                setTimeout(() => {
+                                    loginForm.style.opacity = '1';
+                                    loginForm.style.transform = 'translateX(0)';
+                                    // 恢复标签页缩放
+                                    if (loginTab && registerTab) {
+                                        loginTab.classList.remove('scale-105');
+                                        registerTab.classList.remove('scale-95');
+                                    }
+                                }, 50);
+                            }, 100); // 减少延迟时间
+                        }
+                        
+                        // 清空表单
+                        document.getElementById('register-email').value = '';
+                        document.getElementById('register-password').value = '';
+                        
+                        // 恢复按钮状态
+                        if (registerBtnText && registerLoading && registerSubmit) {
+                            registerBtnText.textContent = '注 册';
+                            registerLoading.classList.add('hidden');
+                            registerSubmit.disabled = false;
+                            registerSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+                        }
+                        
+
+                        
+                        // 登出用户，让用户验证后自行登录
+                        // 使用setTimeout延迟登出，避免立即触发onAuthStateChanged
+                        setTimeout(() => {
+                            auth.signOut().then(() => {
+                                console.log('用户已登出，等待邮箱验证');
+                            });
+                        }, 500); // 减少延迟时间
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        console.error('注册失败:', errorMessage);
+                        notification.show('注册失败: ' + errorMessage, 'error');
+                        
+                        // 恢复按钮状态
+                        if (registerBtnText && registerLoading && registerSubmit) {
+                            registerBtnText.textContent = '注 册';
+                            registerLoading.classList.add('hidden');
+                            registerSubmit.disabled = false;
+                            registerSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+                        }
+                    });
+            });
+            
+            // 注册表单回车键提交
+            document.getElementById('register-form').addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    document.getElementById('register-submit').click();
+                }
+            });
+            
+
+            
+
+            
+            // 注册功能 - 已在上方定义
+            
+            // 登出按钮点击事件
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                const auth = window.firebaseAuth;
+                if (!auth) {
+                    notification.show('认证服务初始化失败', 'error');
+                    return;
+                }
+                
+                auth.signOut()
+                    .then(() => {
+                        console.log('登出成功');
+                        // 隐藏系统框架
+                        const nav = document.querySelector('nav');
+                        const main = document.querySelector('main');
+                        if (nav && main) {
+                            nav.style.display = 'none';
+                            main.style.display = 'none';
+                        }
+                        // 重置body透明度
+                        document.body.style.opacity = '1';
+                        // 显示登录界面
+                        updateUIForUnauth();
+                        notification.show('登出成功');
+                    })
+                    .catch((error) => {
+                        console.error('登出失败:', error);
+                        notification.show('登出失败: ' + error.message, 'error');
+                    });
+            });
+            
+            // 监听认证状态变化
+            const auth = window.firebaseAuth;
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // 用户已登录
+                        console.log('用户已登录:', user);
+                        updateUIForAuth(user);
+                    } else {
+                        // 用户未登录
+                        console.log('用户未登录');
+                        updateUIForUnauth();
+                    }
+                });
+            }
+        }
+        
+        // 更新已登录用户的UI
+        function updateUIForAuth(user) {
+            // 显示用户信息
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) {
+                userInfo.textContent = `${user.email} `;
+            }
+            
+            // 确保登出按钮显示
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.classList.remove('hidden');
+            }
+            
+            // 隐藏登录界面，背景渐隐
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                const authContainer = document.getElementById('auth-container');
+                const authBackground = document.getElementById('auth-background');
+                
+                // 先让登录框缩小并淡出（更长的动画）
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-90', 'opacity-0');
+                
+                // 然后让背景渐隐（更长的动画）
+                setTimeout(() => {
+                    authModal.style.opacity = '0';
+                    authBackground.style.opacity = '0';
+                    setTimeout(() => {
+                        authModal.style.display = 'none';
+                        // 重置背景样式，以便下次使用
+                        authModal.style.opacity = '1';
+                        authBackground.style.opacity = '1';
+                    }, 800);
+                }, 400);
+            }
+        }
+        
+        // 更新未登录用户的UI
+        function updateUIForUnauth() {
+            // 隐藏系统框架，确保不会显示
+            const nav = document.querySelector('nav');
+            const main = document.querySelector('main');
+            if (nav && main) {
+                nav.style.display = 'none';
+                main.style.display = 'none';
+            }
+            
+            // 确保body的opacity为1，否则登录界面也会被隐藏
+            const body = document.body;
+            if (body) {
+                body.style.opacity = '1';
+            }
+            
+            // 清空用户信息
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) {
+                userInfo.textContent = '';
+            }
+            
+            // 确保登出按钮隐藏
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.classList.add('hidden');
+            }
+            
+            // 重置登录按钮状态
+            const loginBtnText = document.getElementById('login-btn-text');
+            const loginLoading = document.getElementById('login-loading');
+            const loginSubmit = document.getElementById('login-submit');
+            if (loginBtnText && loginLoading && loginSubmit) {
+                loginBtnText.textContent = '登 录';
+                loginLoading.classList.add('hidden');
+                loginSubmit.disabled = false;
+                loginSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+            
+            // 重置注册按钮状态
+            const registerBtnText = document.getElementById('register-btn-text');
+            const registerLoading = document.getElementById('register-loading');
+            const registerSubmit = document.getElementById('register-submit');
+            if (registerBtnText && registerLoading && registerSubmit) {
+                registerBtnText.textContent = '注 册';
+                registerLoading.classList.add('hidden');
+                registerSubmit.disabled = false;
+                registerSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+            
+            // 确保登录表单显示，注册表单隐藏
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            if (loginForm && registerForm) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            }
+            
+            // 立即显示登录界面
+            const authModal = document.getElementById('auth-modal');
+            const authBackground = document.getElementById('auth-background');
+            const authContainer = document.getElementById('auth-container');
+            if (authModal && authBackground && authContainer) {
+                // 直接显示模态框，避免动画导致的闪烁
+                authModal.style.display = 'flex';
+                authModal.style.opacity = '1';
+                authBackground.style.opacity = '1';
+                authContainer.classList.remove('scale-95', 'opacity-0');
+                authContainer.classList.add('scale-100', 'opacity-100');
+            }
+        }
+        
+        // 自定义下拉菜单功能
+        function initCustomSelects() {
+            // 使用事件委托处理选项点击
+            document.querySelectorAll('.custom-select').forEach(select => {
+                const trigger = select.querySelector('.custom-select-trigger');
+                const options = select.querySelector('.custom-select-options');
+                
+                if (!trigger || !options) return;
+                
+                // 如果已经初始化过，跳过（防止重复绑定）
+                if (select.dataset.initialized === 'true') return;
+                select.dataset.initialized = 'true';
+                
+                // 点击触发器展开/收缩
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = options.classList.contains('open');
+                    
+                    // 关闭所有其他下拉菜单
+                    document.querySelectorAll('.custom-select-options.open').forEach(opt => {
+                        opt.classList.remove('open');
+                        opt.previousElementSibling?.classList.remove('active');
+                    });
+                    
+                    // 切换当前下拉菜单
+                    if (!isOpen) {
+                        options.classList.add('open');
+                        trigger.classList.add('active');
+                    }
+                });
+                
+                // 使用事件委托处理选项点击
+                options.addEventListener('click', (e) => {
+                    const option = e.target.closest('.custom-option');
+                    if (!option) return;
+                    
+                    e.stopPropagation();
+                    
+                    // 更新选中状态
+                    options.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    
+                    // 更新触发器文本
+                    const value = option.dataset.value;
+                    const text = option.textContent;
+                    trigger.querySelector('span').textContent = text;
+                    
+                    // 关闭下拉菜单
+                    options.classList.remove('open');
+                    trigger.classList.remove('active');
+                    
+                    // 触发自定义事件
+                    select.dispatchEvent(new CustomEvent('change', { 
+                        detail: { value, text }
+                    }));
+                    
+                    // 如果是机构选择下拉菜单，自动刷新统计数据
+                    if (select.id === 'statistics-organization-wrapper') {
+                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                        render.statistics(year, month, value);
+                    }
+                });
+            });
+            
+            // 点击外部关闭所有下拉菜单（只绑定一次）
+            if (!window.customSelectOutsideClickBound) {
+                window.customSelectOutsideClickBound = true;
+                document.addEventListener('click', () => {
+                    document.querySelectorAll('.custom-select-options.open').forEach(options => {
+                        options.classList.remove('open');
+                        options.previousElementSibling?.classList.remove('active');
+                    });
+                });
+            }
+        }
+        
+        // 辅助函数：获取自定义下拉菜单的选中值
+        function getCustomSelectValue(wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            if (!wrapper) return null;
+            const selected = wrapper.querySelector('.custom-option.selected');
+            return selected ? selected.dataset.value : null;
+        }
+        
+        // 辅助函数：设置自定义下拉菜单的值
+        function setCustomSelectValue(wrapperId, value) {
+            const wrapper = document.getElementById(wrapperId);
+            if (!wrapper) return;
+            const options = wrapper.querySelectorAll('.custom-option');
+            const trigger = wrapper.querySelector('.custom-select-trigger span');
+            options.forEach(opt => {
+                if (opt.dataset.value === String(value)) {
+                    opt.classList.add('selected');
+                    if (trigger) trigger.textContent = opt.textContent;
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+        
+        // 页面加载完成后初始化自定义下拉菜单
+        document.addEventListener('DOMContentLoaded', initCustomSelects);
     </script>
 
 </body></html>
