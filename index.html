@@ -5893,6 +5893,7 @@
                     authBackground.style.opacity = '0';
                     setTimeout(() => {
                         authModal.style.display = 'none';
+                        authModal.style.pointerEvents = 'none'; // 禁用点击事件
                         // 重置背景样式，以便下次使用
                         authModal.style.opacity = '1';
                         authBackground.style.opacity = '1';
@@ -5964,6 +5965,8 @@
             const authBackground = document.getElementById('auth-background');
             const authContainer = document.getElementById('auth-container');
             if (authModal && authBackground && authContainer) {
+                // 重新启用点击事件
+                authModal.style.pointerEvents = 'auto';
                 // 直接显示模态框，避免动画导致的闪烁
                 authModal.style.display = 'flex';
                 authModal.style.opacity = '1';
