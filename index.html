@@ -18,15 +18,15 @@
             console.warn = () => {};
         }
         
-        // Firebase配置
+        // Firebase配置 - 使用环境变量
         const firebaseConfig = {
-            apiKey: "AIzaSyAFT1hV0tCJEDdFzq0BQChkcfVMGru9h5I",
-            authDomain: "iamshaoning-qiu.firebaseapp.com",
-            projectId: "iamshaoning-qiu",
-            storageBucket: "iamshaoning-qiu.firebasestorage.app",
-            messagingSenderId: "599860248393",
-            appId: "1:599860248393:web:8c3dce72c200cbafbee498",
-            databaseURL: "https://iamshaoning-qiu-default-rtdb.asia-southeast1.firebasedatabase.app/"
+            apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: import.meta.env.VITE_FIREBASE_APP_ID,
+            databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
         };
 
         // 安全检查：确保Firebase配置存在
@@ -6083,15 +6083,5 @@
         // 页面加载完成后初始化自定义下拉菜单
         document.addEventListener('DOMContentLoaded', initCustomSelects);
     </script>
-
-
-
-    <!-- 底部链接 -->
-    <footer class="bg-gray-100 py-4 mt-12">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <a href="./terms.html" class="text-gray-600 hover:text-blue-600 text-sm mr-6">用户协议</a>
-            <a href="./privacy.html" class="text-gray-600 hover:text-blue-600 text-sm">隐私政策</a>
-        </div>
-    </footer>
 
 </body></html>
