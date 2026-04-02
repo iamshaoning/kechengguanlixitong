@@ -7,10 +7,22 @@
 
 + 您可联系我试用，或根据index.html文件自行二次开发 +
 
-@@ 也可以，账号：test，密码：
++ 也可以账号“test“无密码的方式登录系统进入试用模式，此模式不连接服务器，本地也不保留数据
 ```
 
-<br />
+## 预览截图
+
+### 日历视图
+
+!\[日历视图]\(https\://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png null)
+
+### 学生管理
+
+!\[学生管理]\(https\://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png null)
+
+### 数据统计
+
+!\[数据统计]\(https\://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png null)
 
 ## 功能特性
 
