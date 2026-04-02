@@ -1,11 +1,12 @@
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课程管理系统</title><link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script><style>.content-auto{content-visibility:auto}.glass-effect{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}.shadow-soft{box-shadow:0 4px 20px rgba(0,0,0,.05)}input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{display:none}input[type=date]::-moz-calendar-picker-indicator,input[type=time]::-moz-calendar-picker-indicator{display:none}#modal-content>div{width:100%!important;max-width:none!important;margin:0!important;background:0 0!important;border:none!important;box-shadow:none!important}body{overflow-y:scroll}html{scrollbar-width:thin}::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#f1f1f1}::-webkit-scrollbar-thumb{background:#888;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#555}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield;appearance:textfield}select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:none}.calendar-cell-selected{background-color:rgba(59,130,246,.1)!important;border:2px solid #3b82f6!important}.course-item-selected{background-color:rgba(59,130,246,.2)!important;border-left:4px solid #3b82f6!important}@keyframes gradientFlow{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}.page{transition:opacity .3s ease-in-out,transform .3s ease-in-out;opacity:0;transform:translateX(20px)}.page.active{opacity:1;transform:translateX(0)}.page.hidden{display:none;opacity:0;transform:translateX(-20px)}.nav-item{position:relative;transition:all .3s ease-in-out;overflow:hidden}.nav-item::before{content:'';position:absolute;bottom:0;left:50%;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:all .3s ease-in-out;transform:translateX(-50%);border-radius:3px 3px 0 0}.nav-item:hover::before{width:80%}.nav-item.active::before{width:100%}.nav-item.active{background:linear-gradient(135deg,rgba(59,130,246,.1) 0,rgba(139,92,246,.1) 100%);color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.nav-item:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1)}.nav-item i{transition:transform .3s ease-in-out}.nav-item:hover i{transform:scale(1.1)}.nav-item.active i{transform:scale(1.15)}.btn,button{transition:all .2s ease-in-out}.btn:active,button:active{transform:scale(.95)}.btn:not(:active),button:not(:active){transform:scale(1)}.calendar-grid{transition:opacity .3s ease-in-out,transform .3s ease-in-out}.calendar-grid.slide-left{animation:slideLeft .3s ease-in-out}.calendar-grid.slide-right{animation:slideRight .3s ease-in-out}@keyframes slideLeft{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}@keyframes slideRight{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}.modal-backdrop{transition:opacity .4s ease-in-out}.modal-content{transition:all .4s cubic-bezier(.34, 1.56, .64, 1)}.custom-select{position:relative;display:inline-block}.custom-select-trigger{padding:8px 32px 8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s ease;font-size:14px;line-height:1.5;white-space:nowrap;position:relative}.custom-select-trigger:hover{border-color:#3b82f6}.custom-select-trigger.active{border-color:#3b82f6;border-bottom-left-radius:0;border-bottom-right-radius:0}.custom-select-trigger span{display:inline-block;text-align:center}.custom-select-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;transition:transform .3s ease}.custom-select-trigger.active .custom-select-arrow{transform:translateY(-50%) rotate(180deg)}.custom-select-options{position:absolute;top:100%;left:0;min-width:100%;background:#fff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 6px 6px;max-height:0;overflow:hidden;opacity:0;transform:translateY(-10px);transition:all .3s ease;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}.custom-select-options.open{max-height:200px;opacity:1;transform:translateY(0);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.custom-select-options.open::-webkit-scrollbar{display:none}.custom-option{padding:8px 12px;cursor:pointer;transition:background .2s ease;font-size:14px;text-align:center;white-space:nowrap}.custom-option:hover{background:#f3f4f6}.custom-option.selected{background:#eff6ff;color:#3b82f6}#statistics-year-wrapper{width:90px}#statistics-year-wrapper .custom-select-trigger{width:90px;justify-content:center}#statistics-month-wrapper{width:70px}#statistics-month-wrapper .custom-select-trigger{width:70px;justify-content:center}#statistics-organization-wrapper{width:120px}#statistics-organization-wrapper .custom-select-trigger{width:120px;justify-content:center}#statistics-organization-wrapper .custom-select-options{min-width:120px}input:focus,textarea:focus{transition:all .2s ease-in-out;transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.hover-card{transition:all .3s ease-in-out}.hover-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.1)}input::placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-webkit-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-moz-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input:-ms-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}</style><script type="module" crossorigin src="./assets/index-D9JVYBrR.js"></script><link rel="stylesheet" crossorigin href="./assets/index-BUQ129z-.css"></head><body class="bg-gray-50 min-h-screen" style="opacity:0;transition:opacity .5s ease-in-out"><nav class="bg-white shadow-sm border-b border-gray-200" style="display:none"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between h-16"><div class="flex items-center space-x-4"><div class="flex items-center"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-14 w-auto mr-1"><h1 class="text-xl font-bold text-primary">课程管理系统</h1></div><div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors"><span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span> <span id="sync-text" class="text-gray-500">未同步</span></div></div><div class="flex items-center space-x-4"><button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active"><i class="fa fa-calendar mr-1"></i> 日历排课</button> <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-users mr-1"></i> 学生管理</button> <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-bar-chart mr-1"></i> 课时费统计</button><div class="flex items-center space-x-2"><div id="user-info" class="text-sm text-gray-600"></div><button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button></div></div></div></div></nav><main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display:none"><div id="calendar-page" class="page active"><div class="flex justify-between items-center mb-6"><div class="flex items-center space-x-6"><h2 class="text-2xl font-bold text-gray-800">日历排课</h2><div class="flex items-center space-x-4"><button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-left text-gray-600"></i></button><h3 id="current-month" class="text-xl font-medium">2026年3月</h3><button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-right text-gray-600"></i></button></div></div><button id="add-course-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加课程</button></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200"><div class="text-center py-3 font-medium text-gray-700">周日</div><div class="text-center py-3 font-medium text-gray-700">周一</div><div class="text-center py-3 font-medium text-gray-700">周二</div><div class="text-center py-3 font-medium text-gray-700">周三</div><div class="text-center py-3 font-medium text-gray-700">周四</div><div class="text-center py-3 font-medium text-gray-700">周五</div><div class="text-center py-3 font-medium text-gray-700">周六</div></div><div id="calendar-grid" class="grid grid-cols-7"></div></div></div><div id="students-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">学生管理</h2><div class="flex items-center space-x-3"><button id="manage-organizations-btn" style="background-color:#64748b" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-building mr-2"></i> 机构管理</button> <button id="add-student-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加学生</button></div></div><div class="bg-white p-4 rounded-lg shadow-sm mb-6"><div class="flex flex-col md:flex-row gap-4"><div class="flex-grow"><input id="student-search" placeholder="搜索学生、机构" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"></div></div></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-100 border-b border-gray-200"><tr><th class="px-6 py-3 text-left font-medium text-gray-700">姓名</th><th class="px-6 py-3 text-left font-medium text-gray-700">机构</th><th class="px-6 py-3 text-left font-medium text-gray-700">年级</th><th class="px-6 py-3 text-left font-medium text-gray-700">课型</th><th class="px-6 py-3 text-left font-medium text-gray-700">课时费</th><th class="px-6 py-3 text-left font-medium text-gray-700">操作</th></tr></thead><tbody id="students-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div><div id="statistics-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">课时费统计</h2><div class="flex items-center space-x-3"><div class="flex items-center space-x-2 px-2 py-1"><div class="custom-select" id="statistics-year-wrapper"><div class="custom-select-trigger" id="statistics-year-trigger"><span>2024年</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-year-options"></div></div><div class="custom-select" id="statistics-month-wrapper"><div class="custom-select-trigger" id="statistics-month-trigger"><span>1月</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-month-options"><div class="custom-option selected" data-value="0">1月</div><div class="custom-option" data-value="1">2月</div><div class="custom-option" data-value="2">3月</div><div class="custom-option" data-value="3">4月</div><div class="custom-option" data-value="4">5月</div><div class="custom-option" data-value="5">6月</div><div class="custom-option" data-value="6">7月</div><div class="custom-option" data-value="7">8月</div><div class="custom-option" data-value="8">9月</div><div class="custom-option" data-value="9">10月</div><div class="custom-option" data-value="10">11月</div><div class="custom-option" data-value="11">12月</div></div></div></div><div class="custom-select" id="statistics-organization-wrapper"><div class="custom-select-trigger" id="statistics-organization-trigger"><span>全部机构</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-organization-options"><div class="custom-option selected" data-value="">全部机构</div></div></div><button id="export-statistics" style="background-color:#10b981" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-download mr-2"></i> 导出数据</button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3><p id="total-hours" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-blue-100 p-2 rounded-lg"><i class="fa fa-calendar text-blue-600"></i></div></div><div class="mt-3 text-xs text-gray-400">节课程</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3><p id="total-fee" class="text-3xl font-bold text-primary">¥0</p></div><div class="bg-green-100 p-2 rounded-lg"><i class="fa fa-money text-green-600"></i></div></div><div class="mt-3 text-xs text-gray-400">人民币</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3><p id="total-students" class="text-3xl font-bold text-success">0</p></div><div class="bg-purple-100 p-2 rounded-lg"><i class="fa fa-users text-purple-600"></i></div></div><div class="mt-3 text-xs text-gray-400">名学生</div></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">机构数据</h3></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构课节分布</h4></div><div class="h-64"><canvas id="organization-chart"></canvas></div></div><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构详细数据</h4></div><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构名称</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th></tr></thead><tbody id="organization-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div><div id="detailed-type-table-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">课型详细分布</h3></div></div></div></main><div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity:0;transition:opacity .8s ease-in-out"><div id="auth-background" class="absolute inset-0 transition-all duration-1500 ease-in-out" style="background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:gradientFlow 15s ease infinite"></div><div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-800 ease-out scale-95 opacity-0" id="auth-container"><div class="flex items-center justify-center mb-4"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-32 w-auto"></div><div id="auth-tabs" class="flex gap-2 mb-8"><button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow:3px 3px 3px rgba(59,130,246,.5)">登录</button> <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow:3px 3px 3px rgba(147,51,234,.5)">注册</button></div><div id="login-form" class="transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"><span id="login-btn-text">登 录</span> <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></button></div><div id="register-form" class="hidden transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"><span id="register-btn-text">注 册</span> <span id="register-loading" class="hidden ml-2"><i class="fa fa-spinner fa-spin"></i></span></button></div></div></div><div id="modal-container" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400"><div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)"></div></div><div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm"><div class="flex items-center"><div id="notification-icon" class="flex-shrink-0 text-success"><i class="fa fa-check-circle text-xl"></i></div><div class="ml-3"><p id="notification-message" class="text-sm font-medium text-gray-800"></p></div></div></div><div id="context-menu" class="fixed bg-white rounded-lg shadow-lg py-1 z-50 hidden"><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="details">详情</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="edit">编辑</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">复制</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="paste">粘贴</div><div class="border-t border-gray-200 my-1"></div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600" data-action="delete">删除</div></div><script>// 全局状态管理
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课程管理系统</title><link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script><style>.content-auto{content-visibility:auto}.glass-effect{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}.shadow-soft{box-shadow:0 4px 20px rgba(0,0,0,.05)}input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{display:none}input[type=date]::-moz-calendar-picker-indicator,input[type=time]::-moz-calendar-picker-indicator{display:none}#modal-content>div{width:100%!important;max-width:none!important;margin:0!important;background:0 0!important;border:none!important;box-shadow:none!important}body{overflow-y:scroll}html{scrollbar-width:thin}::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#f1f1f1}::-webkit-scrollbar-thumb{background:#888;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#555}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield;appearance:textfield}select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:none}.calendar-cell-selected{background-color:rgba(59,130,246,.1)!important;border:2px solid #3b82f6!important}.course-item-selected{background-color:rgba(59,130,246,.2)!important;border-left:4px solid #3b82f6!important}@keyframes gradientFlow{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}.page{transition:opacity .3s ease-in-out,transform .3s ease-in-out;opacity:0;transform:translateX(20px)}.page.active{opacity:1;transform:translateX(0)}.page.hidden{display:none;opacity:0;transform:translateX(-20px)}.nav-item{position:relative;transition:all .3s ease-in-out;overflow:hidden}.nav-item::before{content:'';position:absolute;bottom:0;left:50%;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:all .3s ease-in-out;transform:translateX(-50%);border-radius:3px 3px 0 0}.nav-item:hover::before{width:80%}.nav-item.active::before{width:100%}.nav-item.active{background:linear-gradient(135deg,rgba(59,130,246,.1) 0,rgba(139,92,246,.1) 100%);color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.nav-item:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1)}.nav-item i{transition:transform .3s ease-in-out}.nav-item:hover i{transform:scale(1.1)}.nav-item.active i{transform:scale(1.15)}.btn,button{transition:all .2s ease-in-out}.btn:active,button:active{transform:scale(.95)}.btn:not(:active),button:not(:active){transform:scale(1)}.calendar-grid{transition:opacity .3s ease-in-out,transform .3s ease-in-out}.calendar-grid.slide-left{animation:slideLeft .3s ease-in-out}.calendar-grid.slide-right{animation:slideRight .3s ease-in-out}@keyframes slideLeft{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}@keyframes slideRight{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}.modal-backdrop{transition:opacity .4s ease-in-out}.modal-content{transition:all .4s cubic-bezier(.34, 1.56, .64, 1)}.custom-select{position:relative;display:inline-block}.custom-select-trigger{padding:8px 32px 8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s ease;font-size:14px;line-height:1.5;white-space:nowrap;position:relative}.custom-select-trigger:hover{border-color:#3b82f6}.custom-select-trigger.active{border-color:#3b82f6;border-bottom-left-radius:0;border-bottom-right-radius:0}.custom-select-trigger span{display:inline-block;text-align:center}.custom-select-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;transition:transform .3s ease}.custom-select-trigger.active .custom-select-arrow{transform:translateY(-50%) rotate(180deg)}.custom-select-options{position:absolute;top:100%;left:0;min-width:100%;background:#fff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 6px 6px;max-height:0;overflow:hidden;opacity:0;transform:translateY(-10px);transition:all .3s ease;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}.custom-select-options.open{max-height:200px;opacity:1;transform:translateY(0);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.custom-select-options.open::-webkit-scrollbar{display:none}.custom-option{padding:8px 12px;cursor:pointer;transition:background .2s ease;font-size:14px;text-align:center;white-space:nowrap}.custom-option:hover{background:#f3f4f6}.custom-option.selected{background:#eff6ff;color:#3b82f6}#statistics-year-wrapper{width:90px}#statistics-year-wrapper .custom-select-trigger{width:90px;justify-content:center}#statistics-month-wrapper{width:70px}#statistics-month-wrapper .custom-select-trigger{width:70px;justify-content:center}#statistics-organization-wrapper{width:120px}#statistics-organization-wrapper .custom-select-trigger{width:120px;justify-content:center}#statistics-organization-wrapper .custom-select-options{min-width:120px}input:focus,textarea:focus{transition:all .2s ease-in-out;transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.hover-card{transition:all .3s ease-in-out}.hover-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.1)}input::placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-webkit-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-moz-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input:-ms-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}</style><script type="module" crossorigin src="./assets/index-wBdHp46-.js"></script><link rel="stylesheet" crossorigin href="./assets/index-C6L6Bj9w.css"></head><body class="bg-gray-50 min-h-screen" style="opacity:0;transition:opacity .5s ease-in-out"><nav class="bg-white shadow-sm border-b border-gray-200" style="display:none"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between h-16"><div class="flex items-center space-x-4"><div class="flex items-center"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-14 w-auto mr-1"><h1 class="text-xl font-bold text-primary">课程管理系统</h1></div><div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors"><span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span> <span id="sync-text" class="text-gray-500">未同步</span></div></div><div class="flex items-center space-x-4"><button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active"><i class="fa fa-calendar mr-1"></i> 日历排课</button> <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-users mr-1"></i> 学生管理</button> <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-bar-chart mr-1"></i> 课时费统计</button><div class="flex items-center space-x-2"><div id="user-info" class="text-sm text-gray-600"></div><button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button></div></div></div></div></nav><main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display:none"><div id="calendar-page" class="page active"><div class="flex justify-between items-center mb-6"><div class="flex items-center space-x-6"><h2 class="text-2xl font-bold text-gray-800">日历排课</h2><div class="flex items-center space-x-4"><button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-left text-gray-600"></i></button><h3 id="current-month" class="text-xl font-medium">2026年3月</h3><button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-right text-gray-600"></i></button></div></div><button id="add-course-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加课程</button></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200"><div class="text-center py-3 font-medium text-gray-700">周日</div><div class="text-center py-3 font-medium text-gray-700">周一</div><div class="text-center py-3 font-medium text-gray-700">周二</div><div class="text-center py-3 font-medium text-gray-700">周三</div><div class="text-center py-3 font-medium text-gray-700">周四</div><div class="text-center py-3 font-medium text-gray-700">周五</div><div class="text-center py-3 font-medium text-gray-700">周六</div></div><div id="calendar-grid" class="grid grid-cols-7"></div></div></div><div id="students-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">学生管理</h2><div class="flex items-center space-x-3"><button id="manage-organizations-btn" style="background-color:#06b6d4" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-building mr-2"></i> 机构管理</button> <button id="manage-grades-btn" style="background-color:#8b5cf6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-graduation-cap mr-2"></i> 年级管理</button> <button id="add-student-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加学生</button></div></div><div class="bg-white p-4 rounded-lg shadow-sm mb-6"><div class="flex flex-col md:flex-row gap-4"><div class="flex-grow"><input id="student-search" placeholder="搜索学生、机构" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"></div></div></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-100 border-b border-gray-200"><tr><th class="px-6 py-3 text-left font-medium text-gray-700">姓名</th><th class="px-6 py-3 text-left font-medium text-gray-700">机构</th><th class="px-6 py-3 text-left font-medium text-gray-700">年级</th><th class="px-6 py-3 text-left font-medium text-gray-700">课型</th><th class="px-6 py-3 text-left font-medium text-gray-700">课时费</th><th class="px-6 py-3 text-left font-medium text-gray-700">操作</th></tr></thead><tbody id="students-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div><div id="statistics-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">课时费统计</h2><div class="flex items-center space-x-3"><div class="flex items-center space-x-2 px-2 py-1"><div class="custom-select" id="statistics-year-wrapper"><div class="custom-select-trigger" id="statistics-year-trigger"><span>2024年</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-year-options"></div></div><div class="custom-select" id="statistics-month-wrapper"><div class="custom-select-trigger" id="statistics-month-trigger"><span>1月</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-month-options"><div class="custom-option selected" data-value="0">1月</div><div class="custom-option" data-value="1">2月</div><div class="custom-option" data-value="2">3月</div><div class="custom-option" data-value="3">4月</div><div class="custom-option" data-value="4">5月</div><div class="custom-option" data-value="5">6月</div><div class="custom-option" data-value="6">7月</div><div class="custom-option" data-value="7">8月</div><div class="custom-option" data-value="8">9月</div><div class="custom-option" data-value="9">10月</div><div class="custom-option" data-value="10">11月</div><div class="custom-option" data-value="11">12月</div></div></div></div><div class="custom-select" id="statistics-organization-wrapper"><div class="custom-select-trigger" id="statistics-organization-trigger"><span>全部机构</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-organization-options"><div class="custom-option selected" data-value="">全部机构</div></div></div><button id="export-statistics" style="background-color:#10b981" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-download mr-2"></i> 导出数据</button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3><p id="total-hours" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-blue-100 p-2 rounded-lg"><i class="fa fa-calendar text-blue-600"></i></div></div><div class="mt-3 text-xs text-gray-400">节课程</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3><p id="total-fee" class="text-3xl font-bold text-primary">¥0</p></div><div class="bg-green-100 p-2 rounded-lg"><i class="fa fa-money text-green-600"></i></div></div><div class="mt-3 text-xs text-gray-400">人民币</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3><p id="total-students" class="text-3xl font-bold text-success">0</p></div><div class="bg-purple-100 p-2 rounded-lg"><i class="fa fa-users text-purple-600"></i></div></div><div class="mt-3 text-xs text-gray-400">名学生</div></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">机构数据</h3></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构课节分布</h4></div><div class="h-64"><canvas id="organization-chart"></canvas></div></div><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构详细数据</h4></div><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构名称</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th></tr></thead><tbody id="organization-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div><div id="detailed-type-table-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">课型详细分布</h3></div></div></div></main><div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity:0;transition:opacity .3s ease-out"><div id="auth-background" class="absolute inset-0" style="background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:gradientFlow 15s ease infinite"></div><div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-300 ease-out scale-95 opacity-0" id="auth-container"><div class="flex items-center justify-center mb-4"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-32 w-auto"></div><div id="auth-tabs" class="flex gap-2 mb-8"><button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow:3px 3px 3px rgba(59,130,246,.5)">登录</button> <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow:3px 3px 3px rgba(147,51,234,.5)">注册</button></div><div id="login-form" class="transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"><span id="login-btn-text">登 录</span> <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></button></div><div id="register-form" class="hidden transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"><span id="register-btn-text">注 册</span> <span id="register-loading" class="hidden ml-2"><i class="fa fa-spinner fa-spin"></i></span></button></div></div></div><div id="modal-container" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400"><div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)"></div></div><div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm"><div class="flex items-center"><div id="notification-icon" class="flex-shrink-0 text-success"><i class="fa fa-check-circle text-xl"></i></div><div class="ml-3"><p id="notification-message" class="text-sm font-medium text-gray-800"></p></div></div></div><div id="context-menu" class="fixed bg-white rounded-lg shadow-lg py-1 z-50 hidden"><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="details">详情</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="edit">编辑</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">复制</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="paste">粘贴</div><div class="border-t border-gray-200 my-1"></div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600" data-action="delete">删除</div></div><script>// 全局状态管理
         const state = {
             currentDate: new Date(),
             currentYear: new Date().getFullYear(),
             currentMonth: new Date().getMonth(),
             students: [],
             courses: [],
-            organizations: []
+            organizations: [],
+            grades: []
         };
 
         // 工具函数
@@ -102,6 +103,7 @@
                     students: state.students,
                     courses: state.courses,
                     organizations: state.organizations,
+                    grades: state.grades,
                     lastUpdated: new Date().toISOString()
                 };
                 
@@ -134,7 +136,8 @@
             // 从Firebase加载数据并同步
             loadData: () => {
                 const defaults = {
-                    organizations: []
+                    organizations: [],
+                    grades: []
                 };
                 
                 console.log('开始加载数据，Firebase Database:', window.firebaseDatabase);
@@ -149,8 +152,55 @@
                     console.log('用户已登录，尝试从服务器加载数据...');
                     const userId = auth.currentUser.uid;
                     const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
+                    
+                    // 实时数据监听
+                    function setupRealtimeListener() {
+                        window.firebaseOnValue(dbRef, (snapshot) => {
+                            console.log('检测到服务器数据变化');
+                            if (snapshot.exists()) {
+                                const serverData = snapshot.val();
+                                
+                                // 比较服务器数据和本地数据
+                                const localDataStr = localStorage.getItem('courseManagerData');
+                                const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                                
+                                if (localData) {
+                                    const hasChanged =
+                                        JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
+                                        JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
+                                        JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations) ||
+                                        JSON.stringify(localData.grades) !== JSON.stringify(serverData.grades);
+                                    
+                                    if (hasChanged) {
+                                        console.log('服务器数据已变化，自动更新本地数据');
+                                        // 自动更新本地数据
+                                        state.students = serverData.students || [];
+                                        state.courses = serverData.courses || [];
+                                        state.organizations = serverData.organizations || [];
+                                        state.grades = serverData.grades || [];
+                                        
+                                        // 保存到本地存储
+                                        localStorage.setItem('courseManagerData', JSON.stringify(serverData));
+                                        
+                                        // 重新渲染页面
+                                        render.students();
+                                        render.calendar();
+                                        const { year, month, organization } = utils.getStatisticsParams();
+                                        render.statistics(year, month, organization);
+                                        
+                                        // 显示同步成功通知
+                                        notification.show('数据已从服务器更新', 'info');
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
                     window.firebaseGet(dbRef).then((snapshot) => {
                         console.log('服务器数据加载成功，快照存在:', snapshot.exists());
+                        
+                        // 设置实时监听
+                        setupRealtimeListener();
                         
                         // 获取本地数据
                         const localDataStr = localStorage.getItem('courseManagerData');
@@ -165,10 +215,11 @@
                             
                             if (localData) {
                                 // 本地有数据，比较数据是否不同
-                                const hasChanged = 
+                                const hasChanged =
                                     JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
                                     JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
-                                    JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations);
+                                    JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations) ||
+                                    JSON.stringify(localData.grades) !== JSON.stringify(serverData.grades);
                                 
                                 if (hasChanged) {
                                     // 数据不同，显示比较界面
@@ -181,6 +232,7 @@
                                     state.students = localData.students || [];
                                     state.courses = localData.courses || [];
                                     state.organizations = localData.organizations || defaults.organizations;
+                                    state.grades = localData.grades || defaults.grades;
                                     utils.updateSyncStatus('success', '同步成功');
                                     
                                     // 数据加载完成后重新渲染页面
@@ -195,6 +247,7 @@
                                 state.students = serverData.students || [];
                                 state.courses = serverData.courses || [];
                                 state.organizations = serverData.organizations || defaults.organizations;
+                                state.grades = serverData.grades || defaults.grades;
                                 
                                 // 保存到本地
                                 localStorage.setItem('courseManagerData', JSON.stringify(serverData));
@@ -216,6 +269,7 @@
                                 state.students = localData.students || [];
                                 state.courses = localData.courses || [];
                                 state.organizations = localData.organizations || defaults.organizations;
+                                state.grades = localData.grades || defaults.grades;
                                 utils.updateSyncStatus('success', '同步成功');
                                 
                                 // 数据加载完成后重新渲染页面
@@ -229,6 +283,7 @@
                                 state.students = localData.students || [];
                                 state.courses = localData.courses || [];
                                 state.organizations = localData.organizations || defaults.organizations;
+                                state.grades = localData.grades || defaults.grades;
                                 utils.updateSyncStatus('error', '同步失败');
                                 
                                 // 数据加载完成后重新渲染页面
@@ -243,6 +298,7 @@
                             state.students = [];
                             state.courses = [];
                             state.organizations = defaults.organizations;
+                            state.grades = defaults.grades;
                             utils.updateSyncStatus('success', '同步成功');
                             
                             // 数据加载完成后重新渲染页面
@@ -293,7 +349,8 @@
             // 从localStorage加载数据（备用方法）
             loadFromLocalStorage: () => {
                 const defaults = {
-                    organizations: []
+                    organizations: [],
+                    grades: []
                 };
                 
                 try {
@@ -303,6 +360,7 @@
                     state.students = parsed.students || [];
                     state.courses = parsed.courses || [];
                     state.organizations = parsed.organizations || defaults.organizations;
+                    state.grades = parsed.grades || defaults.grades;
                     console.log('数据从localStorage加载成功');
                     // 显示加载本地数据成功的通知
                     notification.show('本地数据加载成功', 'success');
@@ -1267,9 +1325,36 @@
                             }
                         });
                         
-                        contextMenu.style.left = `${e.clientX}px`;
-                        contextMenu.style.top = `${e.clientY}px`;
+                        // 计算菜单位置，确保不会被遮挡
+                        const menuWidth = contextMenu.offsetWidth || 200;
+                        const menuHeight = contextMenu.offsetHeight || 200;
+                        const windowWidth = window.innerWidth;
+                        const windowHeight = window.innerHeight;
+                        
+                        let left = e.clientX;
+                        let top = e.clientY;
+                        
+                        // 检查右侧是否会被遮挡
+                        if (left + menuWidth > windowWidth) {
+                            left = windowWidth - menuWidth - 10;
+                        }
+                        
+                        // 检查底部是否会被遮挡
+                        if (top + menuHeight > windowHeight) {
+                            top = windowHeight - menuHeight - 10;
+                        }
+                        
+                        // 确保菜单在视口内
+                        left = Math.max(0, left);
+                        top = Math.max(0, top);
+                        
+                        contextMenu.style.left = `${left}px`;
+                        contextMenu.style.top = `${top}px`;
                         contextMenu.classList.remove('hidden');
+                        
+                        // 禁用滚轮事件，防止菜单跟随滚动
+                        contextMenu.style.position = 'fixed';
+                        contextMenu.style.zIndex = '50';
                         
                         // 点击菜单项时的处理
                         document.querySelectorAll('.context-menu-item').forEach(item => {
@@ -2315,11 +2400,37 @@
                                 <input type="hidden" id="edit-course-id" value="${course.id}">
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
-                                    <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                        <input type="date" id="course-date" value="${course.date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10">
-                                        <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-date').showPicker();">
-                                            <i class="fa fa-calendar"></i>
-                                        </button>
+                                    <div class="relative">
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleDatePicker('course-date-container')">
+                                            <input type="text" id="course-date" value="${course.date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
+                                                <i class="fa fa-calendar"></i>
+                                            </button>
+                                        </div>
+                                        <!-- 自定义日期选择器 -->
+                                        <div id="course-date-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                            <div class="p-3">
+                                                <div class="flex justify-between items-center mb-3">
+                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', -1)">
+                                                        <i class="fa fa-chevron-left"></i>
+                                                    </button>
+                                                    <h3 id="current-date-month" class="text-sm font-medium"></h3>
+                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', 1)">
+                                                        <i class="fa fa-chevron-right"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="grid grid-cols-7 gap-1 mb-2">
+                                                    <div class="text-center text-xs text-gray-500">日</div>
+                                                    <div class="text-center text-xs text-gray-500">一</div>
+                                                    <div class="text-center text-xs text-gray-500">二</div>
+                                                    <div class="text-center text-xs text-gray-500">三</div>
+                                                    <div class="text-center text-xs text-gray-500">四</div>
+                                                    <div class="text-center text-xs text-gray-500">五</div>
+                                                    <div class="text-center text-xs text-gray-500">六</div>
+                                                </div>
+                                                <div id="date-grid" class="grid grid-cols-7 gap-1"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mb-4">
@@ -2345,27 +2456,93 @@
                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                            <input type="time" id="course-start-time" value="${course.startTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120)" onkeydown="handleTimeInputKeydown(event, 'course-start-time', 'course-end-time')">
-                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-start-time').showPicker();">
-                                                <i class="fa fa-clock-o"></i>
-                                            </button>
+                                        <div class="relative">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleTimePicker('start-time-container')">
+                                                <input type="time" id="course-start-time" value="${course.startTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120); calculateFee();">
+                                                <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
+                                                    <i class="fa fa-clock-o"></i>
+                                                </button>
+                                            </div>
+                                            <!-- 自定义时间选择器 -->
+                                            <div id="start-time-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                                <div class="p-3">
+                                                    <div class="flex justify-between items-center mb-3">
+                                                        <h4 class="text-sm font-medium">选择时间</h4>
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('start-time-container').classList.add('hidden')">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <!-- 小时选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 24}, (_, i) => {
+                                                                    const hour = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-start-time', '${hour}')">${hour}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <!-- 分钟选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 60}, (_, i) => {
+                                                                    const minute = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-start-time', '${minute}')">${minute}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                            <input type="time" id="course-end-time" value="${course.endTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onkeydown="handleTimeInputKeydown(event, 'course-end-time', 'course-start-time')">
-                                            <div class="absolute right-0 top-0 h-full flex items-center">
-                                                <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
-                                                    <i class="fa fa-minus"></i>
-                                                </button>
-                                                <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
-                                                    <i class="fa fa-plus"></i>
-                                                </button>
-                                                <button type="button" class="px-3 text-gray-500 hover:text-gray-700" onclick="document.getElementById('course-end-time').showPicker();">
-                                                    <i class="fa fa-clock-o"></i>
-                                                </button>
+                                        <div class="relative">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                                <input type="time" id="course-end-time" value="${course.endTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onclick="toggleTimePicker('end-time-container')" onchange="calculateFee();">
+                                                <div class="absolute right-0 top-0 h-full flex items-center">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
+                                                        <i class="fa fa-minus"></i>
+                                                    </button>
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
+                                                        <i class="fa fa-plus"></i>
+                                                    </button>
+                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="toggleTimePicker('end-time-container')">
+                                                        <i class="fa fa-clock-o"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- 自定义时间选择器 -->
+                                            <div id="end-time-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                                <div class="p-3">
+                                                    <div class="flex justify-between items-center mb-3">
+                                                        <h4 class="text-sm font-medium">选择时间</h4>
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('end-time-container').classList.add('hidden')">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <!-- 小时选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 24}, (_, i) => {
+                                                                    const hour = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-end-time', '${hour}')">${hour}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <!-- 分钟选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 60}, (_, i) => {
+                                                                    const minute = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-end-time', '${minute}')">${minute}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2429,14 +2606,16 @@
                                         const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
                                         const fee = lessonType === '一对一' ? (studentFees['一对一'] || 0) : 0;
                                         return `
-                                            <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all ${isSelected ? 'selected bg-opacity-40' : ''}" 
+                                            <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all duration-200 ${isSelected ? 'selected bg-opacity-40' : ''}" 
                                                     data-id="${student.id}" 
                                                     data-name="${student.name}" 
                                                     data-organization="${student.organization}" 
                                                     data-grade="${student.grade || '未设置'}" 
                                                     data-color="${color}"
                                                     data-fee="${fee}"
-                                                    style="border-color: ${color}; color: ${color}; background-color: ${isSelected ? `${color}40` : 'transparent'}"
+                                                    style="border-color: ${color}; color: ${color}; background-color: ${isSelected ? `${color}40` : 'transparent'}; transform: translateY(0);"
+                                                    onmouseover="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : '${color}20'; this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';"
+                                                    onmouseout="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent'; this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
                                                     onclick="
                                                         if ('${lessonType}' === '一对一') {
                                                             // 一对一课型只能选择一个学生
@@ -2454,25 +2633,35 @@
                                                                 }
                                                             }, 10);
                                                         } else {
-                                                            // 多人课型可以多选，但必须同一年级
+                                                            // 多人课型可以多选，但必须同一年级且同一机构
                                                             const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                                                            const currentOrganization = this.dataset.organization;
                                                             const currentGrade = this.dataset.grade;
                                                             
-                                                            // 检查是否与已选中学生年级一致
+                                                            // 检查是否与已选中学生机构一致
+                                                            let organizationMatch = true;
                                                             let gradeMatch = true;
                                                             selectedStudents.forEach(btn => {
+                                                                if (btn.dataset.organization !== currentOrganization) {
+                                                                    organizationMatch = false;
+                                                                }
                                                                 if (btn.dataset.grade !== currentGrade) {
                                                                     gradeMatch = false;
                                                                 }
                                                             });
                                                             
-                                                            if (!gradeMatch) {
+                                                            if (!organizationMatch) {
+                                                                // 机构不一致，显示错误提示
+                                                                if (typeof notification !== 'undefined') {
+                                                                    notification.show('多人课只能选择同一机构的学生', 'error');
+                                                                }
+                                                            } else if (!gradeMatch) {
                                                                 // 年级不一致，显示错误提示
                                                                 if (typeof notification !== 'undefined') {
                                                                     notification.show('多人课只能选择同一年级的学生', 'error');
                                                                 }
                                                             } else {
-                                                                // 年级一致，允许选择
+                                                                // 机构和年级都一致，允许选择
                                                                 this.classList.toggle('selected');
                                                                 this.classList.toggle('bg-opacity-40');
                                                                 this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent';
@@ -2613,11 +2802,37 @@
                             <div id="add-course-form">
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
-                                    <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                        <input type="date" id="course-date" value="${date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10">
-                                        <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-date').showPicker();">
-                                            <i class="fa fa-calendar"></i>
-                                        </button>
+                                    <div class="relative">
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleDatePicker('course-date-container')">
+                                            <input type="text" id="course-date" value="${date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
+                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
+                                                <i class="fa fa-calendar"></i>
+                                            </button>
+                                        </div>
+                                        <!-- 自定义日期选择器 -->
+                                        <div id="course-date-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                            <div class="p-3">
+                                                <div class="flex justify-between items-center mb-3">
+                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', -1)">
+                                                        <i class="fa fa-chevron-left"></i>
+                                                    </button>
+                                                    <h3 id="current-date-month" class="text-sm font-medium"></h3>
+                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', 1)">
+                                                        <i class="fa fa-chevron-right"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="grid grid-cols-7 gap-1 mb-2">
+                                                    <div class="text-center text-xs text-gray-500">日</div>
+                                                    <div class="text-center text-xs text-gray-500">一</div>
+                                                    <div class="text-center text-xs text-gray-500">二</div>
+                                                    <div class="text-center text-xs text-gray-500">三</div>
+                                                    <div class="text-center text-xs text-gray-500">四</div>
+                                                    <div class="text-center text-xs text-gray-500">五</div>
+                                                    <div class="text-center text-xs text-gray-500">六</div>
+                                                </div>
+                                                <div id="date-grid" class="grid grid-cols-7 gap-1"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mb-4">
@@ -2643,27 +2858,93 @@
                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                            <input type="time" id="course-start-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120)" onkeydown="handleTimeInputKeydown(event, 'course-start-time', 'course-end-time')">
-                                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="document.getElementById('course-start-time').showPicker();">
-                                                <i class="fa fa-clock-o"></i>
-                                            </button>
+                                        <div class="relative">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleTimePicker('start-time-container')">
+                                                <input type="time" id="course-start-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120); calculateFee();">
+                                                <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
+                                                    <i class="fa fa-clock-o"></i>
+                                                </button>
+                                            </div>
+                                            <!-- 自定义时间选择器 -->
+                                            <div id="start-time-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                                <div class="p-3">
+                                                    <div class="flex justify-between items-center mb-3">
+                                                        <h4 class="text-sm font-medium">选择时间</h4>
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('start-time-container').classList.add('hidden')">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <!-- 小时选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 24}, (_, i) => {
+                                                                    const hour = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-start-time', '${hour}')">${hour}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <!-- 分钟选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 60}, (_, i) => {
+                                                                    const minute = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-start-time', '${minute}')">${minute}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                            <input type="time" id="course-end-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onkeydown="handleTimeInputKeydown(event, 'course-end-time', 'course-start-time')">
-                                            <div class="absolute right-0 top-0 h-full flex items-center">
-                                                <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
-                                                    <i class="fa fa-minus"></i>
-                                                </button>
-                                                <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
-                                                    <i class="fa fa-plus"></i>
-                                                </button>
-                                                <button type="button" class="px-3 text-gray-500 hover:text-gray-700" onclick="document.getElementById('course-end-time').showPicker();">
-                                                    <i class="fa fa-clock-o"></i>
-                                                </button>
+                                        <div class="relative">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden">
+                                                <input type="time" id="course-end-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onclick="toggleTimePicker('end-time-container')" onchange="calculateFee();">
+                                                <div class="absolute right-0 top-0 h-full flex items-center">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
+                                                        <i class="fa fa-minus"></i>
+                                                    </button>
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
+                                                        <i class="fa fa-plus"></i>
+                                                    </button>
+                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="toggleTimePicker('end-time-container')">
+                                                        <i class="fa fa-clock-o"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- 自定义时间选择器 -->
+                                            <div id="end-time-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                                                <div class="p-3">
+                                                    <div class="flex justify-between items-center mb-3">
+                                                        <h4 class="text-sm font-medium">选择时间</h4>
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('end-time-container').classList.add('hidden')">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <!-- 小时选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 24}, (_, i) => {
+                                                                    const hour = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-end-time', '${hour}')">${hour}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <!-- 分钟选择 -->
+                                                        <div class="flex-1">
+                                                            <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
+                                                                ${Array.from({length: 60}, (_, i) => {
+                                                                    const minute = String(i).padStart(2, '0');
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-end-time', '${minute}')">${minute}</button>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2726,14 +3007,16 @@
                                         const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
                                         const fee = lessonType === '一对一' ? (studentFees['一对一'] || 0) : 0;
                                         return `
-                                            <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all"
+                                            <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all duration-200"
                                                     data-id="${student.id}"
                                                     data-name="${student.name}"
                                                     data-organization="${student.organization}"
                                                     data-grade="${student.grade || '未设置'}"
                                                     data-color="${color}"
                                                     data-fee="${fee}"
-                                                    style="border-color: ${color}; color: ${color}; background-color: transparent;"
+                                                    style="border-color: ${color}; color: ${color}; background-color: transparent; transform: translateY(0);"
+                                                    onmouseover="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : '${color}20'; this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';"
+                                                    onmouseout="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent'; this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
                                                     onclick="
                                                         if ('${lessonType}' === '一对一') {
                                                             // 一对一课型只能选择一个学生
@@ -2752,25 +3035,35 @@
                                                             // 重置费用颜色
                                                             feeInput.classList.remove('text-red-500');
                                                         } else {
-                                                            // 多人课型可以多选，但必须同一年级
+                                                            // 多人课型可以多选，但必须同一年级且同一机构
                                                             const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                                                            const currentOrganization = this.dataset.organization;
                                                             const currentGrade = this.dataset.grade;
                                                             
-                                                            // 检查是否与已选中学生年级一致
+                                                            // 检查是否与已选中学生机构一致
+                                                            let organizationMatch = true;
                                                             let gradeMatch = true;
                                                             selectedStudents.forEach(btn => {
+                                                                if (btn.dataset.organization !== currentOrganization) {
+                                                                    organizationMatch = false;
+                                                                }
                                                                 if (btn.dataset.grade !== currentGrade) {
                                                                     gradeMatch = false;
                                                                 }
                                                             });
                                                             
-                                                            if (!gradeMatch) {
+                                                            if (!organizationMatch) {
+                                                                // 机构不一致，显示错误提示
+                                                                if (typeof notification !== 'undefined') {
+                                                                    notification.show('多人课只能选择同一机构的学生', 'error');
+                                                                }
+                                                            } else if (!gradeMatch) {
                                                                 // 年级不一致，显示错误提示
                                                                 if (typeof notification !== 'undefined') {
                                                                     notification.show('多人课只能选择同一年级的学生', 'error');
                                                                 }
                                                             } else {
-                                                                // 年级一致，允许选择
+                                                                // 机构和年级都一致，允许选择
                                                                 this.classList.toggle('selected');
                                                                 this.classList.toggle('bg-opacity-40');
                                                                 this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent';
@@ -3036,13 +3329,11 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
                                         <div class="custom-select w-full" id="student-grade-wrapper">
                                             <div class="custom-select-trigger" id="student-grade-trigger">
-                                                <span>初一</span>
+                                                <span>${state.grades[0] || '请选择年级'}</span>
                                                 <i class="custom-select-arrow fa fa-chevron-down"></i>
                                             </div>
                                             <div class="custom-select-options" id="student-grade-options">
-                                                <div class="custom-option selected" data-value="初一">初一</div>
-                                                <div class="custom-option" data-value="初二">初二</div>
-                                                <div class="custom-option" data-value="初三">初三</div>
+                                                ${state.grades.map((grade, index) => `<div class="custom-option ${index === 0 ? 'selected' : ''}" data-value="${grade}">${grade}</div>`).join('')}
                                             </div>
                                         </div>
                                     </div>
@@ -3259,9 +3550,7 @@
                                                 <i class="custom-select-arrow fa fa-chevron-down"></i>
                                             </div>
                                             <div class="custom-select-options" id="edit-student-grade-options">
-                                                <div class="custom-option ${student.grade === '初一' ? 'selected' : ''}" data-value="初一">初一</div>
-                                                <div class="custom-option ${student.grade === '初二' ? 'selected' : ''}" data-value="初二">初二</div>
-                                                <div class="custom-option ${student.grade === '初三' ? 'selected' : ''}" data-value="初三">初三</div>
+                                                ${state.grades.map(grade => `<div class="custom-option ${grade === student.grade ? 'selected' : ''}" data-value="${grade}">${grade}</div>`).join('')}
                                             </div>
                                         </div>
                                     </div>
@@ -3506,12 +3795,12 @@
                                 
                                 // 保存按钮
                                 const saveBtn = document.createElement('button');
-                                saveBtn.className = 'text-success hover:text-green-700 ml-2';
+                                saveBtn.className = 'text-success hover:text-green-700';
                                 saveBtn.innerHTML = '<i class="fa fa-check"></i>';
                                 
                                 // 取消按钮
                                 const cancelBtn = document.createElement('button');
-                                cancelBtn.className = 'text-gray-500 hover:text-gray-700 ml-2';
+                                cancelBtn.className = 'text-danger hover:text-red-700';
                                 cancelBtn.innerHTML = '<i class="fa fa-times"></i>';
                                 
                                 // 替换编辑和删除按钮为保存和取消按钮
@@ -3729,6 +4018,208 @@
         
             },
             
+            // 显示年级管理模态框
+            showManageGrades: () => {
+                const content = `
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium">年级管理</h3>
+                                <button class="close-modal text-gray-400 hover:text-gray-600">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <input type="text" id="new-grade" placeholder="输入新年级名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <button id="add-grade" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有年级</h4>
+                                <div id="grades-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                    ${state.grades.map(grade => `
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-grade="${grade}">
+                                            <span class="grade-name">${grade}</span>
+                                            <div class="flex items-center space-x-2">
+                                                <button class="text-primary hover:text-blue-700 edit-grade" data-grade="${grade}">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button class="text-danger hover:text-red-700 delete-grade" data-grade="${grade}">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="button" class="close-modal px-4 py-2 text-gray-700">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.show(content);
+                
+                // 自动激活输入框并绑定事件
+                setTimeout(() => {
+                    document.getElementById('new-grade').focus();
+                    
+                    // 使用事件委托处理年级管理操作
+                    const gradesList = document.getElementById('grades-list');
+                    if (gradesList) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        gradesList.onclick = null;
+                        
+                        gradesList.onclick = (event) => {
+                            const editButton = event.target.closest('.edit-grade');
+                            const deleteButton = event.target.closest('.delete-grade');
+                            
+                            if (editButton) {
+                                event.stopPropagation();
+                                const grade = editButton.dataset.grade;
+                                // 找到外层的年级项div（排除按钮本身）
+                                let gradeItem = editButton.closest('[data-grade]');
+                                // 如果找到的是按钮本身，继续向上查找
+                                while (gradeItem && gradeItem.tagName === 'BUTTON') {
+                                    gradeItem = gradeItem.parentElement.closest('[data-grade]');
+                                }
+                                if (!gradeItem) {
+                                    console.error('找不到年级项元素');
+                                    return;
+                                }
+                                const gradeNameSpan = gradeItem.querySelector('.grade-name');
+                                if (!gradeNameSpan) {
+                                    console.error('找不到年级名称元素');
+                                    return;
+                                }
+                                
+                                // 创建编辑输入框
+                                const input = document.createElement('input');
+                                input.type = 'text';
+                                input.value = grade;
+                                input.className = 'flex-grow px-2 py-1 border border-gray-300 rounded text-sm';
+                                
+                                // 替换文本为输入框
+                                gradeNameSpan.replaceWith(input);
+                                input.focus();
+                                input.select();
+                                
+                                // 保存按钮
+                                const saveBtn = document.createElement('button');
+                                saveBtn.className = 'text-success hover:text-green-700';
+                                saveBtn.innerHTML = '<i class="fa fa-check"></i>';
+                                
+                                // 取消按钮
+                                const cancelBtn = document.createElement('button');
+                                cancelBtn.className = 'text-danger hover:text-red-700';
+                                cancelBtn.innerHTML = '<i class="fa fa-times"></i>';
+                                
+                                // 替换编辑和删除按钮为保存和取消按钮
+                                const btnContainer = editButton.parentElement;
+                                if (!btnContainer) {
+                                    console.error('找不到按钮容器');
+                                    return;
+                                }
+                                // 使用 replaceChildren 更安全地替换子元素
+                                btnContainer.replaceChildren(saveBtn, cancelBtn);
+                                
+                                // 保存编辑
+                                const saveEdit = () => {
+                                    const newGrade = input.value.trim();
+                                    
+                                    // 如果没有修改或为空，直接返回
+                                    if (!newGrade || newGrade === grade) {
+                                        modal.showManageGrades(); // 重新渲染
+                                        return;
+                                    }
+                                    
+                                    // 检查是否已存在
+                                    if (state.grades.includes(newGrade)) {
+                                        notification.show('该年级名称已存在', 'error');
+                                        return;
+                                    }
+                                    
+                                    // 更新年级名称
+                                    const index = state.grades.indexOf(grade);
+                                    if (index !== -1) {
+                                        state.grades[index] = newGrade;
+                                        // 同时更新使用该年级的学生
+                                        state.students.forEach(student => {
+                                            if (student.grade === grade) {
+                                                student.grade = newGrade;
+                                            }
+                                        });
+                                        utils.saveData();
+                                        modal.showManageGrades(); // 重新渲染
+                                        notification.show('年级修改成功');
+                                    }
+                                };
+                                
+                                // 取消编辑
+                                const cancelEdit = () => {
+                                    modal.showManageGrades(); // 重新渲染
+                                };
+                                
+                                // 绑定事件
+                                saveBtn.addEventListener('click', saveEdit);
+                                cancelBtn.addEventListener('click', cancelEdit);
+                                input.addEventListener('keypress', (event) => {
+                                    if (event.key === 'Enter') {
+                                        saveEdit();
+                                    } else if (event.key === 'Escape') {
+                                        cancelEdit();
+                                    }
+                                });
+                                input.addEventListener('blur', saveEdit);
+                            } else if (deleteButton) {
+                                event.stopPropagation();
+                                const grade = deleteButton.dataset.grade;
+                                const usedByStudents = state.students.some(s => s.grade === grade);
+                                if (usedByStudents) {
+                                    notification.show('该年级正在被使用，无法删除', 'error');
+                                    return;
+                                }
+                                state.grades = state.grades.filter(g => g !== grade);
+                                utils.saveData();
+                                modal.showManageGrades(); // 重新渲染
+                                notification.show('年级删除成功');
+                            }
+                        };
+                    }
+                    
+                    // 添加年级
+                    const addGradeBtn = document.getElementById('add-grade');
+                    if (addGradeBtn) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        addGradeBtn.onclick = null;
+                        addGradeBtn.onclick = () => {
+                            const newGrade = document.getElementById('new-grade').value.trim();
+                            if (newGrade && !state.grades.includes(newGrade)) {
+                                state.grades.push(newGrade);
+                                utils.saveData();
+                                modal.showManageGrades(); // 重新渲染
+                                notification.show('年级添加成功');
+                            }
+                        };
+                    }
+                    
+                    // 回车键添加年级
+                    const newGradeInput = document.getElementById('new-grade');
+                    if (newGradeInput) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        newGradeInput.onkeypress = null;
+                        newGradeInput.onkeypress = (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                document.getElementById('add-grade').click();
+                            }
+                        };
+                    }
+                }, 100);
+            },
+            
             // 显示删除学生模态框
             showDeleteStudent: (student) => {
                 const content = `
@@ -3811,6 +4302,7 @@
                     students: localData?.students?.length || 0,
                     courses: localData?.courses?.length || 0,
                     organizations: localData?.organizations?.length || 0,
+                    grades: localData?.grades?.length || 0,
                     timestamp: localData?.lastUpdated ? new Date(localData.lastUpdated).toLocaleString() : '无'
                 };
                 
@@ -3818,6 +4310,7 @@
                     students: serverData?.students?.length || 0,
                     courses: serverData?.courses?.length || 0,
                     organizations: serverData?.organizations?.length || 0,
+                    grades: serverData?.grades?.length || 0,
                     timestamp: serverData?.lastUpdated ? new Date(serverData.lastUpdated).toLocaleString() : '无'
                 };
                 
@@ -3843,6 +4336,7 @@
                                             <li><span class="text-gray-500">学生数量：</span> ${localStats.students}</li>
                                             <li><span class="text-gray-500">课程数量：</span> ${localStats.courses}</li>
                                             <li><span class="text-gray-500">机构数量：</span> ${localStats.organizations}</li>
+                                            <li><span class="text-gray-500">年级数量：</span> ${localStats.grades}</li>
                                             <li><span class="text-gray-500">最后更新：</span> ${localStats.timestamp}</li>
                                         </ul>
                                     </div>
@@ -3856,6 +4350,7 @@
                                             <li><span class="text-gray-500">学生数量：</span> ${serverStats.students}</li>
                                             <li><span class="text-gray-500">课程数量：</span> ${serverStats.courses}</li>
                                             <li><span class="text-gray-500">机构数量：</span> ${serverStats.organizations}</li>
+                                            <li><span class="text-gray-500">年级数量：</span> ${serverStats.grades}</li>
                                             <li><span class="text-gray-500">最后更新：</span> ${serverStats.timestamp}</li>
                                         </ul>
                                     </div>
@@ -3888,6 +4383,7 @@
                             state.students = localData.students || [];
                             state.courses = localData.courses || [];
                             state.organizations = localData.organizations || [];
+                            state.grades = localData.grades || [];
                             // 上传到服务器
                             const auth = window.firebaseAuth;
                             if (window.firebaseDatabase && auth && auth.currentUser) {
@@ -3924,6 +4420,7 @@
                             state.students = serverData.students || [];
                             state.courses = serverData.courses || [];
                             state.organizations = serverData.organizations || [];
+                            state.grades = serverData.grades || [];
                             // 保存到本地
                             localStorage.setItem('courseManagerData', JSON.stringify(serverData));
                             utils.updateSyncStatus('success', '同步成功');
@@ -4117,6 +4614,11 @@
                 // 机构管理按钮
                 document.getElementById('manage-organizations-btn').addEventListener('click', () => {
                     modal.showManageOrganizations();
+                });
+                
+                // 年级管理按钮
+                document.getElementById('manage-grades-btn').addEventListener('click', () => {
+                    modal.showManageGrades();
                 });
                 
                 // 学生搜索
@@ -4501,9 +5003,36 @@
                 }
             });
             
-            contextMenu.style.left = `${event.clientX}px`;
-            contextMenu.style.top = `${event.clientY}px`;
+            // 计算菜单位置，确保不会被遮挡
+            const menuWidth = contextMenu.offsetWidth || 200;
+            const menuHeight = contextMenu.offsetHeight || 200;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            let left = event.clientX;
+            let top = event.clientY;
+            
+            // 检查右侧是否会被遮挡
+            if (left + menuWidth > windowWidth) {
+                left = windowWidth - menuWidth - 10;
+            }
+            
+            // 检查底部是否会被遮挡
+            if (top + menuHeight > windowHeight) {
+                top = windowHeight - menuHeight - 10;
+            }
+            
+            // 确保菜单在视口内
+            left = Math.max(0, left);
+            top = Math.max(0, top);
+            
+            contextMenu.style.left = `${left}px`;
+            contextMenu.style.top = `${top}px`;
             contextMenu.classList.remove('hidden');
+            
+            // 禁用滚轮事件，防止菜单跟随滚动
+            contextMenu.style.position = 'fixed';
+            contextMenu.style.zIndex = '50';
             
             // 点击菜单项时的处理
             document.querySelectorAll('.context-menu-item').forEach(item => {
@@ -4601,6 +5130,22 @@
             }
         });
         
+        // 滚轮事件，滚动时隐藏右键菜单
+        document.addEventListener('wheel', function(e) {
+            const contextMenu = document.getElementById('context-menu');
+            if (contextMenu && !contextMenu.classList.contains('hidden')) {
+                contextMenu.classList.add('hidden');
+            }
+        });
+        
+        // 双击事件，双击时隐藏右键菜单
+        document.addEventListener('dblclick', function(e) {
+            const contextMenu = document.getElementById('context-menu');
+            if (contextMenu && !contextMenu.classList.contains('hidden')) {
+                contextMenu.classList.add('hidden');
+            }
+        });
+        
         // 程序关闭前同步数据（仅当用户已登录时）
         window.addEventListener('beforeunload', function() {
             // 检查用户是否已登录
@@ -4661,13 +5206,24 @@
             // 管理登录界面显示/隐藏
             function showAuthModal() {
                 const authModal = document.getElementById('auth-modal');
+                const authBackground = document.getElementById('auth-background');
                 const authContainer = document.getElementById('auth-container');
                 
+                // 重置到初始状态
+                authModal.style.opacity = '0';
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-95', 'opacity-0');
+                
+                // 显示模态框
                 authModal.style.display = 'flex';
-                setTimeout(() => {
-                    authContainer.classList.remove('scale-95', 'opacity-0');
-                    authContainer.classList.add('scale-100', 'opacity-100');
-                }, 10);
+                
+                // 强制重绘
+                authModal.offsetHeight;
+                
+                // 快速渐显背景和登录框
+                authModal.style.opacity = '1';
+                authContainer.classList.remove('scale-95', 'opacity-0');
+                authContainer.classList.add('scale-100', 'opacity-100');
             }
             
             function hideAuthModal() {
@@ -4677,8 +5233,14 @@
                 authContainer.classList.remove('scale-100', 'opacity-100');
                 authContainer.classList.add('scale-95', 'opacity-0');
                 setTimeout(() => {
-                    authModal.style.display = 'none';
-                }, 500);
+                    authModal.style.opacity = '0';
+                    setTimeout(() => {
+                        authModal.style.display = 'none';
+                        // 重置状态
+                        authContainer.classList.remove('scale-95', 'opacity-0');
+                        authContainer.classList.add('scale-95', 'opacity-0');
+                    }, 300);
+                }, 200);
             }
             
             // 切换登录/注册标签
@@ -5016,20 +5578,19 @@
                 const authContainer = document.getElementById('auth-container');
                 const authBackground = document.getElementById('auth-background');
                 
-                // 先让登录框缩小并淡出（更长的动画）
+                // 先让登录框缩小并淡出
                 authContainer.classList.remove('scale-100', 'opacity-100');
                 authContainer.classList.add('scale-90', 'opacity-0');
                 
-                // 然后让背景渐隐（更长的动画）
+                // 然后让背景渐隐
                 setTimeout(() => {
                     authModal.style.opacity = '0';
-                    authBackground.style.opacity = '0';
                     setTimeout(() => {
                         authModal.style.display = 'none';
                         authModal.style.pointerEvents = 'none'; // 禁用点击事件
-                        // 重置背景样式，以便下次使用
-                        authModal.style.opacity = '1';
-                        authBackground.style.opacity = '1';
+                        // 重置容器状态，为下次显示做准备
+                        authContainer.classList.remove('scale-90', 'opacity-0');
+                        authContainer.classList.add('scale-95', 'opacity-0');
                     }, 800);
                 }, 400);
             }
@@ -5093,17 +5654,23 @@
                 registerForm.classList.add('hidden');
             }
             
-            // 立即显示登录界面
+            // 显示登录界面，带渐显效果
             const authModal = document.getElementById('auth-modal');
             const authBackground = document.getElementById('auth-background');
             const authContainer = document.getElementById('auth-container');
             if (authModal && authBackground && authContainer) {
                 // 重新启用点击事件
                 authModal.style.pointerEvents = 'auto';
-                // 直接显示模态框，避免动画导致的闪烁
+                // 重置到初始状态
+                authModal.style.opacity = '0';
+                authContainer.classList.remove('scale-100', 'opacity-100');
+                authContainer.classList.add('scale-95', 'opacity-0');
+                // 先设置 display: flex
                 authModal.style.display = 'flex';
+                // 强制重绘，然后应用动画
+                authModal.offsetHeight;
+                // 渐显
                 authModal.style.opacity = '1';
-                authBackground.style.opacity = '1';
                 authContainer.classList.remove('scale-95', 'opacity-0');
                 authContainer.classList.add('scale-100', 'opacity-100');
             }
@@ -5210,6 +5777,209 @@
                     opt.classList.remove('selected');
                 }
             });
+        }
+        
+        // 日期选择器功能
+        function toggleDatePicker(containerId) {
+            const container = document.getElementById(containerId);
+            container.classList.remove('hidden');
+            renderDateGrid();
+            // 添加点击外部关闭的监听
+            setTimeout(() => {
+                document.addEventListener('click', closeDatePickerOnOutsideClick);
+            }, 100);
+        }
+        
+        // 点击外部关闭日期选择器
+        function closeDatePickerOnOutsideClick(event) {
+            const dateContainer = document.getElementById('course-date-container');
+            const dateInput = document.querySelector('[onclick="toggleDatePicker(\'course-date-container\')"]');
+            
+            if (dateContainer && !dateContainer.contains(event.target) && !dateInput.contains(event.target)) {
+                dateContainer.classList.add('hidden');
+                document.removeEventListener('click', closeDatePickerOnOutsideClick);
+            }
+        }
+        
+        function renderDateGrid() {
+            const dateInput = document.getElementById('course-date');
+            const dateGrid = document.getElementById('date-grid');
+            const monthTitle = document.getElementById('current-date-month');
+            
+            if (!dateInput || !dateGrid || !monthTitle) return;
+            
+            const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            monthTitle.textContent = `${year}年${month + 1}月`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            let html = '';
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = date.getMonth() === month;
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                // 格式化为本地日期字符串，避免时区问题
+                const dateString = formatDate(date);
+                const isSelected = dateInput.value === dateString;
+                
+                // 确保今天的样式优先级高于选中的样式
+                let classes = `py-1 text-center text-sm rounded ${isCurrentMonth ? '' : 'text-gray-300'}`;
+                if (isToday) {
+                    classes += ' bg-primary text-white';
+                } else if (isSelected) {
+                    classes += ' bg-primary/20';
+                } else {
+                    classes += ' hover:bg-gray-100';
+                }
+                
+                html += `
+                    <button type="button" class="${classes}" onclick="selectDate('${dateString}')">
+                        ${date.getDate()}
+                    </button>
+                `;
+            }
+            
+            dateGrid.innerHTML = html;
+        }
+        
+        // 格式化日期为 YYYY-MM-DD 格式，使用本地时间
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        function selectDate(date) {
+            const dateInput = document.getElementById('course-date');
+            const dateContainer = document.getElementById('course-date-container');
+            if (dateInput) {
+                dateInput.value = date;
+            }
+            if (dateContainer) {
+                dateContainer.classList.add('hidden');
+            }
+        }
+        
+        function changeDateMonth(inputId, delta) {
+            const dateInput = document.getElementById(inputId);
+            if (!dateInput) return;
+            
+            const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            dateInput.value = formatDate(currentDate);
+            renderDateGrid();
+        }
+        
+        // 时间选择器功能
+        function toggleTimePicker(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.remove('hidden');
+                // 添加点击外部关闭的监听
+                setTimeout(() => {
+                    document.addEventListener('click', closeTimePickerOnOutsideClick);
+                }, 100);
+            }
+        }
+        
+        // 点击外部关闭时间选择器
+        function closeTimePickerOnOutsideClick(event) {
+            const startContainer = document.getElementById('start-time-container');
+            const endContainer = document.getElementById('end-time-container');
+            const startTimeInput = document.querySelector('[onclick="toggleTimePicker(\'start-time-container\')"]');
+            const endTimeInput = document.querySelector('[onclick="toggleTimePicker(\'end-time-container\')"]');
+            
+            if (startContainer && !startContainer.contains(event.target) && !startTimeInput.contains(event.target)) {
+                startContainer.classList.add('hidden');
+            }
+            if (endContainer && !endContainer.contains(event.target) && !endTimeInput.contains(event.target)) {
+                endContainer.classList.add('hidden');
+            }
+            
+            // 如果两个选择器都关闭了，移除监听
+            if ((!startContainer || startContainer.classList.contains('hidden')) && 
+                (!endContainer || endContainer.classList.contains('hidden'))) {
+                document.removeEventListener('click', closeTimePickerOnOutsideClick);
+            }
+        }
+        
+        function setTime(inputId, time) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            input.value = time;
+            
+            // 关闭时间选择器
+            if (inputId === 'course-start-time') {
+                const startContainer = document.getElementById('start-time-container');
+                if (startContainer) {
+                    startContainer.classList.add('hidden');
+                }
+                // 自动计算结束时间
+                if (typeof calculateEndTime === 'function') {
+                    calculateEndTime('course-start-time', 'course-end-time', 120);
+                }
+            } else {
+                const endContainer = document.getElementById('end-time-container');
+                if (endContainer) {
+                    endContainer.classList.add('hidden');
+                }
+            }
+            
+            // 触发费用计算
+            if (typeof calculateFee === 'function') {
+                calculateFee();
+            }
+        }
+        
+        // 选择小时
+        function selectTimeHour(inputId, hour) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const currentValue = input.value || '00:00';
+            const [, minute] = currentValue.split(':');
+            input.value = `${hour}:${minute}`;
+            
+            // 触发费用计算
+            if (typeof calculateFee === 'function') {
+                calculateFee();
+            }
+            
+            // 如果是开始时间，自动计算结束时间
+            if (inputId === 'course-start-time' && typeof calculateEndTime === 'function') {
+                calculateEndTime('course-start-time', 'course-end-time', 120);
+            }
+        }
+        
+        // 选择分钟
+        function selectTimeMinute(inputId, minute) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const currentValue = input.value || '00:00';
+            const [hour] = currentValue.split(':');
+            input.value = `${hour}:${minute}`;
+            
+            // 触发费用计算
+            if (typeof calculateFee === 'function') {
+                calculateFee();
+            }
+            
+            // 如果是开始时间，自动计算结束时间
+            if (inputId === 'course-start-time' && typeof calculateEndTime === 'function') {
+                calculateEndTime('course-start-time', 'course-end-time', 120);
+            }
         }
         
         // 页面加载完成后初始化自定义下拉菜单
