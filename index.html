@@ -4844,19 +4844,66 @@
         }
         
         // 加载渲染系统
-        function loadSystem() {
+        function loadSystem(isTrialMode = false) {
             // 显示系统框架
             showSystemFrame();
             
             // 渲染初始页面框架
             render.page('calendar-page');
             
-            // 加载数据（会自动重新渲染页面）
-            console.log('开始加载数据...');
-            utils.loadData();
-            
-            // 添加Firebase实时监听
-            setupFirebaseListeners();
+            if (isTrialMode) {
+                // 试用模式：使用内存中的临时数据，不与服务器交互，不保存到本地
+                console.log('进入试用模式');
+                
+                // 重置状态为默认值
+                state.students = [];
+                state.courses = [];
+                state.organizations = [];
+                state.grades = [];
+                
+                // 显示试用模式通知
+                notification.show('您现在处于试用模式，数据不会被保存', 'info');
+                
+                // 重新渲染页面
+                render.students();
+                render.calendar();
+                const { year, month, organization } = utils.getStatisticsParams();
+                render.statistics(year, month, organization);
+                
+                // 覆盖saveData方法，使其在试用模式下不保存数据
+                const originalSaveData = utils.saveData;
+                utils.saveData = function() {
+                    console.log('试用模式：数据不会被保存');
+                    // 重新渲染页面
+                    render.students();
+                    render.calendar();
+                    const { year, month, organization } = utils.getStatisticsParams();
+                    render.statistics(year, month, organization);
+                };
+                
+                // 覆盖loadData方法，使其在试用模式下不加载数据
+                const originalLoadData = utils.loadData;
+                utils.loadData = function() {
+                    console.log('试用模式：使用内存中的临时数据');
+                };
+                
+                // 覆盖loadFromLocalStorage方法，使其在试用模式下不加载数据
+                const originalLoadFromLocalStorage = utils.loadFromLocalStorage;
+                utils.loadFromLocalStorage = function() {
+                    console.log('试用模式：使用内存中的临时数据');
+                };
+                
+                // 修改同步状态显示
+                utils.updateSyncStatus('default', '试用模式');
+                
+            } else {
+                // 正常模式：加载数据
+                console.log('开始加载数据...');
+                utils.loadData();
+                
+                // 添加Firebase实时监听
+                setupFirebaseListeners();
+            }
         }
 
         // 处理课程标签点击事件
@@ -5308,6 +5355,72 @@
             function handleLogin() {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
+                
+                // 试用模式：用户名为test，密码留空
+                if (email === 'test' && password === '') {
+                    // 显示加载状态
+                    const loginBtnText = document.getElementById('login-btn-text');
+                    const loginLoading = document.getElementById('login-loading');
+                    const loginSubmit = document.getElementById('login-submit');
+                    
+                    if (loginBtnText && loginLoading && loginSubmit) {
+                        loginBtnText.textContent = '登录中...';
+                        loginLoading.classList.remove('hidden');
+                        loginSubmit.disabled = true;
+                        loginSubmit.classList.add('opacity-80', 'cursor-not-allowed');
+                    }
+                    
+                    // 模拟登录成功，进入试用模式
+                    setTimeout(() => {
+                        // 立即显示成功通知
+                        notification.show('试用模式登录成功');
+                        
+                        // 异步执行界面切换，不阻塞通知显示
+                        requestAnimationFrame(() => {
+                            hideAuthModal();
+                            
+                            // 更新UI，显示试用用户信息
+                            const userInfo = document.getElementById('user-info');
+                            if (userInfo) {
+                                userInfo.textContent = '试用用户 ';
+                            }
+                            
+                            // 确保登出按钮显示
+                            const logoutBtn = document.getElementById('logout-btn');
+                            if (logoutBtn) {
+                                logoutBtn.classList.remove('hidden');
+                            }
+                            
+                            // 隐藏登录界面，背景渐隐
+                            const authModal = document.getElementById('auth-modal');
+                            if (authModal) {
+                                const authContainer = document.getElementById('auth-container');
+                                const authBackground = document.getElementById('auth-background');
+                                
+                                // 先让登录框缩小并淡出
+                                authContainer.classList.remove('scale-100', 'opacity-100');
+                                authContainer.classList.add('scale-90', 'opacity-0');
+                                
+                                // 然后让背景渐隐
+                                setTimeout(() => {
+                                    authModal.style.opacity = '0';
+                                    setTimeout(() => {
+                                        authModal.style.display = 'none';
+                                        authModal.style.pointerEvents = 'none'; // 禁用点击事件
+                                        // 重置容器状态，为下次显示做准备
+                                        authContainer.classList.remove('scale-90', 'opacity-0');
+                                        authContainer.classList.add('scale-95', 'opacity-0');
+                                    }, 800);
+                                }, 400);
+                            }
+                            
+                            // 进入试用模式
+                            loadSystem(true);
+                        });
+                    }, 1000);
+                    
+                    return;
+                }
                 
                 if (!email || !password) {
                     notification.show('请输入邮箱和密码', 'error');
