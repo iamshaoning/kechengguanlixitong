@@ -1,4 +1,842 @@
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课程管理系统</title><link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script><style>.content-auto{content-visibility:auto}.glass-effect{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}.shadow-soft{box-shadow:0 4px 20px rgba(0,0,0,.05)}input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{display:none}input[type=date]::-moz-calendar-picker-indicator,input[type=time]::-moz-calendar-picker-indicator{display:none}#modal-content>div{width:100%!important;max-width:none!important;margin:0!important;background:0 0!important;border:none!important;box-shadow:none!important}body{overflow-y:scroll}html{scrollbar-width:thin}::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#f1f1f1}::-webkit-scrollbar-thumb{background:#888;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#555}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield;appearance:textfield}select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:none}.calendar-cell-selected{background-color:rgba(59,130,246,.1)!important;border:2px solid #3b82f6!important}.course-item-selected{background-color:rgba(59,130,246,.2)!important;border-left:4px solid #3b82f6!important}@keyframes gradientFlow{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}.page{transition:opacity .3s ease-in-out,transform .3s ease-in-out;opacity:0;transform:translateX(20px)}.page.active{opacity:1;transform:translateX(0)}.page.hidden{display:none;opacity:0;transform:translateX(-20px)}.nav-item{position:relative;transition:all .3s ease-in-out;overflow:hidden}.nav-item::before{content:'';position:absolute;bottom:0;left:50%;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:all .3s ease-in-out;transform:translateX(-50%);border-radius:3px 3px 0 0}.nav-item:hover::before{width:80%}.nav-item.active::before{width:100%}.nav-item.active{background:linear-gradient(135deg,rgba(59,130,246,.1) 0,rgba(139,92,246,.1) 100%);color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.nav-item:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1)}.nav-item i{transition:transform .3s ease-in-out}.nav-item:hover i{transform:scale(1.1)}.nav-item.active i{transform:scale(1.15)}.btn,button{transition:all .2s ease-in-out}.btn:active,button:active{transform:scale(.95)}.btn:not(:active),button:not(:active){transform:scale(1)}.calendar-grid{transition:opacity .3s ease-in-out,transform .3s ease-in-out}.calendar-grid.slide-left{animation:slideLeft .3s ease-in-out}.calendar-grid.slide-right{animation:slideRight .3s ease-in-out}@keyframes slideLeft{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}@keyframes slideRight{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}.modal-backdrop{transition:opacity .4s ease-in-out}.modal-content{transition:all .4s cubic-bezier(.34, 1.56, .64, 1)}.custom-select{position:relative;display:inline-block}.custom-select-trigger{padding:8px 32px 8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s ease;font-size:14px;line-height:1.5;white-space:nowrap;position:relative}.custom-select-trigger:hover{border-color:#3b82f6}.custom-select-trigger.active{border-color:#3b82f6;border-bottom-left-radius:0;border-bottom-right-radius:0}.custom-select-trigger span{display:inline-block;text-align:center}.custom-select-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;transition:transform .3s ease}.custom-select-trigger.active .custom-select-arrow{transform:translateY(-50%) rotate(180deg)}.custom-select-options{position:absolute;top:100%;left:0;min-width:100%;background:#fff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 6px 6px;max-height:0;overflow:hidden;opacity:0;transform:translateY(-10px);transition:all .3s ease;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)}.custom-select-options.open{max-height:200px;opacity:1;transform:translateY(0);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.custom-select-options.open::-webkit-scrollbar{display:none}.custom-option{padding:8px 12px;cursor:pointer;transition:background .2s ease;font-size:14px;text-align:center;white-space:nowrap}.custom-option:hover{background:#f3f4f6}.custom-option.selected{background:#eff6ff;color:#3b82f6}#statistics-year-wrapper{width:90px}#statistics-year-wrapper .custom-select-trigger{width:90px;justify-content:center}#statistics-month-wrapper{width:70px}#statistics-month-wrapper .custom-select-trigger{width:70px;justify-content:center}#statistics-organization-wrapper{width:120px}#statistics-organization-wrapper .custom-select-trigger{width:120px;justify-content:center}#statistics-organization-wrapper .custom-select-options{min-width:120px}input:focus,textarea:focus{transition:all .2s ease-in-out;transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.15)}.hover-card{transition:all .3s ease-in-out}.hover-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.1)}input::placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-webkit-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input::-moz-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}input:-ms-input-placeholder{font-size:1.125rem;font-weight:600;color:rgba(255,255,255,.9)}</style><script type="module" crossorigin src="./assets/index-DORWrcdy.js"></script><link rel="stylesheet" crossorigin href="./assets/index-D0JLwbOq.css"></head><body class="bg-gray-50 min-h-screen" style="opacity:0;transition:opacity .5s ease-in-out"><nav class="bg-white shadow-sm border-b border-gray-200" style="display:none"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between h-16"><div class="flex items-center space-x-4"><div class="flex items-center"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-14 w-auto mr-1"><h1 class="text-xl font-bold text-primary">课程管理系统</h1></div><div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors"><span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span> <span id="sync-text" class="text-gray-500">未同步</span></div></div><div class="flex items-center space-x-4"><button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active"><i class="fa fa-calendar mr-1"></i> 日历排课</button> <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-users mr-1"></i> 学生管理</button> <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"><i class="fa fa-bar-chart mr-1"></i> 课时费统计</button><div class="flex items-center space-x-2"><div id="user-info" class="text-sm text-gray-600"></div><button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button></div></div></div></div></nav><main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display:none"><div id="calendar-page" class="page active"><div class="flex justify-between items-center mb-6"><div class="flex items-center space-x-6"><h2 class="text-2xl font-bold text-gray-800">日历排课</h2><div class="flex items-center space-x-4"><button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-left text-gray-600"></i></button><h3 id="current-month" class="text-xl font-medium">2026年3月</h3><button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><i class="fa fa-chevron-right text-gray-600"></i></button></div></div><button id="add-course-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加课程</button></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200"><div class="text-center py-3 font-medium text-gray-700">周日</div><div class="text-center py-3 font-medium text-gray-700">周一</div><div class="text-center py-3 font-medium text-gray-700">周二</div><div class="text-center py-3 font-medium text-gray-700">周三</div><div class="text-center py-3 font-medium text-gray-700">周四</div><div class="text-center py-3 font-medium text-gray-700">周五</div><div class="text-center py-3 font-medium text-gray-700">周六</div></div><div id="calendar-grid" class="grid grid-cols-7"></div></div></div><div id="students-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">学生管理</h2><div class="flex items-center space-x-3"><button id="manage-organizations-btn" style="background-color:#06b6d4" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-building mr-2"></i> 机构管理</button> <button id="manage-grades-btn" style="background-color:#8b5cf6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-graduation-cap mr-2"></i> 年级管理</button> <button id="add-student-btn" style="background-color:#3b82f6" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-plus mr-2"></i> 添加学生</button></div></div><div class="bg-white p-4 rounded-lg shadow-sm mb-6"><div class="flex flex-col md:flex-row gap-4"><div class="flex-grow"><input id="student-search" placeholder="搜索学生、机构" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"></div></div></div><div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-100 border-b border-gray-200"><tr><th class="px-6 py-3 text-left font-medium text-gray-700">姓名</th><th class="px-6 py-3 text-left font-medium text-gray-700">机构</th><th class="px-6 py-3 text-left font-medium text-gray-700">年级</th><th class="px-6 py-3 text-left font-medium text-gray-700">课型</th><th class="px-6 py-3 text-left font-medium text-gray-700">课时费</th><th class="px-6 py-3 text-left font-medium text-gray-700">操作</th></tr></thead><tbody id="students-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div><div id="statistics-page" class="page hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">课时费统计</h2><div class="flex items-center space-x-3"><div class="flex items-center space-x-2 px-2 py-1"><div class="custom-select" id="statistics-year-wrapper"><div class="custom-select-trigger" id="statistics-year-trigger"><span>2024年</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-year-options"></div></div><div class="custom-select" id="statistics-month-wrapper"><div class="custom-select-trigger" id="statistics-month-trigger"><span>1月</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-month-options"><div class="custom-option selected" data-value="0">1月</div><div class="custom-option" data-value="1">2月</div><div class="custom-option" data-value="2">3月</div><div class="custom-option" data-value="3">4月</div><div class="custom-option" data-value="4">5月</div><div class="custom-option" data-value="5">6月</div><div class="custom-option" data-value="6">7月</div><div class="custom-option" data-value="7">8月</div><div class="custom-option" data-value="8">9月</div><div class="custom-option" data-value="9">10月</div><div class="custom-option" data-value="10">11月</div><div class="custom-option" data-value="11">12月</div></div></div></div><div class="custom-select" id="statistics-organization-wrapper"><div class="custom-select-trigger" id="statistics-organization-trigger"><span>全部机构</span> <i class="custom-select-arrow fa fa-chevron-down"></i></div><div class="custom-select-options" id="statistics-organization-options"><div class="custom-option selected" data-value="">全部机构</div></div></div><button id="export-statistics" style="background-color:#10b981" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90"><i class="fa fa-download mr-2"></i> 导出数据</button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3><p id="total-hours" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-blue-100 p-2 rounded-lg"><i class="fa fa-calendar text-blue-600"></i></div></div><div class="mt-3 text-xs text-gray-400">节课程</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3><p id="total-fee" class="text-3xl font-bold text-primary">¥0</p></div><div class="bg-green-100 p-2 rounded-lg"><i class="fa fa-money text-green-600"></i></div></div><div class="mt-3 text-xs text-gray-400">人民币</div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div class="flex items-start justify-between"><div><h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3><p id="total-students" class="text-3xl font-bold text-success">0</p></div><div class="bg-purple-100 p-2 rounded-lg"><i class="fa fa-users text-purple-600"></i></div></div><div class="mt-3 text-xs text-gray-400">名学生</div></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">机构数据</h3></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构课节分布</h4></div><div class="h-64"><canvas id="organization-chart"></canvas></div></div><div><div class="flex justify-between items-center mb-4"><h4 class="text-md font-medium text-gray-700">机构详细数据</h4></div><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead><tr><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构名称</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th></tr></thead><tbody id="organization-table" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div><div id="detailed-type-table-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-800">课型详细分布</h3></div></div></div></main><div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity:0;transition:opacity .3s ease-out"><div id="auth-background" class="absolute inset-0" style="background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:gradientFlow 15s ease infinite"></div><div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-300 ease-out scale-95 opacity-0" id="auth-container"><div class="flex items-center justify-center mb-4"><img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-32 w-auto"></div><div id="auth-tabs" class="flex gap-2 mb-8"><button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow:3px 3px 3px rgba(59,130,246,.5)">登录</button> <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow:3px 3px 3px rgba(147,51,234,.5)">注册</button></div><div id="login-form" class="transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"><span id="login-btn-text">登 录</span> <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></button></div><div id="register-form" class="hidden transition-all duration-500 ease-in-out transform"><div class="mb-4"><input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><div class="mb-8"><input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size:1.125rem;--placeholder-font-weight:600"></div><button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"><span id="register-btn-text">注 册</span> <span id="register-loading" class="hidden ml-2"><i class="fa fa-spinner fa-spin"></i></span></button></div></div></div><div id="modal-container" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400"><div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)"></div></div><div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm"><div class="flex items-center"><div id="notification-icon" class="flex-shrink-0 text-success"><i class="fa fa-check-circle text-xl"></i></div><div class="ml-3"><p id="notification-message" class="text-sm font-medium text-gray-800"></p></div></div></div><div id="context-menu" class="fixed bg-white rounded-lg shadow-lg py-1 z-50 hidden"><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="details">详情</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="edit">编辑</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">复制</div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="paste">粘贴</div><div class="border-t border-gray-200 my-1"></div><div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600" data-action="delete">删除</div></div><script>// 全局状态管理
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 全局调试控制 - 设置为false禁用所有console输出
+        const GLOBAL_DEBUG = false;
+        if (!GLOBAL_DEBUG) {
+            console.log = () => {};
+            console.error = () => {};
+            console.warn = () => {};
+        }
+        
+        // Supabase配置
+        const supabaseConfig = {
+            url: import.meta.env.VITE_SUPABASE_URL,
+            key: import.meta.env.VITE_SUPABASE_ANON_KEY
+        };
+
+        // 安全检查：确保Supabase配置存在
+        console.log('Supabase配置:', supabaseConfig);
+        if (!supabaseConfig.url || !supabaseConfig.key) {
+            console.error('Supabase配置缺失');
+        }
+
+        // 初始化 Supabase
+        function initializeSupabase() {
+            try {
+                // 检查是否已经创建了 Supabase 客户端实例
+                if (window.supabaseClient) {
+                    console.log('Supabase客户端已存在，跳过初始化');
+                    return;
+                }
+                
+                // 检查 Supabase SDK 是否已加载
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    console.log('开始初始化Supabase客户端...');
+                    
+                    // 创建 Supabase 客户端实例
+                    const supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
+                    
+                    // 保存到全局变量
+                    window.supabaseClient = supabaseClient;
+                    window.supabaseAuth = supabaseClient.auth;
+                    
+                    console.log('Supabase客户端初始化成功');
+                } else {
+                    throw new Error('Supabase SDK 未加载');
+                }
+            } catch (error) {
+                console.error('Supabase初始化失败:', error);
+                // 初始化失败时，确保全局变量有默认值
+                window.supabaseClient = null;
+                window.supabaseAuth = null;
+            }
+        }
+        
+        // 当 DOM 加载完成后初始化 Supabase
+        document.addEventListener('DOMContentLoaded', function() {
+            // 等待 1 秒，确保 Supabase SDK 已加载
+            setTimeout(initializeSupabase, 1000);
+        });
+    </script>
+    <style>
+        .content-auto {
+            content-visibility: auto;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 隐藏浏览器默认的日期和时间选择器图标 */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 针对Firefox的修复 */
+        input[type="date"]::-moz-calendar-picker-indicator,
+        input[type="time"]::-moz-calendar-picker-indicator {
+            display: none;
+        }
+        
+        /* 确保模态框内容宽度与容器宽度一致 */
+        #modal-content > div {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 确保页面在出现滚动条时不会发生偏移 */
+        body {
+            overflow-y: scroll;
+        }
+        
+        /* 确保滚动条宽度一致 */
+        html {
+            scrollbar-width: thin;
+        }
+        
+        /* 为WebKit浏览器设置滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* 隐藏数字输入框的上下调节箭头 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* 针对Firefox的修复 */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        
+        /* 隐藏下拉菜单的下箭头 */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+        }
+        
+        /* 日历单元格选中状态 */
+        .calendar-cell-selected {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            border: 2px solid #3b82f6 !important;
+        }
+        
+        /* 课程标签选中状态 */
+        .course-item-selected {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            border-left: 4px solid #3b82f6 !important;
+        }
+        
+        /* 渐变流动动画 */
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        /* 页面切换动画 */
+        .page {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .page.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        /* 导航标签动画 */
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .nav-item:hover::before {
+            width: 80%;
+        }
+        
+        .nav-item.active::before {
+            width: 100%;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .nav-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item i {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+        
+        .nav-item.active i {
+            transform: scale(1.15);
+        }
+        
+        /* 按钮点击动画 */
+        button, .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        button:active, .btn:active {
+            transform: scale(0.95);
+        }
+        
+        button:not(:active), .btn:not(:active) {
+            transform: scale(1);
+        }
+        
+        /* 日历月份切换动画 */
+        .calendar-grid {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-left {
+            animation: slideLeft 0.3s ease-in-out;
+        }
+        
+        .calendar-grid.slide-right {
+            animation: slideRight 0.3s ease-in-out;
+        }
+        
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 模态框动画 */
+        .modal-backdrop {
+            transition: opacity 0.4s ease-in-out;
+        }
+        
+        .modal-content {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+
+        
+        /* 自定义下拉菜单 */
+        .custom-select {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-select-trigger {
+            padding: 8px 32px 8px 12px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .custom-select-trigger:hover {
+            border-color: #3b82f6;
+        }
+        
+        .custom-select-trigger.active {
+            border-color: #3b82f6;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .custom-select-trigger span {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .custom-select-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #6b7280;
+            transition: transform 0.3s ease;
+        }
+        
+        .custom-select-trigger.active .custom-select-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 100%;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-select-options.open {
+            max-height: 200px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+        }
+        
+        .custom-select-options.open::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .custom-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .custom-option:hover {
+            background: #f3f4f6;
+        }
+        
+        .custom-option.selected {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        /* 统计页面筛选下拉菜单固定宽度 */
+        #statistics-year-wrapper {
+            width: 90px;
+        }
+        
+        #statistics-year-wrapper .custom-select-trigger {
+            width: 90px;
+            justify-content: center;
+        }
+        
+        #statistics-month-wrapper {
+            width: 70px;
+        }
+        
+        #statistics-month-wrapper .custom-select-trigger {
+            width: 70px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper {
+            width: 120px;
+        }
+        
+        #statistics-organization-wrapper .custom-select-trigger {
+            width: 120px;
+            justify-content: center;
+        }
+        
+        #statistics-organization-wrapper .custom-select-options {
+            min-width: 120px;
+        }
+        
+        /* 输入框聚焦动画 */
+        input:focus, textarea:focus {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* 卡片悬停动画 */
+        .hover-card {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 输入框placeholder样式 */
+        input::placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-webkit-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input::-moz-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        input:-ms-input-placeholder {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+  <link rel="stylesheet" crossorigin href="./assets/index-D0JLwbOq.css">
+</head>
+<body class="bg-gray-50 min-h-screen" style="opacity: 0; transition: opacity 0.5s ease-in-out;">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200" style="display: none;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-14 w-auto mr-1">
+                        <h1 class="text-xl font-bold text-primary">课程管理系统</h1>
+                    </div>
+                    <div id="sync-status" class="flex items-center space-x-2 text-sm cursor-pointer hover:text-primary transition-colors">
+                        <span id="sync-icon" class="text-gray-500"><i class="fa fa-cloud"></i></span>
+                        <span id="sync-text" class="text-gray-500">未同步</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button data-page="calendar-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 active">
+                        <i class="fa fa-calendar mr-1"></i> 日历排课
+                    </button>
+                    <button data-page="students-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-users mr-1"></i> 学生管理
+                    </button>
+                    <button data-page="statistics-page" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <i class="fa fa-bar-chart mr-1"></i> 课时费统计
+                    </button>
+                    <!-- 用户认证 -->
+                    <div class="flex items-center space-x-2">
+                        <div id="user-info" class="text-sm text-gray-600"></div>
+                        <button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display: none;">
+        <!-- 日历页面 -->
+        <div id="calendar-page" class="page active">
+            <!-- 日历控制区 -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-6">
+                    <h2 class="text-2xl font-bold text-gray-800">日历排课</h2>
+                    <div class="flex items-center space-x-4">
+                        <button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h3 id="current-month" class="text-xl font-medium">2026年3月</h3>
+                        <button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                            <i class="fa fa-chevron-right text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-course-btn" style="background-color: #3b82f6;" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90">
+                    <i class="fa fa-plus mr-2"></i> 添加课程
+                </button>
+            </div>
+
+            <!-- 日历网格 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200">
+                    <div class="text-center py-3 font-medium text-gray-700">周日</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周一</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周二</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周三</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周四</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周五</div>
+                    <div class="text-center py-3 font-medium text-gray-700">周六</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7">
+                    <!-- 日历单元格将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 学生页面 -->
+        <div id="students-page" class="page hidden">
+            <!-- 页面标题和添加按钮 -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">学生管理</h2>
+                <div class="flex items-center space-x-3">
+                    <button id="manage-organizations-btn" style="background-color: #06b6d4;" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90">
+                        <i class="fa fa-building mr-2"></i> 机构管理
+                    </button>
+                    <button id="manage-grades-btn" style="background-color: #8b5cf6;" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90">
+                        <i class="fa fa-graduation-cap mr-2"></i> 年级管理
+                    </button>
+                    <button id="add-student-btn" style="background-color: #3b82f6;" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90">
+                        <i class="fa fa-plus mr-2"></i> 添加学生
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-grow">
+                        <input type="text" id="student-search" placeholder="搜索学生、机构" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生列表 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">姓名</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">机构</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">年级</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">课型</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">课时费</th>
+                                <th class="px-6 py-3 text-left font-medium text-gray-700">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-list" class="bg-white divide-y divide-gray-200">
+                            <!-- 学生列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页面 -->
+        <div id="statistics-page" class="page hidden">
+            <!-- 页面标题 -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">课时费统计</h2>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 px-2 py-1">
+                        <!-- 自定义年份下拉菜单 -->
+                        <div class="custom-select" id="statistics-year-wrapper">
+                            <div class="custom-select-trigger" id="statistics-year-trigger">
+                                <span>2024年</span>
+                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                            </div>
+                            <div class="custom-select-options" id="statistics-year-options">
+                                <!-- 年份选项将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                        <!-- 自定义月份下拉菜单 -->
+                        <div class="custom-select" id="statistics-month-wrapper">
+                            <div class="custom-select-trigger" id="statistics-month-trigger">
+                                <span>1月</span>
+                                <i class="custom-select-arrow fa fa-chevron-down"></i>
+                            </div>
+                            <div class="custom-select-options" id="statistics-month-options">
+                                <div class="custom-option selected" data-value="0">1月</div>
+                                <div class="custom-option" data-value="1">2月</div>
+                                <div class="custom-option" data-value="2">3月</div>
+                                <div class="custom-option" data-value="3">4月</div>
+                                <div class="custom-option" data-value="4">5月</div>
+                                <div class="custom-option" data-value="5">6月</div>
+                                <div class="custom-option" data-value="6">7月</div>
+                                <div class="custom-option" data-value="7">8月</div>
+                                <div class="custom-option" data-value="8">9月</div>
+                                <div class="custom-option" data-value="9">10月</div>
+                                <div class="custom-option" data-value="10">11月</div>
+                                <div class="custom-option" data-value="11">12月</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 自定义机构下拉菜单 -->
+                    <div class="custom-select" id="statistics-organization-wrapper">
+                        <div class="custom-select-trigger" id="statistics-organization-trigger">
+                            <span>全部机构</span>
+                            <i class="custom-select-arrow fa fa-chevron-down"></i>
+                        </div>
+                        <div class="custom-select-options" id="statistics-organization-options">
+                            <div class="custom-option selected" data-value="">全部机构</div>
+                            <!-- 机构选项将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    <button id="export-statistics" style="background-color: #10b981;" class="text-white px-4 py-2 rounded-lg flex items-center transition-colors hover:opacity-90">
+                        <i class="fa fa-download mr-2"></i> 导出数据
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">总课节数</h3>
+                            <p id="total-hours" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <i class="fa fa-calendar text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">节课程</div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">总课时费</h3>
+                            <p id="total-fee" class="text-3xl font-bold text-primary">¥0</p>
+                        </div>
+                        <div class="bg-green-100 p-2 rounded-lg">
+                            <i class="fa fa-money text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">人民币</div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">学生人数</h3>
+                            <p id="total-students" class="text-3xl font-bold text-success">0</p>
+                        </div>
+                        <div class="bg-purple-100 p-2 rounded-lg">
+                            <i class="fa fa-users text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">名学生</div>
+                </div>
+            </div>
+
+            <!-- 机构模块 -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-800">机构数据</h3>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-md font-medium text-gray-700">机构课节分布</h4>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="organization-chart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-md font-medium text-gray-700">机构详细数据</h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">机构名称</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课节数</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课时费</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生数</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="organization-table" class="bg-white divide-y divide-gray-200">
+                                    <!-- 机构数据将通过JavaScript动态生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- 课型详细分布模块 -->
+            <div id="detailed-type-table-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-800">课型详细分布</h3>
+                </div>
+                <!-- 内容将通过JavaScript动态生成 -->
+            </div>
+
+
+        </div>
+    </main>
+    
+    <!-- 登录模态框 -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="opacity: 0; transition: opacity 0.3s ease-out;">
+        <div id="auth-background" class="absolute inset-0" style="background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientFlow 15s ease infinite;"></div>
+        <div class="relative bg-transparent backdrop-blur-lg rounded-2xl w-full max-w-md p-8 transform transition-all duration-300 ease-out scale-95 opacity-0" id="auth-container">
+            <div class="flex items-center justify-center mb-4">
+                <img src="./assets/logo-Bo1JUiN5.png" alt="课程管理系统" class="h-32 w-auto">
+            </div>
+            <div id="auth-tabs" class="flex gap-2 mb-8">
+                <button id="login-tab" class="flex-1 py-3 rounded-full border-2 border-blue-500 bg-blue-500/40 text-white font-bold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-blue-500/50" style="text-shadow: 3px 3px 3px rgba(59, 130, 246, 0.5);">登录</button>
+                <button id="register-tab" class="flex-1 py-3 rounded-full border-2 border-transparent bg-purple-500/40 text-white font-semibold text-center text-lg drop-shadow-md transition-all duration-300 hover:bg-purple-500/50" style="text-shadow: 3px 3px 3px rgba(147, 51, 234, 0.5);">注册</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <div id="login-form" class="transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                    <span id="login-btn-text">登 录</span>
+                    <svg id="login-loading" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="register-form" class="hidden transition-all duration-500 ease-in-out transform">
+                <div class="mb-4">
+                    <input type="email" id="register-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <div class="mb-8">
+                    <input type="password" id="register-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
+                </div>
+                <button id="register-submit" class="w-full bg-gradient-to-r from-pink-500/80 to-purple-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30 transition-all duration-300 hover:from-pink-400/90 hover:to-purple-500/90 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                    <span id="register-btn-text">注 册</span>
+                    <span id="register-loading" class="hidden ml-2">
+                        <i class="fa fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+            
+
+        </div>
+    </div>
+
+
+    
+    <!-- 模态框容器 -->
+    <div id="modal-container" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-400">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md mx-4 no-shadow transform scale-90 opacity-0 translate-y-4 transition-all duration-400" id="modal-content" style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <!-- 模态框内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="fixed top-4 right-4 bg-white shadow-lg rounded-lg px-6 py-4 transform translate-x-full opacity-0 transition-all-300 z-50 max-w-sm">
+        <div class="flex items-center">
+            <div id="notification-icon" class="flex-shrink-0 text-success">
+                <i class="fa fa-check-circle text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p id="notification-message" class="text-sm font-medium text-gray-800"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 右键菜单 -->
+    <div id="context-menu" class="fixed bg-white rounded-lg shadow-lg py-1 z-50 hidden">
+        <div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="details">详情</div>
+        <div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="edit">编辑</div>
+        <div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">复制</div>
+        <div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="paste">粘贴</div>
+        <div class="border-t border-gray-200 my-1"></div>
+        <div class="context-menu-item px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600" data-action="delete">删除</div>
+    </div>
+
+    <!-- 统计控制器 -->
+
+    
+    <script>
+        // 全局状态管理
         const state = {
             currentDate: new Date(),
             currentYear: new Date().getFullYear(),
@@ -69,102 +907,269 @@
                 const syncText = document.getElementById('sync-text');
                 
                 if (syncStatus && syncIcon && syncText) {
-                    switch (status) {
-                        case 'syncing':
-                            syncIcon.className = 'text-blue-500 animate-spin';
-                            syncIcon.innerHTML = '<i class="fa fa-spinner"></i>';
-                            syncText.className = 'text-blue-500';
-                            syncText.textContent = message || '正在同步...';
-                            break;
-                        case 'success':
-                            syncIcon.className = 'text-green-500';
-                            syncIcon.innerHTML = '<i class="fa fa-check-circle"></i>';
-                            syncText.className = 'text-green-500';
-                            syncText.textContent = message || '同步成功';
-                            break;
-                        case 'error':
-                            syncIcon.className = 'text-red-500';
-                            syncIcon.innerHTML = '<i class="fa fa-exclamation-circle"></i>';
-                            syncText.className = 'text-red-500';
-                            syncText.textContent = message || '同步失败';
-                            break;
-                        default:
-                            syncIcon.className = 'text-gray-500';
-                            syncIcon.innerHTML = '<i class="fa fa-cloud"></i>';
-                            syncText.className = 'text-gray-500';
-                            syncText.textContent = '未同步';
-                    }
+                    const statusConfig = {
+                        syncing: { iconClass: 'text-blue-500 animate-spin', icon: 'fa-spinner', textClass: 'text-blue-500' },
+                        success: { iconClass: 'text-green-500', icon: 'fa-check-circle', textClass: 'text-green-500' },
+                        error: { iconClass: 'text-red-500', icon: 'fa-exclamation-circle', textClass: 'text-red-500' },
+                        default: { iconClass: 'text-gray-500', icon: 'fa-cloud', textClass: 'text-gray-500' }
+                    };
+                    
+                    const config = statusConfig[status] || statusConfig.default;
+                    syncIcon.className = config.iconClass;
+                    syncIcon.innerHTML = `<i class="fa ${config.icon}"></i>`;
+                    syncText.className = config.textClass;
+                    syncText.textContent = message || (status === 'syncing' ? '正在同步...' : status === 'success' ? '同步成功' : status === 'error' ? '同步失败' : '未同步');
+                }
+            },
+            
+            // 从数据更新状态（通用函数）
+            updateStateFromData: (data, useDefaults = true) => {
+                const defaults = { organizations: [], grades: [] };
+                state.students = data.students || [];
+                state.courses = data.courses || [];
+                state.organizations = data.organizations || (useDefaults ? defaults.organizations : []);
+                state.grades = data.grades || (useDefaults ? defaults.grades : []);
+            },
+            
+            // 刷新所有视图（通用函数）
+            refreshAllViews: (withStatistics = false) => {
+                render.students();
+                render.calendar();
+                if (withStatistics) {
+                    const { year, month, organization } = utils.getStatisticsParams();
+                    render.statistics(year, month, organization);
                 }
             },
             
             // 保存数据（先保存到本地，再同步到服务器）
-            saveData: () => {
-                const data = {
+            saveData: async () => {
+                const appData = {
                     students: state.students,
                     courses: state.courses,
                     organizations: state.organizations,
                     grades: state.grades,
-                    lastUpdated: new Date().toISOString()
+                    lastupdated: new Date().toISOString()
                 };
                 
                 // 首先保存到本地
-                localStorage.setItem('courseManagerData', JSON.stringify(data));
+                localStorage.setItem('coursemanagerdata', JSON.stringify(appData));
                 console.log('数据保存到localStorage成功');
                 
                 // 本地数据改变，将同步状态设置为未同步
                 utils.updateSyncStatus('default', '未同步');
                 
                 // 然后同步到服务器（仅当用户已登录时）
-                const auth = window.firebaseAuth;
-                if (window.firebaseDatabase && auth && auth.currentUser) {
-                    utils.updateSyncStatus('syncing', '正在同步...');
-                    const userId = auth.currentUser.uid;
-                    const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
-                    window.firebaseSet(dbRef, data).then(() => {
-                        console.log('数据同步到服务器成功');
-                        utils.updateSyncStatus('success', '同步成功');
-                    }).catch((error) => {
-                        console.error('数据同步到服务器失败:', error);
-                        utils.updateSyncStatus('error', '同步失败');
-                    });
+                const auth = window.supabaseAuth;
+                if (window.supabaseClient && auth) {
+                    try {
+                        const { data: sessionData } = await auth.getSession();
+                        const session = sessionData.session;
+                        if (session) {
+                            utils.updateSyncStatus('syncing', '正在同步...');
+                            const userId = session.user.id;
+                    
+                    // 使用 Supabase 同步数据
+                    const supabaseClient = window.supabaseClient;
+                    supabaseClient
+                        .from('coursemanagerdata')
+                        .upsert({
+                            userid: userId,
+                            students: appData.students,
+                            courses: appData.courses,
+                            organizations: appData.organizations,
+                            grades: appData.grades,
+                            lastupdated: appData.lastupdated
+                        }, { onConflict: 'userid' })
+                        .then(({ error }) => {
+                            if (error) {
+                                console.error('数据同步到服务器失败:', error);
+                                utils.updateSyncStatus('error', '同步失败');
+                            } else {
+                                console.log('数据同步到服务器成功');
+                                utils.updateSyncStatus('success', '同步成功');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('数据同步到服务器失败:', error);
+                            utils.updateSyncStatus('error', '同步失败');
+                        });
+                        }
+                    } catch (error) {
+                        console.error('获取 session 失败:', error);
+                        console.log('用户未登录或服务器不可用，数据仅保存到本地');
+                        utils.updateSyncStatus('default', '未登录');
+                    }
                 } else {
                     console.log('用户未登录或服务器不可用，数据仅保存到本地');
                     utils.updateSyncStatus('default', '未登录');
                 }
             },
             
-            // 从Firebase加载数据并同步
-            loadData: () => {
+            // 从Supabase加载数据并同步
+            loadData: async () => {
                 const defaults = {
                     organizations: [],
                     grades: []
                 };
                 
-                console.log('开始加载数据，Firebase Database:', window.firebaseDatabase);
+                console.log('开始加载数据，Supabase:', window.supabaseClient);
                 
                 // 检查用户是否已登录
-                const auth = window.firebaseAuth;
-                const isLoggedIn = auth && auth.currentUser;
+                const auth = window.supabaseAuth;
+                let isLoggedIn = false;
+                let session = null;
                 
-                if (window.firebaseDatabase && isLoggedIn) {
+                if (auth) {
+                    try {
+                        const { data } = await auth.getSession();
+                        session = data.session;
+                        isLoggedIn = !!session;
+                    } catch (error) {
+                        console.error('获取 session 失败:', error);
+                    }
+                }
+                
+                // 获取当前用户ID
+                const currentUserId = session?.user?.id;
+                
+                // 检查本地数据是否属于当前用户
+                const localDataStr = localStorage.getItem('coursemanagerdata');
+                const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                
+                if (localData && currentUserId && localData.userid !== currentUserId) {
+                    console.log('本地数据属于其他用户，清除本地数据');
+                    localStorage.removeItem('coursemanagerdata');
+                    // 清除状态
+                    state.students = [];
+                    state.courses = [];
+                    state.organizations = defaults.organizations;
+                    state.grades = defaults.grades;
+                }
+                
+                if (window.supabaseClient && isLoggedIn) {
                     // 显示正在从服务器加载数据的状态
                     utils.updateSyncStatus('syncing', '正在同步...');
                     console.log('用户已登录，尝试从服务器加载数据...');
-                    const userId = auth.currentUser.uid;
-                    const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
+                    const userId = session.user.id;
                     
-                    // 实时数据监听
-                    function setupRealtimeListener() {
-                        window.firebaseOnValue(dbRef, (snapshot) => {
-                            console.log('检测到服务器数据变化');
-                            if (snapshot.exists()) {
-                                const serverData = snapshot.val();
+                    // 实时数据监听 - 使用全局变量确保只设置一次
+                    if (!window.realtimeChannel) {
+                        window.realtimeChannel = window.supabaseClient
+                            .channel('course-manager-channel')
+                            .on('postgres_changes', {
+                                event: '*',
+                                schema: 'public',
+                                table: 'coursemanagerdata',
+                                filter: `userid=eq.${userId}`
+                            }, (payload) => {
+                                console.log('检测到服务器数据变化:', payload);
+                                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                                    const serverData = payload.new;
+                                    
+                                    // 比较服务器数据和本地数据
+                                    const localDataStr = localStorage.getItem('courseManagerData');
+                                    const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                                    
+                                    if (localData) {
+                                        const hasChanged =
+                                            JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
+                                            JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
+                                            JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations) ||
+                                            JSON.stringify(localData.grades) !== JSON.stringify(serverData.grades);
+                                        
+                                        if (hasChanged) {
+                                            console.log('服务器数据已变化，自动更新本地数据');
+                                            // 自动更新本地数据
+                                            utils.updateStateFromData(serverData, false);
+                                            
+                                            // 保存到本地存储
+                                            localStorage.setItem('coursemanagerdata', JSON.stringify(serverData));
+                                            
+                                            // 重新渲染页面
+                                            utils.refreshAllViews(true);
+                                            
+                                            // 显示同步成功通知
+                                            notification.show('数据已从服务器更新', 'info');
+                                        }
+                                    }
+                                }
+                            })
+                            .subscribe();
+                        }
+                    
+                    // 从 Supabase 加载数据
+                    window.supabaseClient
+                        .from('coursemanagerdata')
+                        .select('*')
+                        .eq('userid', userId)
+                        .single()
+                        .then(({ data: serverData, error }) => {
+                            if (error) {
+                                console.error('从服务器加载数据失败:', error);
                                 
-                                // 比较服务器数据和本地数据
-                                const localDataStr = localStorage.getItem('courseManagerData');
-                                const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                                // 检查是否是新用户（无数据）的情况
+                                if (error.code === 'PGRST116' && error.details === 'The result contains 0 rows') {
+                                    console.log('新用户，自动在服务器创建空数据集');
+                                    const defaultData = {
+                                        userid: userId,
+                                        students: [],
+                                        courses: [],
+                                        organizations: [],
+                                        grades: [],
+                                        lastupdated: new Date().toISOString()
+                                    };
+                                    
+                                    window.supabaseClient
+                                        .from('coursemanagerdata')
+                                        .insert(defaultData)
+                                        .then(({ error: insertError }) => {
+                                            if (insertError) {
+                                                console.error('创建初始数据失败:', insertError);
+                                                utils.updateSyncStatus('error', '初始化失败');
+                                            } else {
+                                                console.log('初始数据创建成功');
+                                                utils.updateSyncStatus('success', '初始化成功');
+                                            }
+                                        });
+                                    
+                                    utils.updateStateFromData({});
+                                    // 新用户提示
+                                    notification.show('欢迎使用课程管理系统！请添加您的第一条数据', 'info', 5000);
+                                } else {
+                                    // 其他错误，尝试使用本地数据
+                                    utils.updateSyncStatus('error', '同步失败');
+                                    
+                                    const localDataStr = localStorage.getItem('coursemanagerdata');
+                                    const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                                    
+                                    if (localData) {
+                                        console.log('使用本地数据');
+                                        utils.updateStateFromData(localData);
+                                    } else {
+                                        console.log('无本地数据，使用默认数据');
+                                        utils.updateStateFromData({});
+                                    }
+                                }
+                                
+                                // 数据加载完成后重新渲染页面
+                                utils.refreshAllViews(true);
+                                return;
+                            }
+                            
+                            console.log('服务器数据加载成功:', serverData);
+                            
+                            // 获取本地数据
+                            const localDataStr = localStorage.getItem('coursemanagerdata');
+                            const localData = localDataStr ? JSON.parse(localDataStr) : null;
+                            const localTimestamp = localData && localData.lastupdated ? new Date(localData.lastupdated).getTime() : 0;
+                            
+                            if (serverData) {
+                                const serverTimestamp = serverData.lastupdated ? new Date(serverData.lastupdated).getTime() : 0;
+                                
+                                console.log('本地时间戳:', localTimestamp, '服务器时间戳:', serverTimestamp);
                                 
                                 if (localData) {
+                                    // 本地有数据，比较数据是否不同
                                     const hasChanged =
                                         JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
                                         JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
@@ -172,163 +1177,152 @@
                                         JSON.stringify(localData.grades) !== JSON.stringify(serverData.grades);
                                     
                                     if (hasChanged) {
-                                        console.log('服务器数据已变化，自动更新本地数据');
-                                        // 自动更新本地数据
-                                        state.students = serverData.students || [];
-                                        state.courses = serverData.courses || [];
-                                        state.organizations = serverData.organizations || [];
-                                        state.grades = serverData.grades || [];
+                                        // 数据不同，显示比较界面
+                                        console.log('检测到数据不同，显示比较界面');
+                                        modal.showDataConflict(localData, serverData);
+                                        utils.updateSyncStatus('success', '同步成功');
+                                    } else {
+                                        // 数据相同，使用本地数据
+                                        console.log('数据相同，使用本地数据');
+                                        utils.updateStateFromData(localData);
+                                        utils.updateSyncStatus('success', '同步成功');
                                         
-                                        // 保存到本地存储
-                                        localStorage.setItem('courseManagerData', JSON.stringify(serverData));
-                                        
-                                        // 重新渲染页面
-                                        render.students();
-                                        render.calendar();
-                                        const { year, month, organization } = utils.getStatisticsParams();
-                                        render.statistics(year, month, organization);
-                                        
-                                        // 显示同步成功通知
-                                        notification.show('数据已从服务器更新', 'info');
+                                        // 数据加载完成后重新渲染页面
+                                        utils.refreshAllViews(true);
                                     }
-                                }
-                            }
-                        });
-                    }
-                    
-                    window.firebaseGet(dbRef).then((snapshot) => {
-                        console.log('服务器数据加载成功，快照存在:', snapshot.exists());
-                        
-                        // 设置实时监听
-                        setupRealtimeListener();
-                        
-                        // 获取本地数据
-                        const localDataStr = localStorage.getItem('courseManagerData');
-                        const localData = localDataStr ? JSON.parse(localDataStr) : null;
-                        const localTimestamp = localData && localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
-                        
-                        if (snapshot.exists()) {
-                            const serverData = snapshot.val();
-                            const serverTimestamp = serverData.lastUpdated ? new Date(serverData.lastUpdated).getTime() : 0;
-                            
-                            console.log('本地时间戳:', localTimestamp, '服务器时间戳:', serverTimestamp);
-                            
-                            if (localData) {
-                                // 本地有数据，比较数据是否不同
-                                const hasChanged =
-                                    JSON.stringify(localData.students) !== JSON.stringify(serverData.students) ||
-                                    JSON.stringify(localData.courses) !== JSON.stringify(serverData.courses) ||
-                                    JSON.stringify(localData.organizations) !== JSON.stringify(serverData.organizations) ||
-                                    JSON.stringify(localData.grades) !== JSON.stringify(serverData.grades);
-                                
-                                if (hasChanged) {
-                                    // 数据不同，显示比较界面
-                                    console.log('检测到数据不同，显示比较界面');
-                                    modal.showDataConflict(localData, serverData);
-                                    utils.updateSyncStatus('success', '同步成功');
                                 } else {
-                                    // 数据相同，使用本地数据
-                                    console.log('数据相同，使用本地数据');
-                                    state.students = localData.students || [];
-                                    state.courses = localData.courses || [];
-                                    state.organizations = localData.organizations || defaults.organizations;
-                                    state.grades = localData.grades || defaults.grades;
+                                    // 本地无数据，使用服务器数据
+                                    console.log('本地无数据，使用服务器数据');
+                                    utils.updateStateFromData(serverData);
+                                    
+                                    // 保存到本地
+                                    localStorage.setItem('coursemanagerdata', JSON.stringify(serverData));
+                                    console.log('服务器数据已保存到本地');
+                                    
                                     utils.updateSyncStatus('success', '同步成功');
                                     
                                     // 数据加载完成后重新渲染页面
-                                    render.students();
-                                    render.calendar();
-                                    const { year, month, organization } = utils.getStatisticsParams();
-                                    render.statistics(year, month, organization);
+                                    utils.refreshAllViews(true);
                                 }
+                            } else if (localData) {
+                                // 服务器无数据，本地有数据，上传到服务器
+                                console.log('服务器无数据，本地有数据，上传到服务器');
+                                window.supabaseClient
+                                    .from('coursemanagerdata')
+                                    .insert({
+                                        userid: userId,
+                                        students: localData.students,
+                                        courses: localData.courses,
+                                        organizations: localData.organizations,
+                                        grades: localData.grades,
+                                        lastupdated: localData.lastupdated
+                                    })
+                                    .then(({ error }) => {
+                                        if (error) {
+                                            console.error('本地数据上传到服务器失败:', error);
+                                            utils.updateSyncStatus('error', '同步失败');
+                                        } else {
+                                            console.log('本地数据上传到服务器成功');
+                                            utils.updateSyncStatus('success', '同步成功');
+                                        }
+                                        
+                                        // 使用本地数据
+                                        utils.updateStateFromData(localData);
+                                        
+                                        // 数据加载完成后重新渲染页面
+                                        utils.refreshAllViews(true);
+                                    })
+                                    .catch((error) => {
+                                        console.error('本地数据上传到服务器失败:', error);
+                                        // 使用本地数据
+                                        utils.updateStateFromData(localData);
+                                        utils.updateSyncStatus('error', '同步失败');
+                                        
+                                        // 数据加载完成后重新渲染页面
+                                        utils.refreshAllViews(true);
+                                    });
                             } else {
-                                // 本地无数据，使用服务器数据
-                                console.log('本地无数据，使用服务器数据');
-                                state.students = serverData.students || [];
-                                state.courses = serverData.courses || [];
-                                state.organizations = serverData.organizations || defaults.organizations;
-                                state.grades = serverData.grades || defaults.grades;
+                                // 新用户，两边都没有数据，自动在服务器创建空数据集
+                                console.log('新用户，自动在服务器创建空数据集');
+                                const defaultData = {
+                                    userid: userId,
+                                    students: [],
+                                    courses: [],
+                                    organizations: [],
+                                    grades: [],
+                                    lastupdated: new Date().toISOString()
+                                };
                                 
-                                // 保存到本地
-                                localStorage.setItem('courseManagerData', JSON.stringify(serverData));
-                                console.log('服务器数据已保存到本地');
+                                window.supabaseClient
+                                    .from('coursemanagerdata')
+                                    .insert(defaultData)
+                                    .then(({ error }) => {
+                                        if (error) {
+                                            console.error('创建初始数据失败:', error);
+                                            utils.updateSyncStatus('error', '初始化失败');
+                                        } else {
+                                            console.log('初始数据创建成功');
+                                            utils.updateSyncStatus('success', '初始化成功');
+                                        }
+                                    });
                                 
-                                utils.updateSyncStatus('success', '同步成功');
+                                utils.updateStateFromData({});
+                                // 新用户提示
+                                notification.show('欢迎使用课程管理系统！请添加您的第一条数据', 'info', 5000);
                                 
                                 // 数据加载完成后重新渲染页面
+                                utils.refreshAllViews(true);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('从服务器加载数据失败:', error);
+                            
+                            // 检查是否是新用户（无数据）的情况
+                            if (error.code === 'PGRST116' && error.details === 'The result contains 0 rows') {
+                                console.log('新用户，自动在服务器创建空数据集');
+                                const defaultData = {
+                                    userid: userId,
+                                    students: [],
+                                    courses: [],
+                                    organizations: [],
+                                    grades: [],
+                                    lastupdated: new Date().toISOString()
+                                };
+                                
+                                window.supabaseClient
+                                    .from('coursemanagerdata')
+                                    .insert(defaultData)
+                                    .then(({ error: insertError }) => {
+                                        if (insertError) {
+                                            console.error('创建初始数据失败:', insertError);
+                                            utils.updateSyncStatus('error', '初始化失败');
+                                        } else {
+                                            console.log('初始数据创建成功');
+                                            utils.updateSyncStatus('success', '初始化成功');
+                                        }
+                                    });
+                                
+                                utils.updateStateFromData({});
+                                // 新用户提示
+                                notification.show('欢迎使用课程管理系统！请添加您的第一条数据', 'info', 5000);
+                                // 数据加载完成后重新渲染页面
+                                utils.refreshAllViews(true);
+                            } else {
+                                // 其他错误，从localStorage加载
+                                utils.updateSyncStatus('error', '同步失败');
+                                utils.loadFromLocalStorage();
+                                // 从localStorage加载后重新渲染页面
                                 render.students();
                                 render.calendar();
-                                const { year, month, organization } = utils.getStatisticsParams();
+                                const yearValue = getCustomSelectValue('statistics-year-wrapper');
+                                const monthValue = getCustomSelectValue('statistics-month-wrapper');
+                                const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
+                                const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
+                                const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
+                                const organization = organizationValue || '';
                                 render.statistics(year, month, organization);
                             }
-                        } else if (localData) {
-                            // 服务器无数据，本地有数据，上传到服务器
-                            console.log('服务器无数据，本地有数据，上传到服务器');
-                            window.firebaseSet(dbRef, localData).then(() => {
-                                console.log('本地数据上传到服务器成功');
-                                state.students = localData.students || [];
-                                state.courses = localData.courses || [];
-                                state.organizations = localData.organizations || defaults.organizations;
-                                state.grades = localData.grades || defaults.grades;
-                                utils.updateSyncStatus('success', '同步成功');
-                                
-                                // 数据加载完成后重新渲染页面
-                                render.students();
-                                render.calendar();
-                                const { year, month, organization } = utils.getStatisticsParams();
-                                render.statistics(year, month, organization);
-                            }).catch((error) => {
-                                console.error('本地数据上传到服务器失败:', error);
-                                // 使用本地数据
-                                state.students = localData.students || [];
-                                state.courses = localData.courses || [];
-                                state.organizations = localData.organizations || defaults.organizations;
-                                state.grades = localData.grades || defaults.grades;
-                                utils.updateSyncStatus('error', '同步失败');
-                                
-                                // 数据加载完成后重新渲染页面
-                                render.students();
-                                render.calendar();
-                                const { year, month, organization } = utils.getStatisticsParams();
-                                render.statistics(year, month, organization);
-                            });
-                        } else {
-                            // 两边都没有数据，使用默认数据
-                            console.log('两边都没有数据，使用默认数据');
-                            state.students = [];
-                            state.courses = [];
-                            state.organizations = defaults.organizations;
-                            state.grades = defaults.grades;
-                            utils.updateSyncStatus('success', '同步成功');
-                            
-                            // 数据加载完成后重新渲染页面
-                            render.students();
-                            render.calendar();
-                            const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                            const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                            const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                            const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                            const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                            const organization = organizationValue || '';
-                            render.statistics(year, month, organization);
-                        }
-                    }).catch((error) => {
-                        console.error('从服务器加载数据失败:', error);
-                        // 显示加载失败的状态
-                        utils.updateSyncStatus('error', '同步失败');
-                        // 失败时从localStorage加载
-                        utils.loadFromLocalStorage();
-                        // 从localStorage加载后重新渲染页面
-                        render.students();
-                        render.calendar();
-                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                        const organization = organizationValue || '';
-                        render.statistics(year, month, organization);
-                    });
+                        });
                 } else {
                     // 用户未登录或服务器不可用，从localStorage加载
                     if (!isLoggedIn) {
@@ -354,7 +1348,7 @@
                 };
                 
                 try {
-                    const data = localStorage.getItem('courseManagerData');
+                    const data = localStorage.getItem('coursemanagerdata');
                     const parsed = data ? JSON.parse(data) : {};
                     
                     state.students = parsed.students || [];
@@ -4376,7 +5370,7 @@
                     const useLocalBtn = document.getElementById('use-local-data');
                     const useServerBtn = document.getElementById('use-server-data');
                     
-                    useLocalBtn.addEventListener('click', () => {
+                    useLocalBtn.addEventListener('click', async () => {
                         modal.hide();
                         // 使用本地数据
                         if (localData) {
@@ -4385,18 +5379,43 @@
                             state.organizations = localData.organizations || [];
                             state.grades = localData.grades || [];
                             // 上传到服务器
-                            const auth = window.firebaseAuth;
-                            if (window.firebaseDatabase && auth && auth.currentUser) {
-                                utils.updateSyncStatus('syncing', '正在同步...');
-                                const userId = auth.currentUser.uid;
-                                const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
-                                window.firebaseSet(dbRef, localData).then(() => {
-                                    console.log('本地数据上传到服务器成功');
-                                    utils.updateSyncStatus('success', '同步成功');
-                                }).catch((error) => {
-                                    console.error('本地数据上传到服务器失败:', error);
-                                    utils.updateSyncStatus('error', '同步失败');
-                                });
+                            const auth = window.supabaseAuth;
+                            if (window.supabaseClient && auth) {
+                                try {
+                                    const { data } = await auth.getSession();
+                                    const session = data.session;
+                                    if (session) {
+                                        utils.updateSyncStatus('syncing', '正在同步...');
+                                        const userId = session.user.id;
+                                
+                                window.supabaseClient
+                                    .from('coursemanagerdata')
+                                    .upsert({
+                                        userid: userId,
+                                        students: localData.students,
+                                        courses: localData.courses,
+                                        organizations: localData.organizations,
+                                        grades: localData.grades,
+                                        lastupdated: localData.lastUpdated
+                                    }, { onConflict: 'userid' })
+                                    .then(({ error }) => {
+                                        if (error) {
+                                            console.error('本地数据上传到服务器失败:', error);
+                                            utils.updateSyncStatus('error', '同步失败');
+                                        } else {
+                                            console.log('本地数据上传到服务器成功');
+                                            utils.updateSyncStatus('success', '同步成功');
+                                        }
+                                    })
+                                    .catch((error) => {
+                                        console.error('本地数据上传到服务器失败:', error);
+                                        utils.updateSyncStatus('error', '同步失败');
+                                    });
+                                        }
+                                } catch (error) {
+                                    console.error('获取 session 失败:', error);
+                                    utils.updateSyncStatus('error', '服务器不可用');
+                                }
                             } else {
                                 utils.updateSyncStatus('error', '服务器不可用');
                             }
@@ -4422,7 +5441,7 @@
                             state.organizations = serverData.organizations || [];
                             state.grades = serverData.grades || [];
                             // 保存到本地
-                            localStorage.setItem('courseManagerData', JSON.stringify(serverData));
+                            localStorage.setItem('coursemanagerdata', JSON.stringify(serverData));
                             utils.updateSyncStatus('success', '同步成功');
                         }
                         // 重新渲染页面
@@ -4749,32 +5768,48 @@
             // 初始化事件监听
             events.init();
             
-            // 等待 Firebase 加载完成
-            const waitForFirebase = () => {
-                const auth = window.firebaseAuth;
-                if (auth) {
-                    // Firebase 已加载，检测登录状态
-                    auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        // 用户已登录，更新UI并加载渲染系统
-                        console.log('用户已登录，更新UI并加载渲染系统...');
-                        updateUIForAuth(user);
-                        loadSystem();
+            // 检查 Supabase 是否已加载
+            let supabaseCheckCount = 0;
+            const maxCheckCount = 30; // 最多检查30次（3秒）
+            
+            const checkSupabase = () => {
+                supabaseCheckCount++;
+                
+                if (window.supabaseClient) {
+                    // Supabase 已加载，检测登录状态
+                    const auth = window.supabaseAuth;
+                    if (auth) {
+                        auth.onAuthStateChange(({ session }) => {
+                            if (session) {
+                                // 用户已登录，更新UI并加载渲染系统
+                                const user = session.user;
+                                console.log('用户已登录，更新UI并加载渲染系统...');
+                                updateUIForAuth(user);
+                                loadSystem();
+                            } else {
+                                // 用户未登录，只显示登录框，不加载渲染系统
+                                console.log('用户未登录，只显示登录框');
+                                updateUIForUnauth();
+                            }
+                        });
                     } else {
-                        // 用户未登录，只显示登录框，不加载渲染系统
-                        console.log('用户未登录，只显示登录框');
+                        // Supabase 加载失败，使用本地存储
+                        console.log('Supabase 加载失败，使用本地存储');
                         updateUIForUnauth();
                     }
-                });
+                } else if (supabaseCheckCount < maxCheckCount) {
+                    // Supabase 还未加载，等待后重试
+                    console.log('等待 Supabase 加载... (' + supabaseCheckCount + '/' + maxCheckCount + ')');
+                    setTimeout(checkSupabase, 100);
                 } else {
-                    // Firebase 还未加载，等待后重试
-                    console.log('等待 Firebase 加载...');
-                    setTimeout(waitForFirebase, 100);
+                    // 超过最大检查次数，使用本地存储
+                    console.log('Supabase 加载超时，使用本地存储');
+                    updateUIForUnauth();
                 }
             };
             
-            // 开始等待 Firebase
-            waitForFirebase();
+            // 开始检查 Supabase
+            checkSupabase();
         }
         
         // 显示系统框架
@@ -4789,39 +5824,33 @@
             }
         }
         
-        // 设置Firebase实时监听
-        function setupFirebaseListeners() {
-            const auth = window.firebaseAuth;
-            if (window.firebaseDatabase && auth && auth.currentUser) {
-                const userId = auth.currentUser.uid;
-                const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
-                window.firebaseOnValue(dbRef, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        console.log('收到Firebase实时更新:', data);
-                        
-                        // 检查数据是否有变化
-                        const hasChanged = 
-                            JSON.stringify(data.students) !== JSON.stringify(state.students) ||
-                            JSON.stringify(data.courses) !== JSON.stringify(state.courses) ||
-                            JSON.stringify(data.organizations) !== JSON.stringify(state.organizations);
-                        
-                        if (hasChanged) {
-                            updateFromFirebase(data);
-                        }
-                    }
-                });
-            } else {
-                console.log('用户未登录，不启用Firebase实时监听');
+        // 设置Supabase实时监听
+        async function setupSupabaseListeners() {
+            const auth = window.supabaseAuth;
+            let session = null;
+            
+            if (auth) {
+                try {
+                    const { data } = await auth.getSession();
+                    session = data.session;
+                } catch (error) {
+                    console.error('获取 session 失败:', error);
+                }
             }
+            
+            // 实时监听器已在 loadData 函数中设置，这里不需要重复设置
         }
         
-        // 从Firebase更新数据并重新渲染
-        function updateFromFirebase(data) {
+        // 从Supabase更新数据并重新渲染
+        function updateFromSupabase(data) {
             state.students = data.students || [];
             state.courses = data.courses || [];
             state.organizations = data.organizations || [];
-            console.log('数据从Firebase实时更新，重新渲染页面');
+            state.grades = data.grades || [];
+            console.log('数据从Supabase实时更新，重新渲染页面');
+            
+            // 保存到本地存储
+            localStorage.setItem('coursemanagerdata', JSON.stringify(data));
             
             // 重新渲染页面 - 只渲染当前可见的页面
             const studentsPage = document.getElementById('students-page');
@@ -4842,6 +5871,11 @@
             const organization = organizationValue || '';
             render.statistics(year, month, organization);
         }
+        
+        // 存储原始方法
+        let originalSaveData = utils.saveData;
+        let originalLoadData = utils.loadData;
+        let originalLoadFromLocalStorage = utils.loadFromLocalStorage;
         
         // 加载渲染系统
         function loadSystem(isTrialMode = false) {
@@ -4871,7 +5905,7 @@
                 render.statistics(year, month, organization);
                 
                 // 覆盖saveData方法，使其在试用模式下不保存数据
-                const originalSaveData = utils.saveData;
+                originalSaveData = utils.saveData;
                 utils.saveData = function() {
                     console.log('试用模式：数据不会被保存');
                     // 重新渲染页面
@@ -4882,13 +5916,13 @@
                 };
                 
                 // 覆盖loadData方法，使其在试用模式下不加载数据
-                const originalLoadData = utils.loadData;
+                originalLoadData = utils.loadData;
                 utils.loadData = function() {
                     console.log('试用模式：使用内存中的临时数据');
                 };
                 
                 // 覆盖loadFromLocalStorage方法，使其在试用模式下不加载数据
-                const originalLoadFromLocalStorage = utils.loadFromLocalStorage;
+                originalLoadFromLocalStorage = utils.loadFromLocalStorage;
                 utils.loadFromLocalStorage = function() {
                     console.log('试用模式：使用内存中的临时数据');
                 };
@@ -4897,12 +5931,16 @@
                 utils.updateSyncStatus('default', '试用模式');
                 
             } else {
+                // 恢复原始方法
+                if (originalSaveData) utils.saveData = originalSaveData;
+                if (originalLoadData) utils.loadData = originalLoadData;
+                if (originalLoadFromLocalStorage) utils.loadFromLocalStorage = originalLoadFromLocalStorage;
                 // 正常模式：加载数据
                 console.log('开始加载数据...');
                 utils.loadData();
                 
-                // 添加Firebase实时监听
-                setupFirebaseListeners();
+                // 添加Supabase实时监听
+                setupSupabaseListeners();
             }
         }
 
@@ -5196,47 +6234,95 @@
         // 程序关闭前同步数据（仅当用户已登录时）
         window.addEventListener('beforeunload', function() {
             // 检查用户是否已登录
-            const auth = window.firebaseAuth;
-            const isLoggedIn = auth && auth.currentUser;
+            const auth = window.supabaseAuth;
+            let isLoggedIn = false;
+            let session = null;
             
-            // 只在Firebase可用且用户已登录时执行
-            if (window.firebaseDatabase && isLoggedIn) {
+            if (auth) {
+                try {
+                    // 尝试同步获取 session
+                    const sessionData = auth.getSession();
+                    if (sessionData && sessionData.data && sessionData.data.session) {
+                        session = sessionData.data.session;
+                        isLoggedIn = !!session;
+                    }
+                } catch (error) {
+                    console.error('获取 session 失败:', error);
+                }
+            }
+            
+            // 只在Supabase可用且用户已登录时执行
+            if (window.supabaseClient && isLoggedIn) {
                 try {
                     // 获取本地数据
-                    const localDataStr = localStorage.getItem('courseManagerData');
+                    const localDataStr = localStorage.getItem('coursemanagerdata');
                     const localData = localDataStr ? JSON.parse(localDataStr) : null;
                     const localTimestamp = localData && localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
                     
                     if (localTimestamp > 0) {
                         // 比较服务器数据时间戳
-                        const userId = auth.currentUser.uid;
-                        const dbRef = window.firebaseRef(window.firebaseDatabase, `courseManagerData/${userId}`);
-                        window.firebaseGet(dbRef).then((snapshot) => {
-                            if (snapshot.exists()) {
-                                const serverData = snapshot.val();
-                                const serverTimestamp = serverData.lastUpdated ? new Date(serverData.lastUpdated).getTime() : 0;
-                                
-                                // 如果本地数据较新，同步到服务器
-                                if (localTimestamp > serverTimestamp) {
-                                    window.firebaseSet(dbRef, localData).then(() => {
-                                        console.log('程序关闭前，本地数据已同步到服务器');
-                                    }).catch((error) => {
-                                        console.error('程序关闭前同步数据失败:', error);
-                                    });
-                                } else {
-                                    console.log('服务器数据较新，无需同步');
+                        const userId = session.user.id;
+                        
+                        window.supabaseClient
+                            .from('coursemanagerdata')
+                            .select('*')
+                            .eq('userid', userId)
+                            .single()
+                            .then(({ data: serverData, error }) => {
+                                if (error) {
+                                    console.error('获取服务器数据失败:', error);
+                                    return;
                                 }
-                            } else {
-                                // 服务器无数据，上传本地数据
-                                window.firebaseSet(dbRef, localData).then(() => {
-                                    console.log('程序关闭前，本地数据已上传到服务器');
-                                }).catch((error) => {
-                                    console.error('程序关闭前上传数据失败:', error);
-                                });
-                            }
-                        }).catch((error) => {
-                            console.error('获取服务器数据失败:', error);
-                        });
+                                
+                                if (serverData) {
+                                    const serverTimestamp = serverData.lastupdated ? new Date(serverData.lastupdated).getTime() : 0;
+                                    
+                                    // 如果本地数据较新，同步到服务器
+                                    if (localTimestamp > serverTimestamp) {
+                                        window.supabaseClient
+                                            .from('coursemanagerdata')
+                                            .upsert({
+                                                userid: userId,
+                                                students: localData.students,
+                                                courses: localData.courses,
+                                                organizations: localData.organizations,
+                                                grades: localData.grades,
+                                                lastupdated: localData.lastUpdated
+                                            }, { onConflict: 'userid' })
+                                            .then(({ error }) => {
+                                                if (error) {
+                                                    console.error('程序关闭前同步数据失败:', error);
+                                                } else {
+                                                    console.log('程序关闭前，本地数据已同步到服务器');
+                                                }
+                                            });
+                                    } else {
+                                        console.log('服务器数据较新，无需同步');
+                                    }
+                                } else {
+                                    // 服务器无数据，上传本地数据
+                                    window.supabaseClient
+                                        .from('coursemanagerdata')
+                                        .insert({
+                                            userid: userId,
+                                            students: localData.students,
+                                            courses: localData.courses,
+                                            organizations: localData.organizations,
+                                            grades: localData.grades,
+                                            lastupdated: localData.lastUpdated
+                                        })
+                                        .then(({ error }) => {
+                                            if (error) {
+                                                console.error('程序关闭前上传数据失败:', error);
+                                            } else {
+                                                console.log('程序关闭前，本地数据已上传到服务器');
+                                            }
+                                        });
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('获取服务器数据失败:', error);
+                            });
                     }
                 } catch (error) {
                     console.error('同步数据时出错:', error);
@@ -5427,7 +6513,7 @@
                     return;
                 }
                 
-                const auth = window.firebaseAuth;
+                const auth = window.supabaseAuth;
                 if (!auth) {
                     notification.show('认证服务初始化失败', 'error');
                     return;
@@ -5445,10 +6531,33 @@
                     loginSubmit.classList.add('opacity-80', 'cursor-not-allowed');
                 }
                 
-                auth.signInWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
+                auth.signInWithPassword({ email, password })
+                    .then(({ data, error }) => {
+                        if (error) {
+                            console.error('登录失败:', error.message);
+                            // 提供更友好的错误提示
+                            let errorMsg = '登录失败';
+                            if (error.message.includes('Invalid login credentials')) {
+                                errorMsg = '邮箱或密码错误，或邮箱未验证。请检查输入，或查看邮箱完成验证';
+                            } else if (error.message.includes('Email not confirmed')) {
+                                errorMsg = '邮箱未验证，请检查邮箱并点击验证链接';
+                            } else {
+                                errorMsg = '登录失败: ' + error.message;
+                            }
+                            notification.show(errorMsg, 'error');
+                            
+                            // 恢复按钮状态
+                            if (loginBtnText && loginLoading && loginSubmit) {
+                                loginBtnText.textContent = '登 录';
+                                loginLoading.classList.add('hidden');
+                                loginSubmit.disabled = false;
+                                loginSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+                            }
+                            return;
+                        }
+                        
                         // 登录成功
-                        const user = userCredential.user;
+                        const user = data.user;
                         console.log('登录成功:', user);
                         
                         // 立即显示成功通知
@@ -5465,10 +6574,8 @@
                         });
                     })
                     .catch((error) => {
-                        const errorCode = error.code;
-                        const errorMessage = error.message;
-                        console.error('登录失败:', errorMessage);
-                        notification.show('登录失败: ' + errorMessage, 'error');
+                        console.error('登录失败:', error.message);
+                        notification.show('登录失败: ' + error.message, 'error');
                         
                         // 恢复按钮状态
                         if (loginBtnText && loginLoading && loginSubmit) {
@@ -5507,7 +6614,7 @@
                     return;
                 }
                 
-                const auth = window.firebaseAuth;
+                const auth = window.supabaseAuth;
                 if (!auth) {
                     notification.show('认证服务初始化失败', 'error');
                     return;
@@ -5525,14 +6632,41 @@
                     registerSubmit.classList.add('opacity-80', 'cursor-not-allowed');
                 }
                 
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
+                auth.signUp({ email, password })
+                    .then(({ data, error }) => {
+                        if (error) {
+                            console.error('注册失败:', error.message);
+                            // 提供更友好的错误提示
+                            let errorMsg = '注册失败';
+                            if (error.message.includes('User already registered')) {
+                                errorMsg = '该邮箱已注册，请直接登录';
+                            } else if (error.message.includes('Password should be at least')) {
+                                errorMsg = '密码长度不足，请使用至少6位密码';
+                            } else if (error.message.includes('Unable to validate email address')) {
+                                errorMsg = '邮箱格式不正确，请检查输入';
+                            } else if (error.message.includes('rate limit exceeded') || error.message.includes('429')) {
+                                errorMsg = '注册过于频繁，请稍后再试（通常需要等待5-15分钟）';
+                            } else {
+                                errorMsg = '注册失败: ' + error.message;
+                            }
+                            notification.show(errorMsg, 'error');
+                            
+                            // 恢复按钮状态
+                            if (registerBtnText && registerLoading && registerSubmit) {
+                                registerBtnText.textContent = '注 册';
+                                registerLoading.classList.add('hidden');
+                                registerSubmit.disabled = false;
+                                registerSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
+                            }
+                            return;
+                        }
+                        
                         // 注册成功
-                        const user = userCredential.user;
+                        const user = data.user;
                         console.log('注册成功:', user);
                         
-                        // 显示注册成功通知
-                        notification.show('注册成功', 'info');
+                        // 显示注册成功通知（更明确的提示）
+                        notification.show('注册成功！请查看邮箱并点击验证链接，验证后才能登录', 'info', 8000);
                         
                         // 立即开始表单切换，不等待邮件发送
                         // 更新标签页样式
@@ -5584,8 +6718,6 @@
                             registerSubmit.classList.remove('opacity-80', 'cursor-not-allowed');
                         }
                         
-
-                        
                         // 登出用户，让用户验证后自行登录
                         // 使用setTimeout延迟登出，避免立即触发onAuthStateChanged
                         setTimeout(() => {
@@ -5595,10 +6727,8 @@
                         }, 500); // 减少延迟时间
                     })
                     .catch((error) => {
-                        const errorCode = error.code;
-                        const errorMessage = error.message;
-                        console.error('注册失败:', errorMessage);
-                        notification.show('注册失败: ' + errorMessage, 'error');
+                        console.error('注册失败:', error.message);
+                        notification.show('注册失败: ' + error.message, 'error');
                         
                         // 恢复按钮状态
                         if (registerBtnText && registerLoading && registerSubmit) {
@@ -5626,7 +6756,7 @@
             
             // 登出按钮点击事件
             document.getElementById('logout-btn').addEventListener('click', () => {
-                const auth = window.firebaseAuth;
+                const auth = window.supabaseAuth;
                 if (!auth) {
                     notification.show('认证服务初始化失败', 'error');
                     return;
@@ -5655,11 +6785,12 @@
             });
             
             // 监听认证状态变化
-            const auth = window.firebaseAuth;
+            const auth = window.supabaseAuth;
             if (auth) {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
+                auth.onAuthStateChange(({ session }) => {
+                    if (session) {
                         // 用户已登录
+                        const user = session.user;
                         console.log('用户已登录:', user);
                         updateUIForAuth(user);
                     } else {
@@ -6096,4 +7227,7 @@
         }
         
         // 页面加载完成后初始化自定义下拉菜单
-        document.addEventListener('DOMContentLoaded', initCustomSelects);</script></body></html>
+        document.addEventListener('DOMContentLoaded', initCustomSelects);
+    </script>
+
+</body></html>
