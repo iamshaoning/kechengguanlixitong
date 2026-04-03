@@ -1,6 +1,26 @@
+# 依赖包
+node_modules/
+
+# 构建输出
+dist/
+
+# 环境变量文件
 .env
-node_modules
-build
-*.log
+.env.local
+.env.*.local
+
+# IDE 相关
+.vscode/
+.idea/
+
+# 操作系统相关
 .DS_Store
 Thumbs.db
+
+# 日志文件
+logs
+*.log
+
+# 临时文件
+*.tmp
+*.temp
