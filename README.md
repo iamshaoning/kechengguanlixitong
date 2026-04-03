@@ -14,15 +14,15 @@
 
 ### 日历排课
 
-!\[日历排课]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png> null)
+![日历排课](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png)
 
 ### 学生管理
 
-!\[学生管理]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png> null)
+![学生管理](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png)
 
 ### 数据统计
 
-!\[数据统计]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png> null)
+![数据统计](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png)
 
 ## 功能特性
 
