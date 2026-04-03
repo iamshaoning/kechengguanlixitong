@@ -1313,34 +1313,35 @@
                 if (copiedCourses) {
                     try {
                         const courses = JSON.parse(copiedCourses);
-                        
-                        // 覆盖式粘贴：先删除目标日期的所有课程
-                        const existingCoursesCount = state.courses.filter(c => c.date === dateStr).length;
-                        state.courses = state.courses.filter(c => c.date !== dateStr);
-                        
-                        // 添加复制的课程到目标日期
                         let addedCount = 0;
                         courses.forEach(course => {
-                            const newCourse = {
-                                ...course,
-                                id: utils.generateId(),
-                                date: dateStr,
-                                createdAt: new Date().toISOString()
-                            };
-                            state.courses.push(newCourse);
-                            addedCount++;
+                            // 检查是否已经存在相同的课程
+                            const isDuplicate = state.courses.some(existingCourse => {
+                                return existingCourse.date === dateStr &&
+                                       existingCourse.startTime === course.startTime &&
+                                       existingCourse.endTime === course.endTime &&
+                                       existingCourse.lessonType === course.lessonType &&
+                                       JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
+                            });
+                            
+                            if (!isDuplicate) {
+                                const newCourse = {
+                                    ...course,
+                                    id: utils.generateId(),
+                                    date: dateStr,
+                                    createdAt: new Date().toISOString()
+                                };
+                                state.courses.push(newCourse);
+                                addedCount++;
+                            }
                         });
                         
                         if (addedCount > 0) {
                             utils.saveData();
                             render.calendar();
-                            if (existingCoursesCount > 0) {
-                                notification.show(`已覆盖 ${existingCoursesCount} 节课程，成功粘贴 ${addedCount} 节课程`);
-                            } else {
-                                notification.show(`成功粘贴 ${addedCount} 节课程`);
-                            }
+                            notification.show(`成功粘贴 ${addedCount} 节课程`);
                         } else {
-                            notification.show('没有可粘贴的课程', 'warning');
+                            notification.show('没有可粘贴的课程或课程已存在', 'warning');
                         }
                     } catch (error) {
                         console.error('粘贴课程失败:', error);
@@ -2086,7 +2087,7 @@
                     if (courseItem) {
                         e.stopPropagation();
                         const courseId = courseItem.dataset.courseId;
-                        handleCourseClick(courseItem, courseId);
+                        handleCourseClick(courseItem, courseId, e);
                     }
                 });
                 
@@ -2096,6 +2097,30 @@
                         e.stopPropagation();
                         const courseId = courseItem.dataset.courseId;
                         handleCourseContextMenu(courseItem, courseId, e);
+                    }
+                });
+                
+                // 添加事件委托处理课程拖拽开始事件
+                grid.addEventListener('dragstart', function(e) {
+                    const courseItem = e.target.closest('.course-item');
+                    if (courseItem) {
+                        const courseId = courseItem.dataset.courseId;
+                        e.dataTransfer.setData('text/plain', courseId);
+                        e.dataTransfer.effectAllowed = 'copy';
+                        
+                        // 检查是否按下了Ctrl键
+                        if (e.ctrlKey) {
+                            if (e.shiftKey) {
+                                // Ctrl+Shift 移动
+                                e.dataTransfer.effectAllowed = 'move';
+                            } else {
+                                // Ctrl 复制
+                                e.dataTransfer.effectAllowed = 'copy';
+                            }
+                        } else {
+                            // 没有Ctrl键，不允许拖拽
+                            e.preventDefault();
+                        }
                     }
                 });
             },
@@ -2124,7 +2149,8 @@
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
                                      style="background-color: ${primaryColor}10; border-left: 3px solid ${primaryColor};"
-                                     data-course-id="${course.id}">
+                                     data-course-id="${course.id}"
+                                     draggable="true">
                                     <div class="flex flex-wrap gap-1 mb-1">
                                         ${course.studentNames.map((name, index) => {
                                             const color = course.colors[index] || '#9ca3af';
@@ -2148,7 +2174,8 @@
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
                                      style="background-color: ${color}20; border-left: 3px solid ${color};"
-                                     data-course-id="${course.id}">
+                                     data-course-id="${course.id}"
+                                     draggable="true">
                                     <div class="font-medium truncate text-sm" title="${student ? `${student.name} (${student.organization})` : '未知学生'}">
                                         ${student ? student.name : '未知学生'}
                                     </div>
@@ -2168,7 +2195,12 @@
                 `;
                 
                 // 单击选择日期，双击添加课程
-                cell.onclick = function() {
+                cell.onclick = function(e) {
+                    // 只处理左键点击
+                    if (e && e.button !== 0) {
+                        return;
+                    }
+                    
                     // 使用元素的属性保持clickCount状态
                     if (!this._clickCount) {
                         this._clickCount = 0;
@@ -2236,6 +2268,76 @@
                     cell.dataset.keydownListenerAdded = 'true';
                 }
                 
+                // 添加拖拽事件
+                if (!cell.dataset.dragListenerAdded) {
+                    // 拖拽进入事件
+                    cell.addEventListener('dragenter', function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed;
+                        this.classList.add('bg-blue-100');
+                    });
+                    
+                    // 拖拽悬停事件
+                    cell.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed;
+                    });
+                    
+                    // 拖拽离开事件
+                    cell.addEventListener('dragleave', function(e) {
+                        this.classList.remove('bg-blue-100');
+                    });
+                    
+                    // 拖拽放置事件
+                    cell.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('bg-blue-100');
+                        
+                        const courseId = e.dataTransfer.getData('text/plain');
+                        if (courseId) {
+                            const course = state.courses.find(c => c.id === courseId);
+                            if (course) {
+                                const effect = e.dataTransfer.effectAllowed;
+                                
+                                if (effect === 'move') {
+                                    // 移动课程
+                                    course.date = dateStr;
+                                    utils.saveData();
+                                    render.calendar();
+                                    notification.show('课程移动成功');
+                                } else if (effect === 'copy') {
+                                    // 检查是否已经存在相同的课程
+                                    const isDuplicate = state.courses.some(existingCourse => {
+                                        return existingCourse.date === dateStr &&
+                                               existingCourse.startTime === course.startTime &&
+                                               existingCourse.endTime === course.endTime &&
+                                               existingCourse.lessonType === course.lessonType &&
+                                               JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
+                                    });
+                                    
+                                    if (!isDuplicate) {
+                                        // 复制课程
+                                        const newCourse = {
+                                            ...course,
+                                            id: utils.generateId(),
+                                            date: dateStr,
+                                            createdAt: new Date().toISOString()
+                                        };
+                                        state.courses.push(newCourse);
+                                        utils.saveData();
+                                        render.calendar();
+                                        notification.show('课程复制成功');
+                                    } else {
+                                        notification.show('课程已存在', 'warning');
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    cell.dataset.dragListenerAdded = 'true';
+                }
+                
                 // 支持右键菜单功能
                 if (!cell.dataset.contextMenuListenerAdded) {
                     // 保存当前日期字符串
@@ -2244,6 +2346,9 @@
                     // 添加右键菜单事件
                     cell.addEventListener('contextmenu', function(e) {
                         e.preventDefault();
+                        
+                        // 重置点击计数，避免右键后左键点击触发双击
+                        this._clickCount = 0;
                         
                         // 检查是否点击的是课程元素
                         if (e.target.closest('.course-item')) {
@@ -5936,7 +6041,23 @@
         }
 
         // 处理课程标签点击事件
-        function handleCourseClick(element, courseId) {
+        function handleCourseClick(element, courseId, event) {
+            // 隐藏右键菜单
+            const contextMenu = document.getElementById('context-menu');
+            if (contextMenu) {
+                contextMenu.classList.add('hidden');
+            }
+            
+            // 只处理左键点击
+            if (event && event.button !== 0) {
+                return;
+            }
+            
+            // 重置所有课程元素的点击计数
+            document.querySelectorAll('.course-item').forEach(item => {
+                item._clickCount = 0;
+            });
+            
             // 使用闭包保持clickCount状态
             if (!element._clickCount) {
                 element._clickCount = 0;
@@ -6053,6 +6174,9 @@
         // 处理课程右键菜单事件
         function handleCourseContextMenu(element, courseId, event) {
             event.preventDefault();
+            
+            // 重置点击计数，避免右键后左键点击触发双击
+            element._clickCount = 0;
             
             // 直接选择当前课程，不需要先左键点击
             // 移除其他课程的选中状态
@@ -6213,7 +6337,7 @@
         // 全局点击事件，点击其他地方时隐藏右键菜单
         document.addEventListener('click', function(e) {
             const contextMenu = document.getElementById('context-menu');
-            if (contextMenu && !contextMenu.contains(e.target) && !e.target.closest('.course-item') && !e.target.closest('.calendar-cell')) {
+            if (contextMenu && !contextMenu.contains(e.target)) {
                 contextMenu.classList.add('hidden');
             }
         });
