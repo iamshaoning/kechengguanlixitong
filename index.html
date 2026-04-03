@@ -1313,35 +1313,34 @@
                 if (copiedCourses) {
                     try {
                         const courses = JSON.parse(copiedCourses);
+                        
+                        // 覆盖式粘贴：先删除目标日期的所有课程
+                        const existingCoursesCount = state.courses.filter(c => c.date === dateStr).length;
+                        state.courses = state.courses.filter(c => c.date !== dateStr);
+                        
+                        // 添加复制的课程到目标日期
                         let addedCount = 0;
                         courses.forEach(course => {
-                            // 检查是否已经存在相同的课程
-                            const isDuplicate = state.courses.some(existingCourse => {
-                                return existingCourse.date === dateStr &&
-                                       existingCourse.startTime === course.startTime &&
-                                       existingCourse.endTime === course.endTime &&
-                                       existingCourse.lessonType === course.lessonType &&
-                                       JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
-                            });
-                            
-                            if (!isDuplicate) {
-                                const newCourse = {
-                                    ...course,
-                                    id: utils.generateId(),
-                                    date: dateStr,
-                                    createdAt: new Date().toISOString()
-                                };
-                                state.courses.push(newCourse);
-                                addedCount++;
-                            }
+                            const newCourse = {
+                                ...course,
+                                id: utils.generateId(),
+                                date: dateStr,
+                                createdAt: new Date().toISOString()
+                            };
+                            state.courses.push(newCourse);
+                            addedCount++;
                         });
                         
                         if (addedCount > 0) {
                             utils.saveData();
                             render.calendar();
-                            notification.show(`成功粘贴 ${addedCount} 节课程`);
+                            if (existingCoursesCount > 0) {
+                                notification.show(`已覆盖 ${existingCoursesCount} 节课程，成功粘贴 ${addedCount} 节课程`);
+                            } else {
+                                notification.show(`成功粘贴 ${addedCount} 节课程`);
+                            }
                         } else {
-                            notification.show('没有可粘贴的课程或课程已存在', 'warning');
+                            notification.show('没有可粘贴的课程', 'warning');
                         }
                     } catch (error) {
                         console.error('粘贴课程失败:', error);
