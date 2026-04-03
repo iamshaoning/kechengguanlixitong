@@ -10,7 +10,7 @@
     
     <script type="module">
         // 全局调试控制 - 设置为false禁用所有console输出
-        const GLOBAL_DEBUG = false;
+        const GLOBAL_DEBUG = true;
         if (!GLOBAL_DEBUG) {
             console.log = () => {};
             console.error = () => {};
@@ -847,12 +847,22 @@
             grades: []
         };
 
-        // 工具函数
+        /**
+         * 工具函数集合
+         * @description 包含各种辅助函数，如生成ID、转义HTML、计算课时等
+         */
         const utils = {
-            // 生成唯一ID
+            /**
+             * 生成唯一ID
+             * @returns {string} 唯一ID字符串
+             */
             generateId: () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`,
             
-            // 转义HTML特殊字符，防止XSS攻击
+            /**
+             * 转义HTML特殊字符，防止XSS攻击
+             * @param {string} unsafe - 未转义的HTML字符串
+             * @returns {string} 转义后的安全字符串
+             */
             escapeHtml: (unsafe) => {
                 if (!unsafe) return '';
                 return unsafe
@@ -863,7 +873,11 @@
                     .replace(/'/g, "&#039;");
             },
             
-            // 生成颜色
+            /**
+             * 根据文本生成颜色
+             * @param {string} text - 用于生成颜色的文本
+             * @returns {string} 十六进制颜色值
+             */
             generateColor: (text) => {
                 // 预定义的美观颜色数组
                 const baseColors = [
@@ -882,7 +896,10 @@
                 return baseColors[index];
             },
             
-            // 获取统计页面参数
+            /**
+             * 获取统计页面参数
+             * @returns {Object} 包含年、月、机构的统计参数
+             */
             getStatisticsParams: () => {
                 const yearValue = getCustomSelectValue('statistics-year-wrapper');
                 const monthValue = getCustomSelectValue('statistics-month-wrapper');
@@ -893,14 +910,23 @@
                 return { year, month, organization };
             },
             
-            // 计算课时数
+            /**
+             * 计算课时数
+             * @param {string} startTime - 开始时间，格式为 HH:MM
+             * @param {string} endTime - 结束时间，格式为 HH:MM
+             * @returns {number} 课时数（小时）
+             */
             calculateHours: (startTime, endTime) => {
                 const [sh, sm] = startTime.split(':').map(Number);
                 const [eh, em] = endTime.split(':').map(Number);
                 return (eh * 60 + em - sh * 60 - sm) / 60;
             },
             
-            // 更新同步状态
+            /**
+             * 更新同步状态
+             * @param {string} status - 同步状态：syncing, success, error, default
+             * @param {string} message - 状态消息
+             */
             updateSyncStatus: (status, message) => {
                 const syncStatus = document.getElementById('sync-status');
                 const syncIcon = document.getElementById('sync-icon');
@@ -922,7 +948,11 @@
                 }
             },
             
-            // 从数据更新状态（通用函数）
+            /**
+             * 从数据更新状态（通用函数）
+             * @param {Object} data - 包含学生、课程、机构、年级的数据对象
+             * @param {boolean} useDefaults - 是否使用默认值
+             */
             updateStateFromData: (data, useDefaults = true) => {
                 const defaults = { organizations: [], grades: [] };
                 state.students = data.students || [];
@@ -931,7 +961,10 @@
                 state.grades = data.grades || (useDefaults ? defaults.grades : []);
             },
             
-            // 刷新所有视图（通用函数）
+            /**
+             * 刷新所有视图（通用函数）
+             * @param {boolean} withStatistics - 是否刷新统计页面
+             */
             refreshAllViews: (withStatistics = false) => {
                 render.students();
                 render.calendar();
@@ -967,20 +1000,20 @@
                         if (session) {
                             utils.updateSyncStatus('syncing', '正在同步...');
                             const userId = session.user.id;
-                    
-                    // 使用 Supabase 同步数据
-                    const supabaseClient = window.supabaseClient;
-                    supabaseClient
-                        .from('coursemanagerdata')
-                        .upsert({
+                        
+                            // 使用 Supabase 同步数据
+                            const supabaseClient = window.supabaseClient;
+                            const { error } = await supabaseClient
+                                .from('coursemanagerdata')
+                                .upsert({
                             userid: userId,
                             students: appData.students,
                             courses: appData.courses,
                             organizations: appData.organizations,
                             grades: appData.grades,
                             lastupdated: appData.lastupdated
-                        }, { onConflict: 'userid' })
-                        .then(({ error }) => {
+                        }, { onConflict: 'userid' });
+                            
                             if (error) {
                                 console.error('数据同步到服务器失败:', error);
                                 utils.updateSyncStatus('error', '同步失败');
@@ -988,11 +1021,6 @@
                                 console.log('数据同步到服务器成功');
                                 utils.updateSyncStatus('success', '同步成功');
                             }
-                        })
-                        .catch((error) => {
-                            console.error('数据同步到服务器失败:', error);
-                            utils.updateSyncStatus('error', '同步失败');
-                        });
                         }
                     } catch (error) {
                         console.error('获取 session 失败:', error);
@@ -1067,7 +1095,7 @@
                                     const serverData = payload.new;
                                     
                                     // 比较服务器数据和本地数据
-                                    const localDataStr = localStorage.getItem('courseManagerData');
+                                    const localDataStr = localStorage.getItem('coursemanagerdata');
                                     const localData = localDataStr ? JSON.parse(localDataStr) : null;
                                     
                                     if (localData) {
@@ -1276,52 +1304,11 @@
                         })
                         .catch((error) => {
                             console.error('从服务器加载数据失败:', error);
-                            
-                            // 检查是否是新用户（无数据）的情况
-                            if (error.code === 'PGRST116' && error.details === 'The result contains 0 rows') {
-                                console.log('新用户，自动在服务器创建空数据集');
-                                const defaultData = {
-                                    userid: userId,
-                                    students: [],
-                                    courses: [],
-                                    organizations: [],
-                                    grades: [],
-                                    lastupdated: new Date().toISOString()
-                                };
-                                
-                                window.supabaseClient
-                                    .from('coursemanagerdata')
-                                    .insert(defaultData)
-                                    .then(({ error: insertError }) => {
-                                        if (insertError) {
-                                            console.error('创建初始数据失败:', insertError);
-                                            utils.updateSyncStatus('error', '初始化失败');
-                                        } else {
-                                            console.log('初始数据创建成功');
-                                            utils.updateSyncStatus('success', '初始化成功');
-                                        }
-                                    });
-                                
-                                utils.updateStateFromData({});
-                                // 新用户提示
-                                notification.show('欢迎使用课程管理系统！请添加您的第一条数据', 'info', 5000);
-                                // 数据加载完成后重新渲染页面
-                                utils.refreshAllViews(true);
-                            } else {
-                                // 其他错误，从localStorage加载
-                                utils.updateSyncStatus('error', '同步失败');
-                                utils.loadFromLocalStorage();
-                                // 从localStorage加载后重新渲染页面
-                                render.students();
-                                render.calendar();
-                                const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                                const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                                const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                                const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                                const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                                const organization = organizationValue || '';
-                                render.statistics(year, month, organization);
-                            }
+                            // 其他错误，从localStorage加载
+                            utils.updateSyncStatus('error', '同步失败');
+                            utils.loadFromLocalStorage();
+                            // 从localStorage加载后重新渲染页面
+                            utils.refreshAllViews(true);
                         });
                 } else {
                     // 用户未登录或服务器不可用，从localStorage加载
@@ -1366,6 +1353,60 @@
                     state.organizations = defaults.organizations;
                     // 显示加载本地数据失败的通知
                     notification.show('本地数据加载失败，使用默认数据', 'error');
+                }
+            },
+            
+            // 复制粘贴功能
+            copyCourses: (courses) => {
+                if (courses.length > 0) {
+                    localStorage.setItem('copiedCourses', JSON.stringify(courses));
+                    notification.show(`已复制 ${courses.length} 节课程`);
+                } else {
+                    notification.show('该日期没有课程可复制', 'warning');
+                }
+            },
+            
+            pasteCourses: (dateStr) => {
+                const copiedCourses = localStorage.getItem('copiedCourses');
+                if (copiedCourses) {
+                    try {
+                        const courses = JSON.parse(copiedCourses);
+                        let addedCount = 0;
+                        courses.forEach(course => {
+                            // 检查是否已经存在相同的课程
+                            const isDuplicate = state.courses.some(existingCourse => {
+                                return existingCourse.date === dateStr &&
+                                       existingCourse.startTime === course.startTime &&
+                                       existingCourse.endTime === course.endTime &&
+                                       existingCourse.lessonType === course.lessonType &&
+                                       JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
+                            });
+                            
+                            if (!isDuplicate) {
+                                const newCourse = {
+                                    ...course,
+                                    id: utils.generateId(),
+                                    date: dateStr,
+                                    createdAt: new Date().toISOString()
+                                };
+                                state.courses.push(newCourse);
+                                addedCount++;
+                            }
+                        });
+                        
+                        if (addedCount > 0) {
+                            utils.saveData();
+                            render.calendar();
+                            notification.show(`成功粘贴 ${addedCount} 节课程`);
+                        } else {
+                            notification.show('没有可粘贴的课程或课程已存在', 'warning');
+                        }
+                    } catch (error) {
+                        console.error('粘贴课程失败:', error);
+                        notification.show('粘贴课程失败', 'error');
+                    }
+                } else {
+                    notification.show('没有可粘贴的课程', 'warning');
                 }
             },
             
@@ -2097,6 +2138,25 @@
                 // 一次性添加所有单元格，减少DOM重排
                 grid.innerHTML = '';
                 grid.appendChild(fragment);
+                
+                // 添加事件委托处理课程点击和右键菜单事件
+                grid.addEventListener('click', function(e) {
+                    const courseItem = e.target.closest('.course-item');
+                    if (courseItem) {
+                        e.stopPropagation();
+                        const courseId = courseItem.dataset.courseId;
+                        handleCourseClick(courseItem, courseId);
+                    }
+                });
+                
+                grid.addEventListener('contextmenu', function(e) {
+                    const courseItem = e.target.closest('.course-item');
+                    if (courseItem) {
+                        e.stopPropagation();
+                        const courseId = courseItem.dataset.courseId;
+                        handleCourseContextMenu(courseItem, courseId, e);
+                    }
+                });
             },
             
             // 创建日期单元格
@@ -2123,8 +2183,7 @@
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
                                      style="background-color: ${primaryColor}10; border-left: 3px solid ${primaryColor};"
-                                     onclick="event.stopPropagation(); handleCourseClick(this, '${course.id}')"
-                                     oncontextmenu="event.stopPropagation(); handleCourseContextMenu(this, '${course.id}', event)">
+                                     data-course-id="${course.id}">
                                     <div class="flex flex-wrap gap-1 mb-1">
                                         ${course.studentNames.map((name, index) => {
                                             const color = course.colors[index] || '#9ca3af';
@@ -2148,8 +2207,7 @@
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
                                      style="background-color: ${color}20; border-left: 3px solid ${color};"
-                                     onclick="event.stopPropagation(); handleCourseClick(this, '${course.id}')"
-                                     oncontextmenu="event.stopPropagation(); handleCourseContextMenu(this, '${course.id}', event)">
+                                     data-course-id="${course.id}">
                                     <div class="font-medium truncate text-sm" title="${student ? `${student.name} (${student.organization})` : '未知学生'}">
                                         ${student ? student.name : '未知学生'}
                                     </div>
@@ -2214,55 +2272,10 @@
                         if (e.ctrlKey && e.key === 'c') {
                             // 复制选中的课程
                             const selectedCourses = state.courses.filter(c => c.date === dateStr);
-                            if (selectedCourses.length > 0) {
-                                localStorage.setItem('copiedCourses', JSON.stringify(selectedCourses));
-                                notification.show(`已复制 ${selectedCourses.length} 节课程`);
-                            } else {
-                                notification.show('该日期没有课程可复制', 'warning');
-                            }
+                            utils.copyCourses(selectedCourses);
                         } else if (e.ctrlKey && e.key === 'v') {
                             // 粘贴课程
-                            const copiedCourses = localStorage.getItem('copiedCourses');
-                            if (copiedCourses) {
-                                try {
-                                    const courses = JSON.parse(copiedCourses);
-                                    let addedCount = 0;
-                                    courses.forEach(course => {
-                                        // 检查是否已经存在相同的课程
-                                        const isDuplicate = state.courses.some(existingCourse => {
-                                            return existingCourse.date === dateStr &&
-                                                   existingCourse.startTime === course.startTime &&
-                                                   existingCourse.endTime === course.endTime &&
-                                                   existingCourse.lessonType === course.lessonType &&
-                                                   JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
-                                        });
-                                        
-                                        if (!isDuplicate) {
-                                            const newCourse = {
-                                                ...course,
-                                                id: utils.generateId(),
-                                                date: dateStr,
-                                                createdAt: new Date().toISOString()
-                                            };
-                                            state.courses.push(newCourse);
-                                            addedCount++;
-                                        }
-                                    });
-                                    
-                                    if (addedCount > 0) {
-                                        utils.saveData();
-                                        render.calendar();
-                                        notification.show(`成功粘贴 ${addedCount} 节课程`);
-                                    } else {
-                                        notification.show('没有可粘贴的课程或课程已存在', 'warning');
-                                    }
-                                } catch (error) {
-                                    console.error('粘贴课程失败:', error);
-                                    notification.show('粘贴课程失败', 'error');
-                                }
-                            } else {
-                                notification.show('没有可粘贴的课程', 'warning');
-                            }
+                            utils.pasteCourses(dateStr);
                         }
                     });
                     cell.dataset.keydownListenerAdded = 'true';
@@ -2364,55 +2377,10 @@
                                 } else if (action === 'copy') {
                                     // 复制当天所有课程
                                     const selectedCourses = state.courses.filter(c => c.date === currentDateStr);
-                                    if (selectedCourses.length > 0) {
-                                        localStorage.setItem('copiedCourses', JSON.stringify(selectedCourses));
-                                        notification.show(`已复制 ${selectedCourses.length} 节课程`);
-                                    } else {
-                                        notification.show('该日期没有课程可复制', 'warning');
-                                    }
+                                    utils.copyCourses(selectedCourses);
                                 } else if (action === 'paste') {
                                     // 粘贴课程到当前日期
-                                    const copiedCourses = localStorage.getItem('copiedCourses');
-                                    if (copiedCourses) {
-                                        try {
-                                            const courses = JSON.parse(copiedCourses);
-                                            let addedCount = 0;
-                                            courses.forEach(course => {
-                                                // 检查是否已经存在相同的课程
-                                                const isDuplicate = state.courses.some(existingCourse => {
-                                                    return existingCourse.date === currentDateStr &&
-                                                           existingCourse.startTime === course.startTime &&
-                                                           existingCourse.endTime === course.endTime &&
-                                                           existingCourse.lessonType === course.lessonType &&
-                                                           JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
-                                                });
-                                                
-                                                if (!isDuplicate) {
-                                                    const newCourse = {
-                                                        ...course,
-                                                        id: utils.generateId(),
-                                                        date: currentDateStr,
-                                                        createdAt: new Date().toISOString()
-                                                    };
-                                                    state.courses.push(newCourse);
-                                                    addedCount++;
-                                                }
-                                            });
-                                            
-                                            if (addedCount > 0) {
-                                                utils.saveData();
-                                                render.calendar();
-                                                notification.show(`成功粘贴 ${addedCount} 节课程`);
-                                            } else {
-                                                notification.show('没有可粘贴的课程或课程已存在', 'warning');
-                                            }
-                                        } catch (error) {
-                                            console.error('粘贴课程失败:', error);
-                                            notification.show('粘贴课程失败', 'error');
-                                        }
-                                    } else {
-                                        notification.show('没有可粘贴的课程', 'warning');
-                                    }
+                                    utils.pasteCourses(currentDateStr);
                                 } else if (action === 'delete') {
                                     // 删除当天所有课程
                                     const coursesToDelete = state.courses.filter(c => c.date === currentDateStr);
@@ -5297,7 +5265,7 @@
                     courses: localData?.courses?.length || 0,
                     organizations: localData?.organizations?.length || 0,
                     grades: localData?.grades?.length || 0,
-                    timestamp: localData?.lastUpdated ? new Date(localData.lastUpdated).toLocaleString() : '无'
+                    timestamp: localData?.lastupdated ? new Date(localData.lastupdated).toLocaleString() : '无'
                 };
                 
                 const serverStats = {
@@ -5305,7 +5273,7 @@
                     courses: serverData?.courses?.length || 0,
                     organizations: serverData?.organizations?.length || 0,
                     grades: serverData?.grades?.length || 0,
-                    timestamp: serverData?.lastUpdated ? new Date(serverData.lastUpdated).toLocaleString() : '无'
+                    timestamp: serverData?.lastupdated ? new Date(serverData.lastupdated).toLocaleString() : '无'
                 };
                 
                 const content = `
@@ -5396,7 +5364,7 @@
                                         courses: localData.courses,
                                         organizations: localData.organizations,
                                         grades: localData.grades,
-                                        lastupdated: localData.lastUpdated
+                                        lastupdated: localData.lastupdated
                                     }, { onConflict: 'userid' })
                                     .then(({ error }) => {
                                         if (error) {
@@ -5779,6 +5747,29 @@
                     // Supabase 已加载，检测登录状态
                     const auth = window.supabaseAuth;
                     if (auth) {
+                        // 主动检查当前会话状态
+                        auth.getSession()
+                            .then(({ data }) => {
+                                const session = data.session;
+                                if (session) {
+                                    // 用户已登录，更新UI并加载渲染系统
+                                    const user = session.user;
+                                    console.log('用户已登录，更新UI并加载渲染系统...');
+                                    updateUIForAuth(user);
+                                    loadSystem();
+                                } else {
+                                    // 用户未登录，只显示登录框，不加载渲染系统
+                                    console.log('用户未登录，只显示登录框');
+                                    updateUIForUnauth();
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('获取会话失败:', error);
+                                updateUIForUnauth();
+                            });
+                        
+                        // 设置认证状态变化监听器
+                        let authStateChangeTimer = null;
                         auth.onAuthStateChange(({ session }) => {
                             if (session) {
                                 // 用户已登录，更新UI并加载渲染系统
@@ -5787,9 +5778,28 @@
                                 updateUIForAuth(user);
                                 loadSystem();
                             } else {
-                                // 用户未登录，只显示登录框，不加载渲染系统
-                                console.log('用户未登录，只显示登录框');
-                                updateUIForUnauth();
+                                // 用户未登录，添加防抖动，避免短暂的认证状态变化导致误触发
+                                console.log('检测到认证状态变化，等待确认...');
+                                if (authStateChangeTimer) {
+                                    clearTimeout(authStateChangeTimer);
+                                }
+                                authStateChangeTimer = setTimeout(() => {
+                                    // 再次检查会话状态
+                                    auth.getSession()
+                                        .then(({ data }) => {
+                                            const currentSession = data.session;
+                                            if (!currentSession) {
+                                                console.log('用户确实未登录，只显示登录框');
+                                                updateUIForUnauth();
+                                            } else {
+                                                console.log('认证状态已恢复，用户仍已登录');
+                                            }
+                                        })
+                                        .catch((error) => {
+                                            console.error('获取会话失败:', error);
+                                            updateUIForUnauth();
+                                        });
+                                }, 500); // 500ms 防抖动
                             }
                         });
                     } else {
@@ -6257,7 +6267,7 @@
                     // 获取本地数据
                     const localDataStr = localStorage.getItem('coursemanagerdata');
                     const localData = localDataStr ? JSON.parse(localDataStr) : null;
-                    const localTimestamp = localData && localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
+                    const localTimestamp = localData && localData.lastupdated ? new Date(localData.lastupdated).getTime() : 0;
                     
                     if (localTimestamp > 0) {
                         // 比较服务器数据时间戳
@@ -6287,7 +6297,7 @@
                                                 courses: localData.courses,
                                                 organizations: localData.organizations,
                                                 grades: localData.grades,
-                                                lastupdated: localData.lastUpdated
+                                                lastupdated: localData.lastupdated
                                             }, { onConflict: 'userid' })
                                             .then(({ error }) => {
                                                 if (error) {
@@ -6309,7 +6319,7 @@
                                             courses: localData.courses,
                                             organizations: localData.organizations,
                                             grades: localData.grades,
-                                            lastupdated: localData.lastUpdated
+                                            lastupdated: localData.lastupdated
                                         })
                                         .then(({ error }) => {
                                             if (error) {
@@ -6784,22 +6794,22 @@
                     });
             });
             
-            // 监听认证状态变化
-            const auth = window.supabaseAuth;
-            if (auth) {
-                auth.onAuthStateChange(({ session }) => {
-                    if (session) {
-                        // 用户已登录
-                        const user = session.user;
-                        console.log('用户已登录:', user);
-                        updateUIForAuth(user);
-                    } else {
-                        // 用户未登录
-                        console.log('用户未登录');
-                        updateUIForUnauth();
-                    }
-                });
-            }
+            // 监听认证状态变化 - 已在 checkSupabase 函数中设置，这里不再重复设置
+            // const auth = window.supabaseAuth;
+            // if (auth) {
+            //     auth.onAuthStateChange(({ session }) => {
+            //         if (session) {
+            //             // 用户已登录
+            //             const user = session.user;
+            //             console.log('用户已登录:', user);
+            //             updateUIForAuth(user);
+            //         } else {
+            //             // 用户未登录
+            //             console.log('用户未登录');
+            //             updateUIForUnauth();
+            //         }
+            //     });
+            // }
         }
         
         // 更新已登录用户的UI
