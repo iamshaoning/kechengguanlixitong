@@ -3,9 +3,9 @@
 一个适用于课外辅导老师的基于 Web 的课程管理系统，支持学生管理、课程安排、数据统计等功能，数据可同步到云端。
 
 ```diff
-! 因为本程序通过个人api实现同步数据，所以为防止滥用需要登录才可使用 !
+! 因为本程序通过个人api实现同步数据，所以为防止滥用需要登录（未开放注册）
 
-+ 您可联系我试用，或根据index.html文件自行二次开发 +
++ 您可联系我使用，或根据index.html文件自行二次开发 +
 
 + 也可以账号"test"无密码的方式登录系统进入试用模式，此模式不连接服务器，本地也不保留数据
 ```
@@ -14,15 +14,15 @@
 
 ### 日历排课
 
-![日历排课](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png)
+!\[日历排课]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png> null)
 
 ### 学生管理
 
-![学生管理](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png)
+!\[学生管理]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png> null)
 
 ### 数据统计
 
-![数据统计](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png)
+!\[数据统计]\(<https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png> null)
 
 ## 功能特性
 
@@ -65,7 +65,6 @@
 1. 在日历视图中点击日期
 2. 选择学生、时间、时长
 3. 保存课程
-4. 需要注意一对一课程本系统默认两小时，也就是说你在学生管理中添加的预设课时费是两小时的
 
 ### 数据统计
 
@@ -81,7 +80,7 @@
 
 ## 注意事项
 
-1. **网络要求**：加载需要网络连接
+1. **网络要求**：登录加载和同步都需要网络连接
 2. **浏览器支持**：建议使用现代浏览器获得最佳体验
 
 ## 联系方式
