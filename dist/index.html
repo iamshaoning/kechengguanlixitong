@@ -6,66 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-        // 全局调试控制 - 设置为false禁用所有console输出
-        const GLOBAL_DEBUG = false;
-        if (!GLOBAL_DEBUG) {
-            console.log = () => {};
-            console.error = () => {};
-            console.warn = () => {};
-        }
-        
-        // Supabase配置
-        const supabaseConfig = {
-            url: "https://kfshnorhbuiruscycyjh.supabase.co",
-            key: "sb_publishable_WzdOv_4m31PMy3sSZw7-Mw_ThLQ75U7"
-        };
-
-        // 安全检查：确保Supabase配置存在
-        console.log('Supabase配置:', supabaseConfig);
-        if (!supabaseConfig.url || !supabaseConfig.key) {
-            console.error('Supabase配置缺失');
-        }
-
-        // 初始化 Supabase
-        function initializeSupabase() {
-            try {
-                // 检查是否已经创建了 Supabase 客户端实例
-                if (window.supabaseClient) {
-                    console.log('Supabase客户端已存在，跳过初始化');
-                    return;
-                }
-                
-                // 检查 Supabase SDK 是否已加载
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    console.log('开始初始化Supabase客户端...');
-                    
-                    // 创建 Supabase 客户端实例
-                    const supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
-                    
-                    // 保存到全局变量
-                    window.supabaseClient = supabaseClient;
-                    window.supabaseAuth = supabaseClient.auth;
-                    
-                    console.log('Supabase客户端初始化成功');
-                } else {
-                    throw new Error('Supabase SDK 未加载');
-                }
-            } catch (error) {
-                console.error('Supabase初始化失败:', error);
-                // 初始化失败时，确保全局变量有默认值
-                window.supabaseClient = null;
-                window.supabaseAuth = null;
-            }
-        }
-        
-        // 当 DOM 加载完成后初始化 Supabase
-        document.addEventListener('DOMContentLoaded', function() {
-            // 等待 1 秒，确保 Supabase SDK 已加载
-            setTimeout(initializeSupabase, 1000);
-        });
-    </script>
+    
     <style>
         .content-auto {
             content-visibility: auto;
@@ -478,7 +419,8 @@
             color: rgba(255, 255, 255, 0.9);
         }
     </style>
-  <link rel="stylesheet" crossorigin href="./assets/index-B4WoFAkM.css">
+  <script type="module" crossorigin src="./assets/index-C_TlYxHS.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D0JLwbOq.css">
 </head>
 <body class="bg-gray-50 min-h-screen" style="opacity: 0; transition: opacity 0.5s ease-in-out;">
     <!-- 导航栏 -->
@@ -506,31 +448,9 @@
                         <i class="fa fa-bar-chart mr-1"></i> 课时费统计
                     </button>
                     <!-- 用户认证 -->
-                    <div class="relative">
-                        <button id="user-menu-button" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700">
-                            <div id="user-info" class="text-sm text-gray-600"></div>
-                            <i class="fa fa-chevron-down text-xs"></i>
-                        </button>
-                        <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                            <div class="px-4 py-2 text-sm text-gray-600">
-                                <div id="dropdown-username" class="font-medium"></div>
-                                <div id="dropdown-email" class="text-xs text-gray-500"></div>
-                            </div>
-                            <div class="border-t border-gray-100 my-1"></div>
-                            <button id="change-username" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                编辑用户名
-                            </button>
-                            <button id="change-email" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                更改邮箱
-                            </button>
-                            <button id="change-password" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                更改密码
-                            </button>
-                            <div class="border-t border-gray-100 my-1"></div>
-                            <button id="logout-btn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors">
-                                退出
-                            </button>
-                        </div>
+                    <div class="flex items-center space-x-2">
+                        <div id="user-info" class="text-sm text-gray-600"></div>
+                        <button id="logout-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm">登出</button>
                     </div>
                 </div>
             </div>
@@ -791,16 +711,8 @@
                 <div class="mb-4">
                     <input type="email" id="login-email" placeholder="邮  箱" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
                 </div>
-                <div class="mb-8 relative">
-                    <input type="text" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600; -webkit-text-security: disc; -moz-text-security: disc; text-security: disc;">
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
-                        <button type="button" id="toggle-password" class="text-white hover:text-gray-200 transition-colors">
-                            <i class="fa fa-eye"></i>
-                        </button>
-                        <button type="button" id="forgot-password" class="text-white hover:text-gray-200 transition-colors" title="忘记密码">
-                            <i class="fa fa-question-circle"></i>
-                        </button>
-                    </div>
+                <div class="mb-8">
+                    <input type="password" id="login-password" placeholder="密  码" class="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all text-white text-center text-lg font-semibold placeholder-white placeholder-font-bold" style="--placeholder-font-size: 1.125rem; --placeholder-font-weight: 600;">
                 </div>
                 <button id="login-submit" class="w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 backdrop-blur-md text-white font-bold text-lg py-4 rounded-full border border-cyan-400/50 shadow-lg shadow-cyan-500/30 transition-all duration-300 hover:from-cyan-400/90 hover:to-blue-500/90 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
                     <span id="login-btn-text">登 录</span>
@@ -874,12 +786,7 @@
             students: [],
             courses: [],
             organizations: [],
-            grades: [],
-            user: {
-                id: null,
-                email: '',
-                username: ''
-            }
+            grades: []
         };
 
         // 工具函数
@@ -6639,79 +6546,6 @@
                 }
             });
             
-            // 显示/隐藏密码功能
-            document.getElementById('toggle-password').addEventListener('click', () => {
-                const passwordInput = document.getElementById('login-password');
-                const toggleButton = document.getElementById('toggle-password');
-                const icon = toggleButton.querySelector('i');
-                
-                if (passwordInput.style.webkitTextSecurity === 'disc' || passwordInput.style.webkitTextSecurity === '') {
-                    // 显示密码
-                    passwordInput.style.webkitTextSecurity = 'none';
-                    passwordInput.style.mozTextSecurity = 'none';
-                    passwordInput.style.textSecurity = 'none';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    // 隐藏密码
-                    passwordInput.style.webkitTextSecurity = 'disc';
-                    passwordInput.style.mozTextSecurity = 'disc';
-                    passwordInput.style.textSecurity = 'disc';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-            });
-            
-            // 忘记密码功能
-            document.getElementById('forgot-password').addEventListener('click', () => {
-                const email = document.getElementById('login-email').value;
-                
-                if (!email) {
-                    notification.show('请先输入邮箱地址', 'error');
-                    return;
-                }
-                
-                const auth = window.supabaseAuth;
-                if (!auth) {
-                    notification.show('认证服务初始化失败', 'error');
-                    return;
-                }
-                
-                // 先尝试使用错误的密码登录，通过错误信息判断账号是否存在
-                auth.signInWithPassword({
-                    email: email,
-                    password: 'invalid-password-123'
-                })
-                .then(() => {
-                    // 登录成功（不应该发生）
-                    notification.show('发生错误，请稍后再试', 'error');
-                })
-                .catch((error) => {
-                    console.log('登录检查结果:', error);
-                    
-                    // 检查错误类型
-                    if (error.message.includes('Invalid login credentials')) {
-                        // 账号存在，但密码错误，允许发送重置密码邮件
-                        auth.resetPasswordForEmail(email, {
-                            redirectTo: window.location.origin
-                        })
-                        .then(() => {
-                            notification.show('重置密码邮件已发送，请查收', 'success');
-                        })
-                        .catch((resetError) => {
-                            console.error('发送重置密码邮件失败:', resetError);
-                            notification.show('发送邮件失败，请稍后再试', 'error');
-                        });
-                    } else if (error.message.includes('User not found') || error.message.includes('No user found')) {
-                        // 账号不存在
-                        notification.show('此账号不存在', 'error');
-                    } else {
-                        // 其他错误
-                        notification.show('发生错误，请稍后再试', 'error');
-                    }
-                });
-            });
-            
             // 注册功能
             document.getElementById('register-submit').addEventListener('click', () => {
                 const email = document.getElementById('register-email').value;
@@ -6912,33 +6746,16 @@
         
         // 更新已登录用户的UI
         function updateUIForAuth(user) {
-            // 更新用户状态
-            state.user.id = user.id;
-            state.user.email = user.email;
-            
-            // 获取或生成用户名
-            let username = localStorage.getItem(`username_${user.id}`);
-            if (!username) {
-                // 从邮箱生成默认用户名
-                username = user.email.split('@')[0];
-                localStorage.setItem(`username_${user.id}`, username);
-            }
-            state.user.username = username;
-            
             // 显示用户信息
             const userInfo = document.getElementById('user-info');
             if (userInfo) {
-                userInfo.textContent = username;
+                userInfo.textContent = `${user.email} `;
             }
             
-            // 更新下拉菜单信息
-            const dropdownUsername = document.getElementById('dropdown-username');
-            const dropdownEmail = document.getElementById('dropdown-email');
-            if (dropdownUsername) {
-                dropdownUsername.textContent = username;
-            }
-            if (dropdownEmail) {
-                dropdownEmail.textContent = user.email;
+            // 确保登出按钮显示
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.classList.remove('hidden');
             }
             
             // 隐藏登录界面，背景渐隐
@@ -6965,96 +6782,6 @@
             }
         }
         
-        // 用户下拉菜单功能
-        function setupUserMenu() {
-            const userMenuButton = document.getElementById('user-menu-button');
-            const userDropdown = document.getElementById('user-dropdown');
-            
-            if (userMenuButton && userDropdown) {
-                // 点击用户按钮显示/隐藏下拉菜单
-                userMenuButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    userDropdown.classList.toggle('hidden');
-                });
-                
-                // 点击页面其他地方关闭下拉菜单
-                document.addEventListener('click', () => {
-                    userDropdown.classList.add('hidden');
-                });
-                
-                // 阻止下拉菜单内的点击事件冒泡
-                userDropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-                
-                // 编辑用户名
-                const changeUsernameBtn = document.getElementById('change-username');
-                if (changeUsernameBtn) {
-                    changeUsernameBtn.addEventListener('click', () => {
-                        const newUsername = prompt('请输入新的用户名:', state.user.username);
-                        if (newUsername && newUsername.trim()) {
-                            localStorage.setItem(`username_${state.user.id}`, newUsername.trim());
-                            state.user.username = newUsername.trim();
-                            
-                            // 更新UI
-                            const userInfo = document.getElementById('user-info');
-                            const dropdownUsername = document.getElementById('dropdown-username');
-                            if (userInfo) userInfo.textContent = newUsername.trim();
-                            if (dropdownUsername) dropdownUsername.textContent = newUsername.trim();
-                            
-                            notification.show('用户名已更新', 'success');
-                        }
-                    });
-                }
-                
-                // 更改邮箱
-                const changeEmailBtn = document.getElementById('change-email');
-                if (changeEmailBtn) {
-                    changeEmailBtn.addEventListener('click', () => {
-                        const newEmail = prompt('请输入新的邮箱地址:', state.user.email);
-                        if (newEmail && newEmail.trim()) {
-                            const auth = window.supabaseAuth;
-                            if (auth) {
-                                auth.updateUser({
-                                    email: newEmail.trim()
-                                })
-                                .then(() => {
-                                    notification.show('邮箱更新申请已发送，请查收邮件完成验证', 'success');
-                                })
-                                .catch((error) => {
-                                    console.error('更新邮箱失败:', error);
-                                    notification.show('更新邮箱失败: ' + error.message, 'error');
-                                });
-                            }
-                        }
-                    });
-                }
-                
-                // 更改密码
-                const changePasswordBtn = document.getElementById('change-password');
-                if (changePasswordBtn) {
-                    changePasswordBtn.addEventListener('click', () => {
-                        const auth = window.supabaseAuth;
-                        if (auth) {
-                            auth.resetPasswordForEmail(state.user.email, {
-                                redirectTo: window.location.origin
-                            })
-                            .then(() => {
-                                notification.show('重置密码邮件已发送，请查收', 'success');
-                            })
-                            .catch((error) => {
-                                console.error('发送重置密码邮件失败:', error);
-                                notification.show('发送邮件失败，请稍后再试', 'error');
-                            });
-                        }
-                    });
-                }
-            }
-        }
-        
-        // 初始化用户菜单
-        setupUserMenu();
-        
         // 更新未登录用户的UI
         function updateUIForUnauth() {
             // 隐藏系统框架，确保不会显示
@@ -7077,23 +6804,10 @@
                 userInfo.textContent = '';
             }
             
-            // 清空下拉菜单信息
-            const dropdownUsername = document.getElementById('dropdown-username');
-            const dropdownEmail = document.getElementById('dropdown-email');
-            if (dropdownUsername) dropdownUsername.textContent = '';
-            if (dropdownEmail) dropdownEmail.textContent = '';
-            
-            // 关闭下拉菜单
-            const userDropdown = document.getElementById('user-dropdown');
-            if (userDropdown) {
-                userDropdown.classList.add('hidden');
-            }
-            
-            // 重置用户状态
-            state.user = {
-                id: null,
-                email: '',
-                username: ''
+            // 确保登出按钮隐藏
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.classList.add('hidden');
             }
             
             // 重置登录按钮状态
