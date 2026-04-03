@@ -7,65 +7,6 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script>
-        // 全局调试控制 - 设置为false禁用所有console输出
-        const GLOBAL_DEBUG = false;
-        if (!GLOBAL_DEBUG) {
-            console.log = () => {};
-            console.error = () => {};
-            console.warn = () => {};
-        }
-        
-        // Supabase配置
-        const supabaseConfig = {
-            url: import.meta.env.VITE_SUPABASE_URL,
-            key: import.meta.env.VITE_SUPABASE_ANON_KEY
-        };
-
-        // 安全检查：确保Supabase配置存在
-        console.log('Supabase配置:', supabaseConfig);
-        if (!supabaseConfig.url || !supabaseConfig.key) {
-            console.error('Supabase配置缺失');
-        }
-
-        // 初始化 Supabase
-        function initializeSupabase() {
-            try {
-                // 检查是否已经创建了 Supabase 客户端实例
-                if (window.supabaseClient) {
-                    console.log('Supabase客户端已存在，跳过初始化');
-                    return;
-                }
-                
-                // 检查 Supabase SDK 是否已加载
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    console.log('开始初始化Supabase客户端...');
-                    
-                    // 创建 Supabase 客户端实例
-                    const supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
-                    
-                    // 保存到全局变量
-                    window.supabaseClient = supabaseClient;
-                    window.supabaseAuth = supabaseClient.auth;
-                    
-                    console.log('Supabase客户端初始化成功');
-                } else {
-                    throw new Error('Supabase SDK 未加载');
-                }
-            } catch (error) {
-                console.error('Supabase初始化失败:', error);
-                // 初始化失败时，确保全局变量有默认值
-                window.supabaseClient = null;
-                window.supabaseAuth = null;
-            }
-        }
-        
-        // 当 DOM 加载完成后初始化 Supabase
-        document.addEventListener('DOMContentLoaded', function() {
-            // 等待 1 秒，确保 Supabase SDK 已加载
-            setTimeout(initializeSupabase, 1000);
-        });
-    </script>
     <style>
         .content-auto {
             content-visibility: auto;
@@ -478,6 +419,7 @@
             color: rgba(255, 255, 255, 0.9);
         }
     </style>
+  <script type="module" crossorigin src="./assets/index-C_TlYxHS.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-D0JLwbOq.css">
 </head>
 <body class="bg-gray-50 min-h-screen" style="opacity: 0; transition: opacity 0.5s ease-in-out;">
