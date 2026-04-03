@@ -2087,7 +2087,7 @@
                     if (courseItem) {
                         e.stopPropagation();
                         const courseId = courseItem.dataset.courseId;
-                        handleCourseClick(courseItem, courseId, e);
+                        handleCourseClick(courseItem, courseId);
                     }
                 });
                 
@@ -2168,8 +2168,8 @@
                     </div>
                 `;
                 
-                // 单击选择日期，双击添加课程，支持Ctrl多选
-                cell.onclick = function(e) {
+                // 单击选择日期，双击添加课程
+                cell.onclick = function() {
                     // 使用元素的属性保持clickCount状态
                     if (!this._clickCount) {
                         this._clickCount = 0;
@@ -2178,24 +2178,19 @@
                     
                     const currentCell = this;
                     const currentDateStr = dateStr;
-                    const isCtrlPressed = e && e.ctrlKey;
                     
                     setTimeout(() => {
-                        if (!isCtrlPressed) {
-                            // 非Ctrl点击，移除其他单元格的选中状态
-                            document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                                el.classList.remove('calendar-cell-selected');
-                            });
-                            // 移除课程的选中状态
-                            document.querySelectorAll('.course-item-selected').forEach(el => {
-                                el.classList.remove('course-item-selected');
-                            });
-                            // 添加选中状态
-                            currentCell.classList.add('calendar-cell-selected');
-                        } else {
-                            // Ctrl点击，切换选中状态
-                            currentCell.classList.toggle('calendar-cell-selected');
-                        }
+                        // 无论是单击还是双击，都先触发选中效果
+                        // 移除其他单元格的选中状态
+                        document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                            el.classList.remove('calendar-cell-selected');
+                        });
+                        // 移除课程的选中状态
+                        document.querySelectorAll('.course-item-selected').forEach(el => {
+                            el.classList.remove('course-item-selected');
+                        });
+                        // 添加选中状态
+                        currentCell.classList.add('calendar-cell-selected');
                         
                         if (currentCell._clickCount === 2) {
                             // 双击 - 添加课程
@@ -5942,7 +5937,7 @@
         }
 
         // 处理课程标签点击事件
-        function handleCourseClick(element, courseId, event) {
+        function handleCourseClick(element, courseId) {
             // 使用闭包保持clickCount状态
             if (!element._clickCount) {
                 element._clickCount = 0;
@@ -5951,30 +5946,22 @@
             
             // 保存当前课程ID，确保在setTimeout中使用正确的ID
             const currentCourseId = courseId;
-            const isCtrlPressed = event && event.ctrlKey;
             
             setTimeout(() => {
-                if (!isCtrlPressed) {
-                    // 非Ctrl点击，移除其他课程的选中状态
-                    document.querySelectorAll('.course-item-selected').forEach(el => {
-                        el.classList.remove('course-item-selected');
-                    });
-                    // 移除日期的选中状态
-                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                        el.classList.remove('calendar-cell-selected');
-                    });
-                    // 添加选中状态
-                    element.classList.add('course-item-selected');
-                } else {
-                    // Ctrl点击，切换选中状态
-                    element.classList.toggle('course-item-selected');
-                }
-                
+                // 无论是单击还是双击，都先触发选中效果
+                // 移除其他课程的选中状态
+                document.querySelectorAll('.course-item-selected').forEach(el => {
+                    el.classList.remove('course-item-selected');
+                });
+                // 移除日期的选中状态
+                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                    el.classList.remove('calendar-cell-selected');
+                });
+                // 添加选中状态
+                element.classList.add('course-item-selected');
                 // 使选中的课程标签获得焦点，以便响应键盘事件
-                if (element.classList.contains('course-item-selected')) {
-                    element.tabIndex = 0;
-                    element.focus();
-                }
+                element.tabIndex = 0;
+                element.focus();
                 
                 if (element._clickCount === 2) {
                     // 双击 - 触发课程编辑
@@ -6047,28 +6034,16 @@
                             notification.show('没有可粘贴的课程', 'warning');
                         }
                     } else if (e.key === 'Delete' || e.key === 'Backspace') {
-                        // 删除选中的课程（支持批量删除）
+                        // 删除选中的课程
                         e.preventDefault();
-                        const selectedCourses = document.querySelectorAll('.course-item-selected');
-                        if (selectedCourses.length > 0) {
-                            const courseIds = Array.from(selectedCourses).map(el => el.dataset.courseId);
-                            modal.showConfirm(`确定要删除 ${courseIds.length} 节课程吗？`, () => {
-                                state.courses = state.courses.filter(c => !courseIds.includes(c.id));
+                        const course = state.courses.find(c => c.id === currentCourseId);
+                        if (course) {
+                            modal.showConfirm('确定要删除这节课程吗？', () => {
+                                state.courses = state.courses.filter(c => c.id !== currentCourseId);
                                 utils.saveData();
                                 render.calendar();
-                                notification.show(`成功删除 ${courseIds.length} 节课程`);
+                                notification.show('课程删除成功');
                             });
-                        } else {
-                            // 如果没有多选，删除当前课程
-                            const course = state.courses.find(c => c.id === currentCourseId);
-                            if (course) {
-                                modal.showConfirm('确定要删除这节课程吗？', () => {
-                                    state.courses = state.courses.filter(c => c.id !== currentCourseId);
-                                    utils.saveData();
-                                    render.calendar();
-                                    notification.show('课程删除成功');
-                                });
-                            }
                         }
                     }
                 });
