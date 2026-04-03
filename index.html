@@ -2145,7 +2145,7 @@
                     if (courseItem) {
                         e.stopPropagation();
                         const courseId = courseItem.dataset.courseId;
-                        handleCourseClick(courseItem, courseId);
+                        handleCourseClick(courseItem, courseId, e);
                     }
                 });
                 
@@ -2226,8 +2226,8 @@
                     </div>
                 `;
                 
-                // 单击选择日期，双击添加课程
-                cell.onclick = function() {
+                // 单击选择日期，双击添加课程，支持Ctrl多选
+                cell.onclick = function(e) {
                     // 使用元素的属性保持clickCount状态
                     if (!this._clickCount) {
                         this._clickCount = 0;
@@ -2236,19 +2236,24 @@
                     
                     const currentCell = this;
                     const currentDateStr = dateStr;
+                    const isCtrlPressed = e && e.ctrlKey;
                     
                     setTimeout(() => {
-                        // 无论是单击还是双击，都先触发选中效果
-                        // 移除其他单元格的选中状态
-                        document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                            el.classList.remove('calendar-cell-selected');
-                        });
-                        // 移除课程的选中状态
-                        document.querySelectorAll('.course-item-selected').forEach(el => {
-                            el.classList.remove('course-item-selected');
-                        });
-                        // 添加选中状态
-                        currentCell.classList.add('calendar-cell-selected');
+                        if (!isCtrlPressed) {
+                            // 非Ctrl点击，移除其他单元格的选中状态
+                            document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                                el.classList.remove('calendar-cell-selected');
+                            });
+                            // 移除课程的选中状态
+                            document.querySelectorAll('.course-item-selected').forEach(el => {
+                                el.classList.remove('course-item-selected');
+                            });
+                            // 添加选中状态
+                            currentCell.classList.add('calendar-cell-selected');
+                        } else {
+                            // Ctrl点击，切换选中状态
+                            currentCell.classList.toggle('calendar-cell-selected');
+                        }
                         
                         if (currentCell._clickCount === 2) {
                             // 双击 - 添加课程
@@ -2259,7 +2264,7 @@
                 };
                 // 添加选中样式
                 cell.classList.add('calendar-cell');
-                // 支持复制粘贴功能
+                // 支持复制粘贴和删除快捷键功能
                 if (!cell.dataset.keydownListenerAdded) {
                     cell.addEventListener('keydown', function(e) {
                         // 检查是否有课程被选中
@@ -2276,6 +2281,20 @@
                         } else if (e.ctrlKey && e.key === 'v') {
                             // 粘贴课程
                             utils.pasteCourses(dateStr);
+                        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                            // 删除当天所有课程
+                            e.preventDefault();
+                            const coursesToDelete = state.courses.filter(c => c.date === dateStr);
+                            if (coursesToDelete.length > 0) {
+                                modal.showConfirm(`确定要删除 ${coursesToDelete.length} 节课程吗？`, () => {
+                                    state.courses = state.courses.filter(c => c.date !== dateStr);
+                                    utils.saveData();
+                                    render.calendar();
+                                    notification.show(`成功删除 ${coursesToDelete.length} 节课程`);
+                                });
+                            } else {
+                                notification.show('该日期没有课程可删除', 'warning');
+                            }
                         }
                     });
                     cell.dataset.keydownListenerAdded = 'true';
@@ -4308,16 +4327,12 @@
                                                 <input type="checkbox" id="lesson-type-one-on-one" value="一对一" class="mr-2 text-primary focus:ring-primary">
                                                 <span>一对一</span>
                                             </label>
-                                            <div class="flex items-center space-x-2">
-                                                <div class="flex items-center">
-                                                    <span class="text-sm text-gray-500 mr-2">时长:</span>
-                                                    <input type="number" id="duration-one-on-one" min="1" step="5" value="120" class="w-20 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                                                    <span class="text-sm text-gray-500 ml-1">分钟</span>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <span class="text-sm text-gray-500 mr-2">费用:</span>
-                                                    <input type="number" id="fee-one-on-one" min="0" step="0.01" placeholder="0.00" class="w-24 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                                                </div>
+                                            <div class="flex items-center">
+                                                <span class="text-sm text-gray-500 mr-2">每</span>
+                                                <input type="number" id="duration-one-on-one" min="1" step="5" value="120" class="w-12 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                                <span class="text-sm text-gray-500 mx-2">分钟</span>
+                                                <input type="number" id="fee-one-on-one" min="0" step="0.01" placeholder="0.00" class="w-12 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                                <span class="text-sm text-gray-500 ml-2">元</span>
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
@@ -4542,16 +4557,12 @@
                                                 <input type="checkbox" id="edit-lesson-type-one-on-one" value="一对一" ${lessonTypes.includes('一对一') ? 'checked' : ''} class="mr-2 text-primary focus:ring-primary">
                                                 <span>一对一</span>
                                             </label>
-                                            <div class="flex items-center space-x-2">
-                                                <div class="flex items-center">
-                                                    <span class="text-sm text-gray-500 mr-2">时长:</span>
-                                                    <input type="number" id="edit-duration-one-on-one" min="1" step="5" value="${fees['一对一_duration'] || 120}" class="w-20 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                                                    <span class="text-sm text-gray-500 ml-1">分钟</span>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <span class="text-sm text-gray-500 mr-2">费用:</span>
-                                                    <input type="number" id="edit-fee-one-on-one" min="0" step="0.01" value="${fees['一对一'] || 0}" class="w-24 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                                                </div>
+                                            <div class="flex items-center">
+                                                <span class="text-sm text-gray-500 mr-2">每</span>
+                                                <input type="number" id="edit-duration-one-on-one" min="1" step="5" value="${fees['一对一_duration'] || 120}" class="w-12 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                                <span class="text-sm text-gray-500 mx-2">分钟</span>
+                                                <input type="number" id="edit-fee-one-on-one" min="0" step="0.01" value="${fees['一对一'] || 0}" class="w-12 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                                <span class="text-sm text-gray-500 ml-2">元</span>
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
@@ -5989,7 +6000,7 @@
         }
 
         // 处理课程标签点击事件
-        function handleCourseClick(element, courseId) {
+        function handleCourseClick(element, courseId, event) {
             // 使用闭包保持clickCount状态
             if (!element._clickCount) {
                 element._clickCount = 0;
@@ -5998,22 +6009,30 @@
             
             // 保存当前课程ID，确保在setTimeout中使用正确的ID
             const currentCourseId = courseId;
+            const isCtrlPressed = event && event.ctrlKey;
             
             setTimeout(() => {
-                // 无论是单击还是双击，都先触发选中效果
-                // 移除其他课程的选中状态
-                document.querySelectorAll('.course-item-selected').forEach(el => {
-                    el.classList.remove('course-item-selected');
-                });
-                // 移除日期的选中状态
-                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                    el.classList.remove('calendar-cell-selected');
-                });
-                // 添加选中状态
-                element.classList.add('course-item-selected');
+                if (!isCtrlPressed) {
+                    // 非Ctrl点击，移除其他课程的选中状态
+                    document.querySelectorAll('.course-item-selected').forEach(el => {
+                        el.classList.remove('course-item-selected');
+                    });
+                    // 移除日期的选中状态
+                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                        el.classList.remove('calendar-cell-selected');
+                    });
+                    // 添加选中状态
+                    element.classList.add('course-item-selected');
+                } else {
+                    // Ctrl点击，切换选中状态
+                    element.classList.toggle('course-item-selected');
+                }
+                
                 // 使选中的课程标签获得焦点，以便响应键盘事件
-                element.tabIndex = 0;
-                element.focus();
+                if (element.classList.contains('course-item-selected')) {
+                    element.tabIndex = 0;
+                    element.focus();
+                }
                 
                 if (element._clickCount === 2) {
                     // 双击 - 触发课程编辑
@@ -6030,7 +6049,7 @@
                 // 保存当前课程ID，确保在事件监听器中使用正确的ID
                 const currentCourseId = courseId;
                 
-                // 支持复制粘贴功能
+                // 支持复制粘贴和删除功能
                 element.addEventListener('keydown', function(e) {
                     if (e.ctrlKey && e.key === 'c') {
                         // 复制选中的课程
@@ -6084,6 +6103,30 @@
                             }
                         } else {
                             notification.show('没有可粘贴的课程', 'warning');
+                        }
+                    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                        // 删除选中的课程（支持批量删除）
+                        e.preventDefault();
+                        const selectedCourses = document.querySelectorAll('.course-item-selected');
+                        if (selectedCourses.length > 0) {
+                            const courseIds = Array.from(selectedCourses).map(el => el.dataset.courseId);
+                            modal.showConfirm(`确定要删除 ${courseIds.length} 节课程吗？`, () => {
+                                state.courses = state.courses.filter(c => !courseIds.includes(c.id));
+                                utils.saveData();
+                                render.calendar();
+                                notification.show(`成功删除 ${courseIds.length} 节课程`);
+                            });
+                        } else {
+                            // 如果没有多选，删除当前课程
+                            const course = state.courses.find(c => c.id === currentCourseId);
+                            if (course) {
+                                modal.showConfirm('确定要删除这节课程吗？', () => {
+                                    state.courses = state.courses.filter(c => c.id !== currentCourseId);
+                                    utils.saveData();
+                                    render.calendar();
+                                    notification.show('课程删除成功');
+                                });
+                            }
                         }
                     }
                 });
