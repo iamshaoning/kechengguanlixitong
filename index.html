@@ -24,48 +24,69 @@
             key: import.meta.env.VITE_SUPABASE_ANON_KEY
         };
 
+        // 应用常量配置
+        const APP_CONFIG = {
+            // 课程时长相关
+            DEFAULT_COURSE_DURATION: 120,  // 默认课程时长（分钟）
+
+            // 通知相关
+            NOTIFICATION_DURATION: 3000,   // 通知显示时长（毫秒）
+
+            // Supabase初始化相关
+            SUPABASE_INIT_INTERVAL: 100,  // SDK加载检测间隔（毫秒）
+            SUPABASE_INIT_MAX_RETRIES: 30,  // SDK加载最大重试次数
+
+            // 防抖相关
+            AUTH_DEBOUNCE_TIME: 500,      // 认证状态变化防抖时间（毫秒）
+        };
+
+        // 将配置暴露到全局，供HTML模板使用
+        window.APP_CONFIG = APP_CONFIG;
+
         // 安全检查：确保Supabase配置存在
         console.log('Supabase配置:', supabaseConfig);
         if (!supabaseConfig.url || !supabaseConfig.key) {
             console.error('Supabase配置缺失');
         }
 
-        // 初始化 Supabase
-        function initializeSupabase() {
-            try {
-                // 检查是否已经创建了 Supabase 客户端实例
-                if (window.supabaseClient) {
-                    console.log('Supabase客户端已存在，跳过初始化');
-                    return;
+        // 初始化 Supabase，返回 Promise
+        window.supabaseReady = new Promise((resolve) => {
+            document.addEventListener('DOMContentLoaded', function() {
+                // 不再用固定 setTimeout，而是直接尝试初始化
+                function tryInit() {
+                    try {
+                        if (window.supabaseClient) {
+                            resolve(window.supabaseClient);
+                            return;
+                        }
+                        if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                            const client = window.supabase.createClient(
+                                supabaseConfig.url,
+                                supabaseConfig.key
+                            );
+                            window.supabaseClient = client;
+                            window.supabaseAuth = client.auth;
+                            console.log('Supabase客户端初始化成功');
+                            resolve(client);
+                        } else {
+                            // SDK 还没加载，短间隔重试
+                            if (!tryInit.count) tryInit.count = 0;
+                            if (++tryInit.count < APP_CONFIG.SUPABASE_INIT_MAX_RETRIES) {
+                                setTimeout(tryInit, APP_CONFIG.SUPABASE_INIT_INTERVAL);
+                            } else {
+                                console.error('Supabase SDK 加载超时');
+                                resolve(null);  // 超时也 resolve，让流程继续
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Supabase初始化失败:', error);
+                        window.supabaseClient = null;
+                        window.supabaseAuth = null;
+                        resolve(null);
+                    }
                 }
-                
-                // 检查 Supabase SDK 是否已加载
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    console.log('开始初始化Supabase客户端...');
-                    
-                    // 创建 Supabase 客户端实例
-                    const supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
-                    
-                    // 保存到全局变量
-                    window.supabaseClient = supabaseClient;
-                    window.supabaseAuth = supabaseClient.auth;
-                    
-                    console.log('Supabase客户端初始化成功');
-                } else {
-                    throw new Error('Supabase SDK 未加载');
-                }
-            } catch (error) {
-                console.error('Supabase初始化失败:', error);
-                // 初始化失败时，确保全局变量有默认值
-                window.supabaseClient = null;
-                window.supabaseAuth = null;
-            }
-        }
-        
-        // 当 DOM 加载完成后初始化 Supabase
-        document.addEventListener('DOMContentLoaded', function() {
-            // 等待 1 秒，确保 Supabase SDK 已加载
-            setTimeout(initializeSupabase, 1000);
+                tryInit();
+            });
         });
     </script>
     <style>
@@ -221,6 +242,19 @@
         
         .nav-item.active::before {
             width: 100%;
+        }
+        
+        /* 学生选择按钮悬停效果 */
+        .student-btn {
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+        .student-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .student-btn.selected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .nav-item.active {
@@ -967,12 +1001,37 @@
              * @param {boolean} withStatistics - 是否刷新统计页面
              */
             refreshAllViews: (withStatistics = false) => {
-                render.students();
-                render.calendar();
-                if (withStatistics) {
+                // 只渲染当前可见的页面
+                const studentsPage = document.getElementById('students-page');
+                const calendarPage = document.getElementById('calendar-page');
+                const statisticsPage = document.getElementById('statistics-page');
+                
+                if (studentsPage && !studentsPage.classList.contains('hidden')) {
+                    render.students();
+                }
+                if (calendarPage && !calendarPage.classList.contains('hidden')) {
+                    render.calendar();
+                }
+                if (withStatistics && statisticsPage && !statisticsPage.classList.contains('hidden')) {
                     const { year, month, organization } = utils.getStatisticsParams();
                     render.statistics(year, month, organization);
                 }
+            },
+            
+            /**
+             * 获取课程费用
+             * @param {Object} course - 课程对象
+             * @param {Object} student - 学生对象
+             * @param {number} index - 学生在课程中的索引
+             * @returns {number} 课程费用
+             */
+            getCourseFee: function(course, student, index) {
+                // 如果课程有费用数组且指定索引的费用已定义，使用课程费用
+                if (course.fees && course.fees[index] !== undefined) {
+                    return course.fees[index];
+                }
+                // 否则使用学生的"一对一"费用或默认费用
+                return student?.fees?.['一对一'] || student?.fee || 0;
             },
             
             // 保存数据（先保存到本地，再同步到服务器）
@@ -1790,15 +1849,15 @@
                     courseData.forEach(row => {
                         htmlContent += `
                     <tr>
-                        <td>${row.日期 || ''}</td>
-                        <td>${row.时间 || ''}</td>
-                        <td>${row.学生姓名 || ''}</td>
-                        <td>${row.所属机构 || ''}</td>
-                        <td>${row.年级 || ''}</td>
-                        <td>${row.课型 || ''}</td>
-                        <td>${row.上课人数 || ''}</td>
-                        <td>¥${row.课时费 || '0'}</td>
-                        <td>${row.备注 || ''}</td>
+                        <td>${String(row.日期 || '')}</td>
+                        <td>${String(row.时间 || '')}</td>
+                        <td>${String(row.学生姓名 || '')}</td>
+                        <td>${String(row.所属机构 || '')}</td>
+                        <td>${String(row.年级 || '')}</td>
+                        <td>${String(row.课型 || '')}</td>
+                        <td>${String(row.上课人数 || '')}</td>
+                        <td>¥${String(row.课时费 || '0')}</td>
+                        <td>${String(row.备注 || '')}</td>
                     </tr>
                         `;
                     });
@@ -1874,8 +1933,7 @@
                             上课人数: course.studentIds ? course.studentIds.length : 1,
                             课时费: isGroupLesson ? 
                                 (course.fees && course.fees[0] !== undefined ? course.fees[0] : 0) : 
-                                (course.fees && course.fees[index] !== undefined ? course.fees[index] : 
-                                (student.fees?.['一对一'] || student.fee || 0)),
+                                utils.getCourseFee(course, student, index),
                             备注: course.note || ''
                         });
                         
@@ -1897,8 +1955,7 @@
                             organizationStats[org].courses += 1;
                             const courseFee = isGroupLesson ? 
                                 (course.fees && course.fees[0] !== undefined ? course.fees[0] : 0) : 
-                                (course.fees && course.fees[index] !== undefined ? course.fees[index] : 
-                                (student.fees?.['一对一'] || student.fee || 0));
+                                utils.getCourseFee(course, student, index);
                             organizationStats[org].fee += courseFee;
                         }
                         
@@ -1917,8 +1974,7 @@
                                 };
                             }
                             detailedStats['一对一'][grade][org].courses += 1;
-                            detailedStats['一对一'][grade][org].fee += course.fees && course.fees[index] !== undefined ? course.fees[index] : 
-                                (student.fees?.['一对一'] || student.fee || 0);
+                            detailedStats['一对一'][grade][org].fee += utils.getCourseFee(course, student, index);
                             detailedStats['一对一'][grade][org].students.add(studentId);
                         } else if (courseLessonType === '多人课') {
                             const grade = student.grade || '未设置';
@@ -2223,7 +2279,7 @@
                                         }).join('')}
                                     </div>
                                     <div class="opacity-80 text-[10px]">${course.startTime} - ${course.endTime}</div>
-                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${course.note}">${course.note}</div>` : ''}
+                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${utils.escapeHtml(course.note)}">${utils.escapeHtml(course.note)}</div>` : ''}
                                 </div>
                             `;
                         } else {
@@ -2235,11 +2291,11 @@
                                      style="background-color: ${color}20; border-left: 3px solid ${color};"
                                      data-course-id="${course.id}"
                                      draggable="true">
-                                    <div class="font-medium truncate text-sm" title="${student ? `${student.name} (${student.organization})` : '未知学生'}">
-                                        ${student ? student.name : '未知学生'}
+                                    <div class="font-medium truncate text-sm" title="${student ? `${utils.escapeHtml(student.name)} (${utils.escapeHtml(student.organization)})` : '未知学生'}">
+                                        ${student ? utils.escapeHtml(student.name) : '未知学生'}
                                     </div>
                                     <div class="opacity-80">${course.startTime} - ${course.endTime}</div>
-                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${course.note}">${course.note}</div>` : ''}
+                                    ${course.note ? `<div class="text-[9px] text-gray-500 truncate" title="${utils.escapeHtml(course.note)}">${utils.escapeHtml(course.note)}</div>` : ''}
                                 </div>
                             `;
                         }
@@ -2257,6 +2313,13 @@
                 cell.onclick = function(e) {
                     // 只处理左键点击
                     if (e && e.button !== 0) {
+                        return;
+                    }
+                    
+                    // 检查是否点击的是课程元素
+                    const courseItem = e.target.closest('.course-item');
+                    if (courseItem) {
+                        // 如果点击的是课程元素，不处理日期单元格的点击事件
                         return;
                     }
                     
@@ -2751,8 +2814,7 @@
                         let fee = 0;
                         if (!isGroupLesson) {
                             // 一对一使用学生预设费用
-                            fee = course.fees && course.fees[index] !== undefined ? course.fees[index] : 
-                                 (student.fees?.['一对一'] || student.fee || 0);
+                            fee = utils.getCourseFee(course, student, index);
                             stats.totalFee += fee;
                             // 只对一对一课程计数，且只计数一次
                             if (!isGroupLesson && !shouldCountCourse) {
@@ -3331,12 +3393,7 @@
                         // 获取自定义下拉菜单的值
                         const yearWrapper = document.getElementById('statistics-year-wrapper');
                         const monthWrapper = document.getElementById('statistics-month-wrapper');
-                        const yearSelected = yearWrapper?.querySelector('.custom-option.selected');
-                        const monthSelected = monthWrapper?.querySelector('.custom-option.selected');
-                        const year = yearSelected ? parseInt(yearSelected.dataset.value) : new Date().getFullYear();
-                        const month = monthSelected ? parseInt(monthSelected.dataset.value) : new Date().getMonth();
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const organization = organizationValue || '';
+                        const { year, month, organization } = utils.getStatisticsParams();
                         render.statistics(year, month, organization);
                     }
                 };
@@ -3362,10 +3419,65 @@
                     modalContent.classList.add('scale-100', 'opacity-100', 'translate-y-0');
                 });
                 
+                // 存储事件监听器引用，以便在关闭时移除
+                const eventListeners = [];
+                
                 // 绑定关闭按钮事件（延迟确保DOM已渲染）
                 setTimeout(() => {
                     modalContent.querySelectorAll('.close-modal').forEach(btn => {
-                        btn.addEventListener('click', modal.hide);
+                        const listener = () => modal.hide();
+                        btn.addEventListener('click', listener);
+                        eventListeners.push({ element: btn, type: 'click', listener });
+                    });
+                    
+                    // 事件委托：统一处理data-action按钮
+                    const actionListener = function(e) {
+                        const btn = e.target.closest('[data-action]');
+                        if (!btn) return;
+                        
+                        const action = btn.dataset.action;
+                        switch (action) {
+                            case 'toggle-date-picker':
+                                toggleDatePicker(btn.dataset.target);
+                                break;
+                            case 'change-date-month':
+                                changeDateMonth(btn.dataset.target, parseInt(btn.dataset.delta));
+                                break;
+                            case 'adjust-time':
+                                adjustTime(btn.dataset.target, parseInt(btn.dataset.delta));
+                                break;
+                            case 'close-picker':
+                                document.getElementById(btn.dataset.target).classList.add('hidden');
+                                break;
+                            case 'toggle-time-picker':
+                                toggleTimePicker(btn.dataset.target);
+                                break;
+                        }
+                    };
+                    modalContent.addEventListener('click', actionListener);
+                    eventListeners.push({ element: modalContent, type: 'click', listener: actionListener });
+                    
+                    // 事件委托：处理时间选择器的小时/分钟选择
+                    const timePickerListener = function(e) {
+                        const hourBtn = e.target.closest('[data-select-hour]');
+                        if (hourBtn) {
+                            selectTimeHour(hourBtn.dataset.inputId, hourBtn.dataset.hour);
+                            return;
+                        }
+                        const minuteBtn = e.target.closest('[data-select-minute]');
+                        if (minuteBtn) {
+                            selectTimeMinute(minuteBtn.dataset.inputId, minuteBtn.dataset.minute);
+                            return;
+                        }
+                    };
+                    modalContent.addEventListener('click', timePickerListener);
+                    eventListeners.push({ element: modalContent, type: 'click', listener: timePickerListener });
+                    
+                    // 在模态框关闭时移除所有事件监听器
+                    container.addEventListener('hide', () => {
+                        eventListeners.forEach(({ element, type, listener }) => {
+                            element.removeEventListener(type, listener);
+                        });
                     });
                 }, 0);
                 
@@ -3393,6 +3505,15 @@
                 
                 setTimeout(() => {
                     container.classList.add('hidden');
+                    
+                    // 移除所有关闭按钮的事件监听器
+                    modalContent.querySelectorAll('.close-modal').forEach(btn => {
+                        btn.removeEventListener('click', modal.hide);
+                    });
+                    
+                    // 触发hide事件，用于清理自定义事件监听器
+                    const hideEvent = new Event('hide');
+                    container.dispatchEvent(hideEvent);
                 }, 400);
                 
                 // 移除事件监听
@@ -3457,12 +3578,13 @@
                     document.addEventListener('keydown', handleKeydown);
                     
                     // 确保在模态框关闭时移除事件监听器
-                    const originalHide = modal.hide;
-                    modal.hide = function() {
+                    // 使用事件委托的方式，避免替换modal.hide方法
+                    const modalContainer = document.getElementById('modal-container');
+                    const cleanupEvent = () => {
                         document.removeEventListener('keydown', handleKeydown);
-                        modal.hide = originalHide;
-                        originalHide.call(this);
+                        modalContainer.removeEventListener('hide', cleanupEvent);
                     };
+                    modalContainer.addEventListener('hide', cleanupEvent);
                 }, 0);
             },
             
@@ -3482,7 +3604,7 @@
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
                                     <div class="relative">
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleDatePicker('course-date-container')">
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" data-action="toggle-date-picker" data-target="course-date-container">
                                             <input type="text" id="course-date" value="${course.date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
                                             <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                                                 <i class="fa fa-calendar"></i>
@@ -3492,11 +3614,11 @@
                                         <div id="course-date-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
                                             <div class="p-3">
                                                 <div class="flex justify-between items-center mb-3">
-                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', -1)">
+                                                    <button type="button" class="px-2 py-1 text-sm" data-action="change-date-month" data-target="course-date" data-delta="-1">
                                                         <i class="fa fa-chevron-left"></i>
                                                     </button>
                                                     <h3 id="current-date-month" class="text-sm font-medium"></h3>
-                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', 1)">
+                                                    <button type="button" class="px-2 py-1 text-sm" data-action="change-date-month" data-target="course-date" data-delta="1">
                                                         <i class="fa fa-chevron-right"></i>
                                                     </button>
                                                 </div>
@@ -3538,8 +3660,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
                                         <div class="relative">
-                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleTimePicker('start-time-container')">
-                                                <input type="time" id="course-start-time" value="${course.startTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120); calculateFee();">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" data-action="toggle-time-picker" data-target="start-time-container">
+                                                <input type="time" id="course-start-time" value="${course.startTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', APP_CONFIG.DEFAULT_COURSE_DURATION); calculateFee();">
                                                 <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                                                     <i class="fa fa-clock-o"></i>
                                                 </button>
@@ -3549,7 +3671,7 @@
                                                 <div class="p-3">
                                                     <div class="flex justify-between items-center mb-3">
                                                         <h4 class="text-sm font-medium">选择时间</h4>
-                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('start-time-container').classList.add('hidden')">
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-picker" data-target="start-time-container">
                                                             <i class="fa fa-times"></i>
                                                         </button>
                                                     </div>
@@ -3559,7 +3681,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 24}, (_, i) => {
                                                                     const hour = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-start-time', '${hour}')">${hour}</button>`;
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" data-select-hour data-input-id="course-start-time" data-hour="${hour}">${hour}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3568,7 +3690,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 60}, (_, i) => {
                                                                     const minute = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-start-time', '${minute}')">${minute}</button>`;
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" data-select-minute data-input-id="course-start-time" data-minute="${minute}">${minute}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3581,15 +3703,15 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
                                         <div class="relative">
                                             <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                                <input type="time" id="course-end-time" value="${course.endTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onclick="toggleTimePicker('end-time-container')" onchange="calculateFee();">
+                                                <input type="time" id="course-end-time" value="${course.endTime || '00:00'}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" data-action="toggle-time-picker" data-target="end-time-container" onchange="calculateFee();">
                                                 <div class="absolute right-0 top-0 h-full flex items-center">
-                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" data-action="adjust-time" data-target="course-end-time" data-delta="-30">
                                                         <i class="fa fa-minus"></i>
                                                     </button>
-                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" data-action="adjust-time" data-target="course-end-time" data-delta="30">
                                                         <i class="fa fa-plus"></i>
                                                     </button>
-                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="toggleTimePicker('end-time-container')">
+                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" data-action="toggle-time-picker" data-target="end-time-container">
                                                         <i class="fa fa-clock-o"></i>
                                                     </button>
                                                 </div>
@@ -3599,7 +3721,7 @@
                                                 <div class="p-3">
                                                     <div class="flex justify-between items-center mb-3">
                                                         <h4 class="text-sm font-medium">选择时间</h4>
-                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('end-time-container').classList.add('hidden')">
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-picker" data-target="end-time-container">
                                                             <i class="fa fa-times"></i>
                                                         </button>
                                                     </div>
@@ -3609,7 +3731,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 24}, (_, i) => {
                                                                     const hour = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-end-time', '${hour}')">${hour}</button>`;
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" data-select-hour data-input-id="course-end-time" data-hour="${hour}">${hour}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3618,7 +3740,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 60}, (_, i) => {
                                                                     const minute = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-end-time', '${minute}')">${minute}</button>`;
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" data-select-minute data-input-id="course-end-time" data-minute="${minute}">${minute}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3681,7 +3803,13 @@
                             <div class="border border-gray-300 rounded-md p-3">
                                 <div class="flex flex-wrap gap-2" id="student-buttons">
                                     ${filteredStudents.map(student => {
-                                        const isSelected = course.studentIds ? course.studentIds.includes(student.id) : course.studentId === student.id;
+                                        // 修复：确保 studentIds 是数组，并正确处理选中状态
+                                        let isSelected = false;
+                                        if (course.studentIds && Array.isArray(course.studentIds)) {
+                                            isSelected = course.studentIds.includes(student.id);
+                                        } else if (course.studentId) {
+                                            isSelected = course.studentId === student.id;
+                                        }
                                         const color = utils.generateColor(student.organization);
                                         // 获取学生对应课型的费用
                                         const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
@@ -3689,66 +3817,14 @@
                                         return `
                                             <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all duration-200 ${isSelected ? 'selected bg-opacity-40' : ''}" 
                                                     data-id="${student.id}" 
-                                                    data-name="${student.name}" 
-                                                    data-organization="${student.organization}" 
-                                                    data-grade="${student.grade || '未设置'}" 
+                                                    data-name="${utils.escapeHtml(student.name)}" 
+                                                    data-organization="${utils.escapeHtml(student.organization)}" 
+                                                    data-grade="${utils.escapeHtml(student.grade || '未设置')}" 
                                                     data-color="${color}"
                                                     data-fee="${fee}"
-                                                    style="border-color: ${color}; color: ${color}; background-color: ${isSelected ? `${color}40` : 'transparent'}; transform: translateY(0);"
-                                                    onmouseover="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : '${color}20'; this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';"
-                                                    onmouseout="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent'; this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
-                                                    onclick="
-                                                        if ('${lessonType}' === '一对一') {
-                                                            // 一对一课型只能选择一个学生
-                                                            document.querySelectorAll('.student-btn').forEach(b => {
-                                                                b.classList.remove('selected', 'bg-opacity-40');
-                                                                b.style.backgroundColor = 'transparent';
-                                                            });
-                                                            this.classList.add('selected', 'bg-opacity-40');
-                                                            this.style.backgroundColor = '${color}40';
-                                                            
-                                                            // 触发费用计算
-                                                            setTimeout(() => {
-                                                                if (typeof calculateFee === 'function') {
-                                                                    calculateFee();
-                                                                }
-                                                            }, 10);
-                                                        } else {
-                                                            // 多人课型可以多选，但必须同一年级且同一机构
-                                                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
-                                                            const currentOrganization = this.dataset.organization;
-                                                            const currentGrade = this.dataset.grade;
-                                                            
-                                                            // 检查是否与已选中学生机构一致
-                                                            let organizationMatch = true;
-                                                            let gradeMatch = true;
-                                                            selectedStudents.forEach(btn => {
-                                                                if (btn.dataset.organization !== currentOrganization) {
-                                                                    organizationMatch = false;
-                                                                }
-                                                                if (btn.dataset.grade !== currentGrade) {
-                                                                    gradeMatch = false;
-                                                                }
-                                                            });
-                                                            
-                                                            if (!organizationMatch) {
-                                                                // 机构不一致，显示错误提示
-                                                                if (typeof notification !== 'undefined') {
-                                                                    notification.show('多人课只能选择同一机构的学生', 'error');
-                                                                }
-                                                            } else if (!gradeMatch) {
-                                                                // 年级不一致，显示错误提示
-                                                                if (typeof notification !== 'undefined') {
-                                                                    notification.show('多人课只能选择同一年级的学生', 'error');
-                                                                }
-                                                            } else {
-                                                                // 机构和年级都一致，允许选择
-                                                                this.classList.toggle('selected');
-                                                                this.classList.toggle('bg-opacity-40');
-                                                                this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent';
-                                                            }
-                                                        }
-                                                    ">${student.name}</button>
+                                                    data-lesson-type="${lessonType}"
+                                                    style="border-color: ${color}; color: ${color}; background-color: ${isSelected ? `${color}40` : 'transparent'};"
+                                            >${utils.escapeHtml(student.name)}</button>
                                         `;
                                     }).join('')}
                                 </div>
@@ -3759,6 +3835,72 @@
                 
                 // 初始化学生选择区域
                 updateStudentSelection();
+                
+                // 事件委托：处理学生选择按钮点击（绑定到模态框内容容器，确保课型切换后仍然有效）
+                const modalContent = document.getElementById('modal-content');
+                if (modalContent) {
+                    // 移除之前的事件监听器（防止重复绑定）
+                    modalContent.onclick = null;
+                    
+                    modalContent.onclick = function(e) {
+                        const btn = e.target.closest('.student-btn');
+                        if (!btn) return;
+                        
+                        const lessonType = btn.dataset.lessonType;
+                        const color = btn.dataset.color;
+                        
+                        if (lessonType === '一对一') {
+                            // 一对一课型只能选择一个学生
+                            document.querySelectorAll('.student-btn').forEach(b => {
+                                b.classList.remove('selected', 'bg-opacity-40');
+                                b.style.backgroundColor = 'transparent';
+                            });
+                            btn.classList.add('selected', 'bg-opacity-40');
+                            btn.style.backgroundColor = color + '40';
+                            
+                            // 触发费用计算
+                            setTimeout(() => {
+                                if (typeof calculateFee === 'function') {
+                                    calculateFee();
+                                }
+                            }, 10);
+                        } else {
+                            // 多人课型可以多选，但必须同一年级且同一机构
+                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                            const currentOrganization = btn.dataset.organization;
+                            const currentGrade = btn.dataset.grade;
+                            
+                            // 检查是否与已选中学生机构一致
+                            let organizationMatch = true;
+                            let gradeMatch = true;
+                            selectedStudents.forEach(selectedBtn => {
+                                if (selectedBtn.dataset.organization !== currentOrganization) {
+                                    organizationMatch = false;
+                                }
+                                if (selectedBtn.dataset.grade !== currentGrade) {
+                                    gradeMatch = false;
+                                }
+                            });
+                            
+                            if (!organizationMatch) {
+                                // 机构不一致，显示错误提示
+                                if (typeof notification !== 'undefined') {
+                                    notification.show('多人课只能选择同一机构的学生', 'error');
+                                }
+                            } else if (!gradeMatch) {
+                                // 年级不一致，显示错误提示
+                                if (typeof notification !== 'undefined') {
+                                    notification.show('多人课只能选择同一年级的学生', 'error');
+                                }
+                            } else {
+                                // 机构和年级都一致，允许选择
+                                btn.classList.toggle('selected');
+                                btn.classList.toggle('bg-opacity-40');
+                                btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                            }
+                        }
+                    };
+                }
                 
                 // 加载课程中存储的费用数据
                 if (course.fees && course.fees[0] !== undefined) {
@@ -3884,7 +4026,7 @@
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
                                     <div class="relative">
-                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleDatePicker('course-date-container')">
+                                        <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" data-action="toggle-date-picker" data-target="course-date-container">
                                             <input type="text" id="course-date" value="${date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
                                             <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                                                 <i class="fa fa-calendar"></i>
@@ -3894,11 +4036,11 @@
                                         <div id="course-date-container" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden">
                                             <div class="p-3">
                                                 <div class="flex justify-between items-center mb-3">
-                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', -1)">
+                                                    <button type="button" class="px-2 py-1 text-sm" data-action="change-date-month" data-target="course-date" data-delta="-1">
                                                         <i class="fa fa-chevron-left"></i>
                                                     </button>
                                                     <h3 id="current-date-month" class="text-sm font-medium"></h3>
-                                                    <button type="button" class="px-2 py-1 text-sm" onclick="changeDateMonth('course-date', 1)">
+                                                    <button type="button" class="px-2 py-1 text-sm" data-action="change-date-month" data-target="course-date" data-delta="1">
                                                         <i class="fa fa-chevron-right"></i>
                                                     </button>
                                                 </div>
@@ -3940,8 +4082,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">开始时间</label>
                                         <div class="relative">
-                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" onclick="toggleTimePicker('start-time-container')">
-                                                <input type="time" id="course-start-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', 120); calculateFee();">
+                                            <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" data-action="toggle-time-picker" data-target="start-time-container">
+                                                <input type="time" id="course-start-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" onchange="calculateEndTime('course-start-time', 'course-end-time', APP_CONFIG.DEFAULT_COURSE_DURATION); calculateFee();">
                                                 <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                                                     <i class="fa fa-clock-o"></i>
                                                 </button>
@@ -3951,7 +4093,7 @@
                                                 <div class="p-3">
                                                     <div class="flex justify-between items-center mb-3">
                                                         <h4 class="text-sm font-medium">选择时间</h4>
-                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('start-time-container').classList.add('hidden')">
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-picker" data-target="start-time-container">
                                                             <i class="fa fa-times"></i>
                                                         </button>
                                                     </div>
@@ -3961,7 +4103,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 24}, (_, i) => {
                                                                     const hour = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-start-time', '${hour}')">${hour}</button>`;
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" data-select-hour data-input-id="course-start-time" data-hour="${hour}">${hour}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3970,7 +4112,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 60}, (_, i) => {
                                                                     const minute = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-start-time', '${minute}')">${minute}</button>`;
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" data-select-minute data-input-id="course-start-time" data-minute="${minute}">${minute}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -3983,15 +4125,15 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">结束时间</label>
                                         <div class="relative">
                                             <div class="relative border border-gray-300 rounded-md overflow-hidden">
-                                                <input type="time" id="course-end-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" onclick="toggleTimePicker('end-time-container')" onchange="calculateFee();">
+                                                <input type="time" id="course-end-time" value="00:00" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-24" data-action="toggle-time-picker" data-target="end-time-container" onchange="calculateFee();">
                                                 <div class="absolute right-0 top-0 h-full flex items-center">
-                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', -30)">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" data-action="adjust-time" data-target="course-end-time" data-delta="-30">
                                                         <i class="fa fa-minus"></i>
                                                     </button>
-                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" onclick="adjustTime('course-end-time', 30)">
+                                                    <button type="button" class="px-2 text-gray-500 hover:text-gray-700" data-action="adjust-time" data-target="course-end-time" data-delta="30">
                                                         <i class="fa fa-plus"></i>
                                                     </button>
-                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" onclick="toggleTimePicker('end-time-container')">
+                                                    <button type="button" class="px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center" data-action="toggle-time-picker" data-target="end-time-container">
                                                         <i class="fa fa-clock-o"></i>
                                                     </button>
                                                 </div>
@@ -4001,7 +4143,7 @@
                                                 <div class="p-3">
                                                     <div class="flex justify-between items-center mb-3">
                                                         <h4 class="text-sm font-medium">选择时间</h4>
-                                                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('end-time-container').classList.add('hidden')">
+                                                        <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-picker" data-target="end-time-container">
                                                             <i class="fa fa-times"></i>
                                                         </button>
                                                     </div>
@@ -4011,7 +4153,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 24}, (_, i) => {
                                                                     const hour = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" onclick="selectTimeHour('course-end-time', '${hour}')">${hour}</button>`;
+                                                                    return `<button type="button" class="w-full py-2 text-center text-sm hover:bg-gray-100" data-select-hour data-input-id="course-end-time" data-hour="${hour}">${hour}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -4020,7 +4162,7 @@
                                                             <div class="border border-gray-300 rounded-md overflow-hidden max-h-40 overflow-y-auto scrollbar-hide">
                                                                 ${Array.from({length: 60}, (_, i) => {
                                                                     const minute = String(i).padStart(2, '0');
-                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" onclick="selectTimeMinute('course-end-time', '${minute}')">${minute}</button>`;
+                                                                    return `<button type="button" class="w-full py-1.5 text-center text-sm hover:bg-gray-100" data-select-minute data-input-id="course-end-time" data-minute="${minute}">${minute}</button>`;
                                                                 }).join('')}
                                                             </div>
                                                         </div>
@@ -4090,69 +4232,14 @@
                                         return `
                                             <button type="button" class="student-btn px-3 py-1 rounded-full text-sm border-2 transition-all duration-200"
                                                     data-id="${student.id}"
-                                                    data-name="${student.name}"
-                                                    data-organization="${student.organization}"
-                                                    data-grade="${student.grade || '未设置'}"
+                                                    data-name="${utils.escapeHtml(student.name)}"
+                                                    data-organization="${utils.escapeHtml(student.organization)}"
+                                                    data-grade="${utils.escapeHtml(student.grade || '未设置')}"
                                                     data-color="${color}"
                                                     data-fee="${fee}"
-                                                    style="border-color: ${color}; color: ${color}; background-color: transparent; transform: translateY(0);"
-                                                    onmouseover="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : '${color}20'; this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';"
-                                                    onmouseout="this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent'; this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
-                                                    onclick="
-                                                        if ('${lessonType}' === '一对一') {
-                                                            // 一对一课型只能选择一个学生
-                                                            document.querySelectorAll('.student-btn').forEach(b => {
-                                                                b.classList.remove('selected', 'bg-opacity-40');
-                                                                b.style.backgroundColor = 'transparent';
-                                                            });
-                                                            this.classList.add('selected', 'bg-opacity-40');
-                                                            this.style.backgroundColor = '${color}40';
-                                                            
-                                                            // 显示选中学生的预设费用
-                                                            const fee = this.dataset.fee;
-                                                            const feeInput = document.getElementById('course-fee');
-                                                            feeInput.value = fee;
-                                                            
-                                                            // 重置费用颜色
-                                                            feeInput.classList.remove('text-red-500');
-                                                        } else {
-                                                            // 多人课型可以多选，但必须同一年级且同一机构
-                                                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
-                                                            const currentOrganization = this.dataset.organization;
-                                                            const currentGrade = this.dataset.grade;
-                                                            
-                                                            // 检查是否与已选中学生机构一致
-                                                            let organizationMatch = true;
-                                                            let gradeMatch = true;
-                                                            selectedStudents.forEach(btn => {
-                                                                if (btn.dataset.organization !== currentOrganization) {
-                                                                    organizationMatch = false;
-                                                                }
-                                                                if (btn.dataset.grade !== currentGrade) {
-                                                                    gradeMatch = false;
-                                                                }
-                                                            });
-                                                            
-                                                            if (!organizationMatch) {
-                                                                // 机构不一致，显示错误提示
-                                                                if (typeof notification !== 'undefined') {
-                                                                    notification.show('多人课只能选择同一机构的学生', 'error');
-                                                                }
-                                                            } else if (!gradeMatch) {
-                                                                // 年级不一致，显示错误提示
-                                                                if (typeof notification !== 'undefined') {
-                                                                    notification.show('多人课只能选择同一年级的学生', 'error');
-                                                                }
-                                                            } else {
-                                                                // 机构和年级都一致，允许选择
-                                                                this.classList.toggle('selected');
-                                                                this.classList.toggle('bg-opacity-40');
-                                                                this.style.backgroundColor = this.classList.contains('selected') ? '${color}40' : 'transparent';
-                                                            }
-                                                        }
-                                                    ">
-                                                ${student.name}
-                                            </button>
+                                                    data-lesson-type="${lessonType}"
+                                                    style="border-color: ${color}; color: ${color}; background-color: transparent;"
+                                            >${utils.escapeHtml(student.name)}</button>
                                         `;
                                     }).join('')}
                                 </div>
@@ -4163,6 +4250,70 @@
                 
                 // 初始化学生选择区域
                 updateStudentSelection();
+                
+                // 事件委托：处理学生选择按钮点击
+                const studentButtonsContainer = document.getElementById('student-buttons');
+                if (studentButtonsContainer) {
+                    studentButtonsContainer.addEventListener('click', function(e) {
+                        const btn = e.target.closest('.student-btn');
+                        if (!btn) return;
+                        
+                        const lessonType = btn.dataset.lessonType;
+                        const color = btn.dataset.color;
+                        
+                        if (lessonType === '一对一') {
+                            // 一对一课型只能选择一个学生
+                            document.querySelectorAll('.student-btn').forEach(b => {
+                                b.classList.remove('selected', 'bg-opacity-40');
+                                b.style.backgroundColor = 'transparent';
+                            });
+                            btn.classList.add('selected', 'bg-opacity-40');
+                            btn.style.backgroundColor = color + '40';
+                            
+                            // 显示选中学生的预设费用
+                            const fee = btn.dataset.fee;
+                            const feeInput = document.getElementById('course-fee');
+                            if (feeInput) {
+                                feeInput.value = fee;
+                                feeInput.classList.remove('text-red-500');
+                            }
+                        } else {
+                            // 多人课型可以多选，但必须同一年级且同一机构
+                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                            const currentOrganization = btn.dataset.organization;
+                            const currentGrade = btn.dataset.grade;
+                            
+                            // 检查是否与已选中学生机构一致
+                            let organizationMatch = true;
+                            let gradeMatch = true;
+                            selectedStudents.forEach(selectedBtn => {
+                                if (selectedBtn.dataset.organization !== currentOrganization) {
+                                    organizationMatch = false;
+                                }
+                                if (selectedBtn.dataset.grade !== currentGrade) {
+                                    gradeMatch = false;
+                                }
+                            });
+                            
+                            if (!organizationMatch) {
+                                // 机构不一致，显示错误提示
+                                if (typeof notification !== 'undefined') {
+                                    notification.show('多人课只能选择同一机构的学生', 'error');
+                                }
+                            } else if (!gradeMatch) {
+                                // 年级不一致，显示错误提示
+                                if (typeof notification !== 'undefined') {
+                                    notification.show('多人课只能选择同一年级的学生', 'error');
+                                }
+                            } else {
+                                // 机构和年级都一致，允许选择
+                                btn.classList.toggle('selected');
+                                btn.classList.toggle('bg-opacity-40');
+                                btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                            }
+                        }
+                    });
+                }
                 
                 // 监听课型变化
                 document.querySelectorAll('input[name="course-lesson-type"]').forEach(radio => {
@@ -4282,19 +4433,9 @@
                                 const student = state.students.find(s => s.id === course.studentIds[index]);
                                 // 使用课程中的费用（一对一使用学生预设费用，多人课不计算学生费用）
                                 let fee = 0;
-                                let feeColor = '';
                                 if (!isGroupLesson) {
-                                    fee = course.fees && course.fees[index] !== undefined ? course.fees[index] : (student ? student.fee : 0);
+                                    fee = utils.getCourseFee(course, student, index);
                                     totalFee += fee;
-                                    
-                                    // 检查是否为自定义费用
-                                    if (student) {
-                                        const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
-                                        const studentFee = studentFees['一对一'] || 0;
-                                        if (parseFloat(fee) !== studentFee) {
-                                            feeColor = 'text-red-500';
-                                        }
-                                    }
                                 }
                                 return `
                                     <span class="px-2 py-1 rounded text-xs" 
@@ -4310,17 +4451,9 @@
                     // 单个学生的课程
                     const student = state.students.find(s => s.id === course.studentId);
                     if (student) {
-                        const fee = course.fees && course.fees[0] !== undefined ? course.fees[0] : student.fee;
+                        const fee = utils.getCourseFee(course, student, 0);
                         totalFee = fee;
                         const color = utils.generateColor(student.organization);
-                        let feeColor = '';
-                        
-                        // 检查是否为自定义费用
-                        const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
-                        const studentFee = studentFees['一对一'] || 0;
-                        if (parseFloat(fee) !== studentFee) {
-                            feeColor = 'text-red-500';
-                        }
                         
                         studentsContent = `
                             <span class="px-2 py-1 rounded text-xs" 
@@ -4331,8 +4464,7 @@
                     }
                 }
                 
-                // 移除费用颜色判断，所有费用都使用默认颜色
-                let feeColor = '';
+                
                 
                 const content = `
                     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
@@ -4358,12 +4490,12 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-500">课时费</p>
-                                    <p class="font-medium ${feeColor || 'text-primary'}">¥${totalFee.toFixed(2)}</p>
+                                    <p class="font-medium text-primary">¥${totalFee.toFixed(2)}</p>
                                 </div>
                                 ${course.note ? `
                                     <div>
                                         <p class="text-sm text-gray-500">备注</p>
-                                        <p>${course.note}</p>
+                                        <p>${utils.escapeHtml(course.note)}</p>
                                     </div>
                                 ` : ''}
                             </div>
@@ -4472,7 +4604,7 @@
                 
                 // 绑定保存按钮事件
                 document.getElementById('add-student-save').addEventListener('click', () => {
-                    const name = utils.escapeHtml(document.getElementById('student-name').value.trim());
+                    const name = document.getElementById('student-name').value.trim();
                     const organization = getCustomSelectValue('student-organization-wrapper');
                     const grade = getCustomSelectValue('student-grade-wrapper');
                     
@@ -4701,7 +4833,7 @@
                 // 绑定保存按钮事件
                 document.getElementById('edit-student-save').addEventListener('click', () => {
                     const id = document.getElementById('edit-student-id').value;
-                    const name = utils.escapeHtml(document.getElementById('edit-student-name').value.trim());
+                    const name = document.getElementById('edit-student-name').value.trim();
                     const organization = getCustomSelectValue('edit-student-organization-wrapper');
                     
                     // 获取课型选择
@@ -4811,34 +4943,36 @@
                 });
             },
             
-            // 显示机构管理模态框
-            showManageOrganizations: () => {
+            // 显示管理模态框（通用函数）
+            showManagementModal: (config) => {
+                const { title, items, itemName, addItem, editItem, deleteItem, onAdd, onEdit, onDelete, updateUI } = config;
+                
                 const content = `
                     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
                         <div class="p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-medium">机构管理</h3>
+                                <h3 class="text-lg font-medium">${title}</h3>
                                 <button class="close-modal text-gray-400 hover:text-gray-600">
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
                             <div class="mb-4">
                                 <div class="flex items-center space-x-2 mb-2">
-                                    <input type="text" id="new-organization" placeholder="输入新机构名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                    <button id="add-organization" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
+                                    <input type="text" id="new-${itemName}" placeholder="输入新${itemName}名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <button id="add-${itemName}" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
                                 </div>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有机构</h4>
-                                <div id="organizations-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                    ${state.organizations.map(org => `
-                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-org="${org}">
-                                            <span class="org-name">${org}</span>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有${itemName}</h4>
+                                <div id="${itemName}s-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                    ${items.map(item => `
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-${itemName}="${utils.escapeHtml(item)}">
+                                            <span class="${itemName}-name">${utils.escapeHtml(item)}</span>
                                             <div class="flex items-center space-x-2">
-                                                <button class="text-primary hover:text-blue-700 edit-organization" data-org="${org}">
+                                                <button class="text-primary hover:text-blue-700 edit-${itemName}" data-${itemName}="${utils.escapeHtml(item)}">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <button class="text-danger hover:text-red-700 delete-organization" data-org="${org}">
+                                                <button class="text-danger hover:text-red-700 delete-${itemName}" data-${itemName}="${utils.escapeHtml(item)}">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </div>
@@ -4857,45 +4991,45 @@
                 
                 // 自动激活输入框并绑定事件
                 setTimeout(() => {
-                    document.getElementById('new-organization').focus();
+                    document.getElementById(`new-${itemName}`).focus();
                     
-                    // 使用事件委托处理机构管理操作
-                    const organizationsList = document.getElementById('organizations-list');
-                    if (organizationsList) {
+                    // 使用事件委托处理管理操作
+                    const itemsList = document.getElementById(`${itemName}s-list`);
+                    if (itemsList) {
                         // 移除之前的事件监听器（防止重复绑定）
-                        organizationsList.onclick = null;
+                        itemsList.onclick = null;
                         
-                        organizationsList.onclick = (event) => {
-                            const editButton = event.target.closest('.edit-organization');
-                            const deleteButton = event.target.closest('.delete-organization');
+                        itemsList.onclick = (event) => {
+                            const editButton = event.target.closest(`.edit-${itemName}`);
+                            const deleteButton = event.target.closest(`.delete-${itemName}`);
                             
                             if (editButton) {
                                 event.stopPropagation();
-                                const org = editButton.dataset.org;
-                                // 找到外层的机构项div（排除按钮本身）
-                                let orgItem = editButton.closest('[data-org]');
+                                const item = editButton.dataset[itemName];
+                                // 找到外层的项div（排除按钮本身）
+                                let itemElement = editButton.closest(`[data-${itemName}]`);
                                 // 如果找到的是按钮本身，继续向上查找
-                                while (orgItem && orgItem.tagName === 'BUTTON') {
-                                    orgItem = orgItem.parentElement.closest('[data-org]');
+                                while (itemElement && itemElement.tagName === 'BUTTON') {
+                                    itemElement = itemElement.parentElement.closest(`[data-${itemName}]`);
                                 }
-                                if (!orgItem) {
-                                    console.error('找不到机构项元素');
+                                if (!itemElement) {
+                                    console.error(`找不到${itemName}项元素`);
                                     return;
                                 }
-                                const orgNameSpan = orgItem.querySelector('.org-name');
-                                if (!orgNameSpan) {
-                                    console.error('找不到机构名称元素');
+                                const itemNameSpan = itemElement.querySelector(`.${itemName}-name`);
+                                if (!itemNameSpan) {
+                                    console.error(`找不到${itemName}名称元素`);
                                     return;
                                 }
                                 
                                 // 创建编辑输入框
                                 const input = document.createElement('input');
                                 input.type = 'text';
-                                input.value = org;
+                                input.value = item;
                                 input.className = 'flex-grow px-2 py-1 border border-gray-300 rounded text-sm';
                                 
                                 // 替换文本为输入框
-                                orgNameSpan.replaceWith(input);
+                                itemNameSpan.replaceWith(input);
                                 input.focus();
                                 input.select();
                                 
@@ -4920,93 +5054,35 @@
                                 
                                 // 保存编辑
                                 const saveEdit = () => {
-                                    const newOrg = input.value.trim();
+                                    const newItem = input.value.trim();
                                     
                                     // 如果没有修改或为空，直接返回
-                                    if (!newOrg || newOrg === org) {
-                                        modal.showManageOrganizations(); // 重新渲染
+                                    if (!newItem || newItem === item) {
+                                        modal.showManagementModal(config); // 重新渲染
                                         return;
                                     }
                                     
                                     // 检查是否已存在
-                                    if (state.organizations.includes(newOrg)) {
-                                        notification.show('该机构名称已存在', 'error');
+                                    if (items.includes(newItem)) {
+                                        notification.show(`该${itemName}名称已存在`, 'error');
                                         return;
                                     }
                                     
-                                    // 更新机构名称
-                                    const orgIndex = state.organizations.indexOf(org);
-                                    if (orgIndex !== -1) {
-                                        state.organizations[orgIndex] = newOrg;
-                                        
-                                        // 更新所有学生的机构名称
-                                        state.students.forEach(student => {
-                                            if (student.organization === org) {
-                                                student.organization = newOrg;
-                                            }
-                                        });
-                                        
-                                        // 生成新的机构颜色
-                                        const newColor = utils.generateColor(newOrg);
-                                        
-                                        // 更新所有课程的机构名称和颜色
-                                        state.courses.forEach(course => {
-                                            // 处理单个学生的课程
-                                            if (course.organization === org) {
-                                                course.organization = newOrg;
-                                                // 更新单个学生课程的颜色
-                                                if (course.color) {
-                                                    course.color = newColor;
-                                                }
-                                            }
-                                            
-                                            // 处理多名学生的课程
-                                            if (course.organizations) {
-                                                course.organizations = course.organizations.map((o, index) => {
-                                                    if (o === org) {
-                                                        // 更新颜色数组中对应位置的颜色
-                                                        if (course.colors && course.colors[index]) {
-                                                            course.colors[index] = newColor;
-                                                        }
-                                                        return newOrg;
-                                                    }
-                                                    return o;
-                                                });
-                                            }
-                                        });
-                                        
+                                    // 更新项名称
+                                    const itemIndex = items.indexOf(item);
+                                    if (itemIndex !== -1) {
+                                        editItem(itemIndex, newItem);
+                                        if (onEdit) onEdit(item, newItem);
                                         utils.saveData();
-                                        notification.show('机构修改成功');
-                                        
-                                        // 更新统计页面的机构筛选下拉菜单
-                                        const organizationOptions = document.getElementById('statistics-organization-options');
-                                        const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
-                                        if (organizationOptions) {
-                                            const currentValue = getCustomSelectValue('statistics-organization-wrapper');
-                                            organizationOptions.innerHTML = '<div class="custom-option ' + (currentValue === '' ? 'selected' : '') + '" data-value="">全部机构</div>';
-                                            state.organizations.forEach(o => {
-                                                const optionDiv = document.createElement('div');
-                                                optionDiv.className = 'custom-option' + (o === currentValue ? ' selected' : '');
-                                                optionDiv.dataset.value = o;
-                                                optionDiv.textContent = o;
-                                                organizationOptions.appendChild(optionDiv);
-                                            });
-                                            if (organizationTrigger) {
-                                                const selectedOption = organizationOptions.querySelector('.custom-option.selected');
-                                                organizationTrigger.textContent = selectedOption ? selectedOption.textContent : '全部机构';
-                                            }
-                                        }
-                                        
-                                        // 重新渲染学生列表和日历
-                                        render.students();
-                                        render.calendar();
+                                        notification.show(`${itemName}修改成功`);
+                                        if (updateUI) updateUI();
                                     }
-                                    modal.showManageOrganizations(); // 重新渲染
+                                    modal.showManagementModal(config); // 重新渲染
                                 };
                                 
                                 // 取消编辑
                                 const cancelEdit = () => {
-                                    modal.showManageOrganizations(); // 重新渲染
+                                    modal.showManagementModal(config); // 重新渲染
                                 };
                                 
                                 // 绑定保存按钮点击事件
@@ -5035,295 +5111,165 @@
                                 input.addEventListener('blur', saveEdit);
                             } else if (deleteButton) {
                                 event.stopPropagation();
-                                const org = deleteButton.dataset.org;
-                                const usedByStudents = state.students.some(s => s.organization === org);
-                                if (usedByStudents) {
-                                    notification.show('该机构正在被使用，无法删除', 'error');
+                                const item = deleteButton.dataset[itemName];
+                                const used = onDelete ? onDelete(item) : false;
+                                if (used) {
+                                    notification.show(`该${itemName}正在被使用，无法删除`, 'error');
                                     return;
                                 }
-                                state.organizations = state.organizations.filter(o => o !== org);
+                                deleteItem(item);
                                 utils.saveData();
-                                modal.showManageOrganizations(); // 重新渲染
-                                notification.show('机构删除成功');
-                                
-                                // 更新统计页面的机构筛选下拉菜单
-                                const organizationOptions = document.getElementById('statistics-organization-options');
-                                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
-                                if (organizationOptions) {
-                                    // 重新生成机构选项
-                                    organizationOptions.innerHTML = '<div class="custom-option selected" data-value="">全部机构</div>';
-                                    state.organizations.forEach(org => {
-                                        const optionDiv = document.createElement('div');
-                                        optionDiv.className = 'custom-option';
-                                        optionDiv.dataset.value = org;
-                                        optionDiv.textContent = org;
-                                        organizationOptions.appendChild(optionDiv);
-                                    });
-                                    // 更新触发器显示文本
-                                    if (organizationTrigger) {
-                                        organizationTrigger.textContent = '全部机构';
-                                    }
-                                }
+                                // 重新获取最新的配置（包含更新后的items）
+                                const updatedConfig = {
+                                    ...config,
+                                    items: config.items.filter(i => i !== item) // 更新items数组
+                                };
+                                modal.showManagementModal(updatedConfig); // 重新渲染
+                                notification.show(`${itemName}删除成功`);
+                                if (updateUI) updateUI();
                             }
                         };
                     }
                     
-                    // 添加机构
-                    const addOrganizationBtn = document.getElementById('add-organization');
-                    if (addOrganizationBtn) {
+                    // 添加项
+                    const addItemBtn = document.getElementById(`add-${itemName}`);
+                    if (addItemBtn) {
                         // 移除之前的事件监听器（防止重复绑定）
-                        addOrganizationBtn.onclick = null;
-                        addOrganizationBtn.onclick = () => {
-                            const newOrg = document.getElementById('new-organization').value.trim();
-                            if (newOrg && !state.organizations.includes(newOrg)) {
-                                state.organizations.push(newOrg);
+                        addItemBtn.onclick = null;
+                        addItemBtn.onclick = () => {
+                            const newItem = document.getElementById(`new-${itemName}`).value.trim();
+                            if (newItem && !items.includes(newItem)) {
+                                addItem(newItem);
+                                if (onAdd) onAdd(newItem);
                                 utils.saveData();
-                                modal.showManageOrganizations(); // 重新渲染
-                                notification.show('机构添加成功');
-                                
-                                // 更新统计页面的机构筛选下拉菜单
-                                const organizationOptions = document.getElementById('statistics-organization-options');
-                                const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
-                                if (organizationOptions) {
-                                    // 重新生成机构选项
-                                    organizationOptions.innerHTML = '<div class="custom-option selected" data-value="">全部机构</div>';
-                                    state.organizations.forEach(org => {
-                                        const optionDiv = document.createElement('div');
-                                        optionDiv.className = 'custom-option';
-                                        optionDiv.dataset.value = org;
-                                        optionDiv.textContent = org;
-                                        organizationOptions.appendChild(optionDiv);
-                                    });
-                                    // 更新触发器显示文本
-                                    if (organizationTrigger) {
-                                        organizationTrigger.textContent = '全部机构';
-                                    }
-                                }
+                                modal.showManagementModal(config); // 重新渲染
+                                notification.show(`${itemName}添加成功`);
+                                if (updateUI) updateUI();
                             }
                         };
                     }
                     
-                    // 回车键添加机构
-                    const newOrganizationInput = document.getElementById('new-organization');
-                    if (newOrganizationInput) {
+                    // 回车键添加项
+                    const newItemInput = document.getElementById(`new-${itemName}`);
+                    if (newItemInput) {
                         // 移除之前的事件监听器（防止重复绑定）
-                        newOrganizationInput.onkeypress = null;
-                        newOrganizationInput.onkeypress = (event) => {
+                        newItemInput.onkeypress = null;
+                        newItemInput.onkeypress = (event) => {
                             if (event.key === 'Enter') {
                                 event.preventDefault();
-                                document.getElementById('add-organization').click();
+                                document.getElementById(`add-${itemName}`).click();
                             }
                         };
                     }
                 }, 100);
-                
-
-        
-        
-        
-        
+            },
+            
+            // 显示机构管理模态框
+            showManageOrganizations: () => {
+                const config = {
+                    title: '机构管理',
+                    items: state.organizations,
+                    itemName: '机构',
+                    addItem: (org) => state.organizations.push(org),
+                    editItem: (index, newOrg) => {
+                        const oldOrg = state.organizations[index];
+                        state.organizations[index] = newOrg;
+                        
+                        // 更新所有学生的机构名称
+                        state.students.forEach(student => {
+                            if (student.organization === oldOrg) {
+                                student.organization = newOrg;
+                            }
+                        });
+                        
+                        // 生成新的机构颜色
+                        const newColor = utils.generateColor(newOrg);
+                        
+                        // 更新所有课程的机构名称和颜色
+                        state.courses.forEach(course => {
+                            // 处理单个学生的课程
+                            if (course.organization === oldOrg) {
+                                course.organization = newOrg;
+                                // 更新单个学生课程的颜色
+                                if (course.color) {
+                                    course.color = newColor;
+                                }
+                            }
+                            
+                            // 处理多名学生的课程
+                            if (course.organizations) {
+                                course.organizations = course.organizations.map((o, index) => {
+                                    if (o === oldOrg) {
+                                        // 更新颜色数组中对应位置的颜色
+                                        if (course.colors && course.colors[index]) {
+                                            course.colors[index] = newColor;
+                                        }
+                                        return newOrg;
+                                    }
+                                    return o;
+                                });
+                            }
+                        });
+                    },
+                    deleteItem: (org) => {
+                        state.organizations = state.organizations.filter(o => o !== org);
+                    },
+                    onDelete: (org) => {
+                        return state.students.some(s => s.organization === org);
+                    },
+                    updateUI: () => {
+                        // 更新统计页面的机构筛选下拉菜单
+                        const organizationOptions = document.getElementById('statistics-organization-options');
+                        const organizationTrigger = document.querySelector('#statistics-organization-trigger span');
+                        if (organizationOptions) {
+                            const currentValue = getCustomSelectValue('statistics-organization-wrapper');
+                            organizationOptions.innerHTML = '<div class="custom-option ' + (currentValue === '' ? 'selected' : '') + '" data-value="">全部机构</div>';
+                            state.organizations.forEach(o => {
+                                const optionDiv = document.createElement('div');
+                                optionDiv.className = 'custom-option' + (o === currentValue ? ' selected' : '');
+                                optionDiv.dataset.value = o;
+                                optionDiv.textContent = o;
+                                organizationOptions.appendChild(optionDiv);
+                            });
+                            if (organizationTrigger) {
+                                const selectedOption = organizationOptions.querySelector('.custom-option.selected');
+                                organizationTrigger.textContent = selectedOption ? selectedOption.textContent : '全部机构';
+                            }
+                        }
+                        
+                        // 重新渲染学生列表和日历
+                        render.students();
+                        render.calendar();
+                    }
+                };
+                modal.showManagementModal(config);
             },
             
             // 显示年级管理模态框
             showManageGrades: () => {
-                const content = `
-                    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-                        <div class="p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-medium">年级管理</h3>
-                                <button class="close-modal text-gray-400 hover:text-gray-600">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="mb-4">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <input type="text" id="new-grade" placeholder="输入新年级名称" class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
-                                    <button id="add-grade" class="bg-primary text-white px-3 py-2 rounded-md">添加</button>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-700 mb-2">已有年级</h4>
-                                <div id="grades-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                    ${state.grades.map(grade => `
-                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-grade="${grade}">
-                                            <span class="grade-name">${grade}</span>
-                                            <div class="flex items-center space-x-2">
-                                                <button class="text-primary hover:text-blue-700 edit-grade" data-grade="${grade}">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                                <button class="text-danger hover:text-red-700 delete-grade" data-grade="${grade}">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="flex justify-end mt-6">
-                                <button type="button" class="close-modal px-4 py-2 text-gray-700">关闭</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                modal.show(content);
-                
-                // 自动激活输入框并绑定事件
-                setTimeout(() => {
-                    document.getElementById('new-grade').focus();
-                    
-                    // 使用事件委托处理年级管理操作
-                    const gradesList = document.getElementById('grades-list');
-                    if (gradesList) {
-                        // 移除之前的事件监听器（防止重复绑定）
-                        gradesList.onclick = null;
-                        
-                        gradesList.onclick = (event) => {
-                            const editButton = event.target.closest('.edit-grade');
-                            const deleteButton = event.target.closest('.delete-grade');
-                            
-                            if (editButton) {
-                                event.stopPropagation();
-                                const grade = editButton.dataset.grade;
-                                // 找到外层的年级项div（排除按钮本身）
-                                let gradeItem = editButton.closest('[data-grade]');
-                                // 如果找到的是按钮本身，继续向上查找
-                                while (gradeItem && gradeItem.tagName === 'BUTTON') {
-                                    gradeItem = gradeItem.parentElement.closest('[data-grade]');
-                                }
-                                if (!gradeItem) {
-                                    console.error('找不到年级项元素');
-                                    return;
-                                }
-                                const gradeNameSpan = gradeItem.querySelector('.grade-name');
-                                if (!gradeNameSpan) {
-                                    console.error('找不到年级名称元素');
-                                    return;
-                                }
-                                
-                                // 创建编辑输入框
-                                const input = document.createElement('input');
-                                input.type = 'text';
-                                input.value = grade;
-                                input.className = 'flex-grow px-2 py-1 border border-gray-300 rounded text-sm';
-                                
-                                // 替换文本为输入框
-                                gradeNameSpan.replaceWith(input);
-                                input.focus();
-                                input.select();
-                                
-                                // 保存按钮
-                                const saveBtn = document.createElement('button');
-                                saveBtn.className = 'text-success hover:text-green-700';
-                                saveBtn.innerHTML = '<i class="fa fa-check"></i>';
-                                
-                                // 取消按钮
-                                const cancelBtn = document.createElement('button');
-                                cancelBtn.className = 'text-danger hover:text-red-700';
-                                cancelBtn.innerHTML = '<i class="fa fa-times"></i>';
-                                
-                                // 替换编辑和删除按钮为保存和取消按钮
-                                const btnContainer = editButton.parentElement;
-                                if (!btnContainer) {
-                                    console.error('找不到按钮容器');
-                                    return;
-                                }
-                                // 使用 replaceChildren 更安全地替换子元素
-                                btnContainer.replaceChildren(saveBtn, cancelBtn);
-                                
-                                // 保存编辑
-                                const saveEdit = () => {
-                                    const newGrade = input.value.trim();
-                                    
-                                    // 如果没有修改或为空，直接返回
-                                    if (!newGrade || newGrade === grade) {
-                                        modal.showManageGrades(); // 重新渲染
-                                        return;
-                                    }
-                                    
-                                    // 检查是否已存在
-                                    if (state.grades.includes(newGrade)) {
-                                        notification.show('该年级名称已存在', 'error');
-                                        return;
-                                    }
-                                    
-                                    // 更新年级名称
-                                    const index = state.grades.indexOf(grade);
-                                    if (index !== -1) {
-                                        state.grades[index] = newGrade;
-                                        // 同时更新使用该年级的学生
-                                        state.students.forEach(student => {
-                                            if (student.grade === grade) {
-                                                student.grade = newGrade;
-                                            }
-                                        });
-                                        utils.saveData();
-                                        modal.showManageGrades(); // 重新渲染
-                                        notification.show('年级修改成功');
-                                    }
-                                };
-                                
-                                // 取消编辑
-                                const cancelEdit = () => {
-                                    modal.showManageGrades(); // 重新渲染
-                                };
-                                
-                                // 绑定事件
-                                saveBtn.addEventListener('click', saveEdit);
-                                cancelBtn.addEventListener('click', cancelEdit);
-                                input.addEventListener('keypress', (event) => {
-                                    if (event.key === 'Enter') {
-                                        saveEdit();
-                                    } else if (event.key === 'Escape') {
-                                        cancelEdit();
-                                    }
-                                });
-                                input.addEventListener('blur', saveEdit);
-                            } else if (deleteButton) {
-                                event.stopPropagation();
-                                const grade = deleteButton.dataset.grade;
-                                const usedByStudents = state.students.some(s => s.grade === grade);
-                                if (usedByStudents) {
-                                    notification.show('该年级正在被使用，无法删除', 'error');
-                                    return;
-                                }
-                                state.grades = state.grades.filter(g => g !== grade);
-                                utils.saveData();
-                                modal.showManageGrades(); // 重新渲染
-                                notification.show('年级删除成功');
+                const config = {
+                    title: '年级管理',
+                    items: state.grades,
+                    itemName: '年级',
+                    addItem: (grade) => state.grades.push(grade),
+                    editItem: (index, newGrade) => {
+                        const oldGrade = state.grades[index];
+                        state.grades[index] = newGrade;
+                        // 同时更新使用该年级的学生
+                        state.students.forEach(student => {
+                            if (student.grade === oldGrade) {
+                                student.grade = newGrade;
                             }
-                        };
+                        });
+                    },
+                    deleteItem: (grade) => {
+                        state.grades = state.grades.filter(g => g !== grade);
+                    },
+                    onDelete: (grade) => {
+                        return state.students.some(s => s.grade === grade);
                     }
-                    
-                    // 添加年级
-                    const addGradeBtn = document.getElementById('add-grade');
-                    if (addGradeBtn) {
-                        // 移除之前的事件监听器（防止重复绑定）
-                        addGradeBtn.onclick = null;
-                        addGradeBtn.onclick = () => {
-                            const newGrade = document.getElementById('new-grade').value.trim();
-                            if (newGrade && !state.grades.includes(newGrade)) {
-                                state.grades.push(newGrade);
-                                utils.saveData();
-                                modal.showManageGrades(); // 重新渲染
-                                notification.show('年级添加成功');
-                            }
-                        };
-                    }
-                    
-                    // 回车键添加年级
-                    const newGradeInput = document.getElementById('new-grade');
-                    if (newGradeInput) {
-                        // 移除之前的事件监听器（防止重复绑定）
-                        newGradeInput.onkeypress = null;
-                        newGradeInput.onkeypress = (event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                document.getElementById('add-grade').click();
-                            }
-                        };
-                    }
-                }, 100);
+                };
+                modal.showManagementModal(config);
             },
             
             // 显示删除学生模态框
@@ -5334,7 +5280,7 @@
                             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
                                 <i class="fa fa-exclamation-triangle text-2xl"></i>
                             </div>
-                            <p class="text-gray-600 mb-2">删除学生 <strong>${student.name}</strong> 后</p>
+                            <p class="text-gray-600 mb-2">删除学生 <strong>${utils.escapeHtml(student.name)}</strong> 后</p>
                             <p class="text-gray-600 mb-2">相关课程也将全部删除</p>
                         </div>
                         <div class="flex space-x-3">
@@ -5393,12 +5339,13 @@
                     document.addEventListener('keydown', handleKeydown);
                     
                     // 确保在模态框关闭时移除事件监听器
-                    const originalHide = modal.hide;
-                    modal.hide = function() {
+                    // 使用事件委托的方式，避免替换modal.hide方法
+                    const modalContainer = document.getElementById('modal-container');
+                    const cleanupEvent = () => {
                         document.removeEventListener('keydown', handleKeydown);
-                        modal.hide = originalHide;
-                        originalHide.call(this);
+                        modalContainer.removeEventListener('hide', cleanupEvent);
                     };
+                    modalContainer.addEventListener('hide', cleanupEvent);
                 }, 0);
             },
             
@@ -5535,12 +5482,7 @@
                         // 重新渲染页面
                         render.students();
                         render.calendar();
-                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                        const organization = organizationValue || '';
+                        const { year, month, organization } = utils.getStatisticsParams();
                         render.statistics(year, month, organization);
                     });
                     
@@ -5559,121 +5501,627 @@
                         // 重新渲染页面
                         render.students();
                         render.calendar();
-                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                        const organization = organizationValue || '';
+                        const { year, month, organization } = utils.getStatisticsParams();
                         render.statistics(year, month, organization);
                     });
                 }, 0);
             }
         };
 
-        // 处理时间输入框的键盘事件
-        function handleTimeInputKeydown(event, currentId, otherId) {
-            // 取消左右键切换功能
-        }
-        
-        // 根据开始时间计算结束时间
-        function calculateEndTime(startId, endId, minutesToAdd) {
-            const startTimeInput = document.getElementById(startId);
-            const endTimeInput = document.getElementById(endId);
+        // 全局函数模块 - 避免命名空间污染
+        (function() {
+            // 根据开始时间计算结束时间
+            window.calculateEndTime = function(startId, endId, minutesToAdd) {
+                const startTimeInput = document.getElementById(startId);
+                const endTimeInput = document.getElementById(endId);
+                
+                if (startTimeInput && endTimeInput) {
+                    const startTime = startTimeInput.value;
+                    if (startTime) {
+                        const [hours, minutes] = startTime.split(':').map(Number);
+                        const totalMinutes = hours * 60 + minutes + minutesToAdd;
+                        const endHours = Math.floor(totalMinutes / 60) % 24;
+                        const endMinutes = totalMinutes % 60;
+                        
+                        const formattedEndTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                        endTimeInput.value = formattedEndTime;
+                        
+                        // 触发费用计算
+                        setTimeout(() => {
+                            if (typeof window.calculateFee === 'function') {
+                                window.calculateFee();
+                            }
+                        }, 10);
+                    }
+                }
+            };
             
-            if (startTimeInput && endTimeInput) {
-                const startTime = startTimeInput.value;
-                if (startTime) {
-                    const [hours, minutes] = startTime.split(':').map(Number);
-                    const totalMinutes = hours * 60 + minutes + minutesToAdd;
-                    const endHours = Math.floor(totalMinutes / 60) % 24;
-                    const endMinutes = totalMinutes % 60;
-                    
-                    const formattedEndTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-                    endTimeInput.value = formattedEndTime;
-                    
-                    // 触发费用计算
-                    setTimeout(() => {
-                        if (typeof calculateFee === 'function') {
-                            calculateFee();
-                        }
-                    }, 10);
+            // 调整时间（增加或减少指定分钟数）
+            window.adjustTime = function(timeId, minutesToAdd) {
+                const timeInput = document.getElementById(timeId);
+                if (timeInput) {
+                    const time = timeInput.value;
+                    if (time) {
+                        const [hours, minutes] = time.split(':').map(Number);
+                        const totalMinutes = hours * 60 + minutes + minutesToAdd;
+                        const endHours = Math.floor(totalMinutes / 60) % 24;
+                        const endMinutes = totalMinutes % 60;
+                        
+                        const formattedTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                        timeInput.value = formattedTime;
+                        
+                        // 触发费用计算
+                        setTimeout(() => {
+                            if (typeof window.calculateFee === 'function') {
+                                window.calculateFee();
+                            }
+                        }, 10);
+                    }
                 }
-            }
-        }
-        
-        // 调整时间（增加或减少指定分钟数）
-        function adjustTime(timeId, minutesToAdd) {
-            const timeInput = document.getElementById(timeId);
-            if (timeInput) {
-                const time = timeInput.value;
-                if (time) {
-                    const [hours, minutes] = time.split(':').map(Number);
-                    const totalMinutes = hours * 60 + minutes + minutesToAdd;
-                    const endHours = Math.floor(totalMinutes / 60) % 24;
-                    const endMinutes = totalMinutes % 60;
-                    
-                    const formattedTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-                    timeInput.value = formattedTime;
-                    
-                    // 触发费用计算
-                    setTimeout(() => {
-                        if (typeof calculateFee === 'function') {
-                            calculateFee();
-                        }
-                    }, 10);
-                }
-            }
-        }
+            };
 
-        // 计算课程时长（分钟）
-        function calculateDuration() {
-            const startTime = document.getElementById('course-start-time').value;
-            const endTime = document.getElementById('course-end-time').value;
-            
-            if (startTime && endTime) {
-                const [startHour, startMinute] = startTime.split(':').map(Number);
-                const [endHour, endMinute] = endTime.split(':').map(Number);
+            // 计算课程时长（分钟）
+            window.calculateDuration = function() {
+                const startTime = document.getElementById('course-start-time').value;
+                const endTime = document.getElementById('course-end-time').value;
                 
-                const startTotalMinutes = startHour * 60 + startMinute;
-                const endTotalMinutes = endHour * 60 + endMinute;
+                if (startTime && endTime) {
+                    const [startHour, startMinute] = startTime.split(':').map(Number);
+                    const [endHour, endMinute] = endTime.split(':').map(Number);
+                    
+                    const startTotalMinutes = startHour * 60 + startMinute;
+                    const endTotalMinutes = endHour * 60 + endMinute;
+                    
+                    return endTotalMinutes - startTotalMinutes;
+                }
+                return APP_CONFIG.DEFAULT_COURSE_DURATION; // 默认2小时
+            };
+            
+            // 根据课程时长计算费用
+            window.calculateFee = function() {
+                // 检查当前课型
+                const lessonType = document.querySelector('input[name="course-lesson-type"]:checked')?.value;
+                if (lessonType !== '一对一') return; // 只对一对一课程计算费用
                 
-                return endTotalMinutes - startTotalMinutes;
-            }
-            return 120; // 默认2小时
-        }
-        
-        // 根据课程时长计算费用
-        function calculateFee() {
-            // 检查当前课型
-            const lessonType = document.querySelector('input[name="course-lesson-type"]:checked')?.value;
-            if (lessonType !== '一对一') return; // 只对一对一课程计算费用
+                const selectedStudents = Array.from(document.querySelectorAll('.student-btn.selected'));
+                if (selectedStudents.length === 0) return;
+                
+                const studentId = selectedStudents[0].dataset.id;
+                const student = state.students.find(s => s.id === studentId);
+                if (!student) return;
+                
+                const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
+                const baseFee = studentFees['一对一'] || 0;
+                const baseDuration = studentFees['一对一_duration'] || APP_CONFIG.DEFAULT_COURSE_DURATION; // 默认课程时长
+                const actualDuration = window.calculateDuration();
+                
+                // 按学生预设时长的价格计算实际费用
+                const calculatedFee = (baseFee / baseDuration) * actualDuration;
+                
+                const feeInput = document.getElementById('course-fee');
+                if (feeInput) {
+                    feeInput.value = calculatedFee.toFixed(2);
+                }
+            };
             
-            const selectedStudents = Array.from(document.querySelectorAll('.student-btn.selected'));
-            if (selectedStudents.length === 0) return;
+            // 处理课程标签点击事件
+            window.handleCourseClick = function(element, courseId, event) {
+                // 隐藏右键菜单
+                const contextMenu = document.getElementById('context-menu');
+                if (contextMenu) {
+                    contextMenu.classList.add('hidden');
+                }
+                
+                // 只处理左键点击
+                if (event && event.button !== 0) {
+                    return;
+                }
+                
+                // 使用闭包保持clickCount状态（不要重置其他元素的计数，以免干扰双击检测）
+                if (!element._clickCount) {
+                    element._clickCount = 0;
+                }
+                element._clickCount++;
+                
+                // 保存当前课程ID，确保在setTimeout中使用正确的ID
+                const currentCourseId = courseId;
+                
+                setTimeout(() => {
+                    // 无论是单击还是双击，都先触发选中效果
+                    // 移除其他课程的选中状态
+                    document.querySelectorAll('.course-item-selected').forEach(el => {
+                        el.classList.remove('course-item-selected');
+                    });
+                    // 移除日期的选中状态
+                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                        el.classList.remove('calendar-cell-selected');
+                    });
+                    // 添加选中状态
+                    element.classList.add('course-item-selected');
+                    // 使选中的课程标签获得焦点，以便响应键盘事件
+                    element.tabIndex = 0;
+                    element.focus();
+                    
+                    if (element._clickCount >= 2) {
+                        // 双击 - 触发课程编辑
+                        const course = state.courses.find(c => c.id === currentCourseId);
+                        if (course) {
+                            modal.showEditCourse(course);
+                        }
+                    }
+                    element._clickCount = 0;
+                }, 300);
+                
+                // 检查是否已经添加了事件监听器
+                if (!element.dataset.keydownListenerAdded) {
+                    // 保存当前课程ID，确保在事件监听器中使用正确的ID
+                    const currentCourseId = courseId;
+                    
+                    // 支持复制粘贴和删除功能
+                    element.addEventListener('keydown', function(e) {
+                        if (e.ctrlKey && e.key === 'c') {
+                            // 复制选中的课程
+                            const course = state.courses.find(c => c.id === currentCourseId);
+                            if (course) {
+                                utils.copyCourses([course]);
+                            }
+                        } else if (e.ctrlKey && e.key === 'v') {
+                            // 粘贴课程到当前课程所在的日期
+                            const currentCourse = state.courses.find(c => c.id === currentCourseId);
+                            if (currentCourse) {
+                                utils.pasteCourses(currentCourse.date);
+                            }
+                        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                            // 删除选中的课程
+                            e.preventDefault();
+                            const course = state.courses.find(c => c.id === currentCourseId);
+                            if (course) {
+                                modal.showConfirm('确定要删除这节课程吗？', () => {
+                                    state.courses = state.courses.filter(c => c.id !== currentCourseId);
+                                    utils.saveData();
+                                    render.calendar();
+                                    notification.show('课程删除成功');
+                                });
+                            }
+                        }
+                    });
+                    element.dataset.keydownListenerAdded = 'true';
+                }
+            };
             
-            const studentId = selectedStudents[0].dataset.id;
-            const student = state.students.find(s => s.id === studentId);
-            if (!student) return;
+            // 处理课程右键菜单事件
+            window.handleCourseContextMenu = function(element, courseId, event) {
+                event.preventDefault();
+                
+                // 重置点击计数，避免右键后左键点击触发双击
+                element._clickCount = 0;
+                
+                // 直接选择当前课程，不需要先左键点击
+                // 移除其他课程的选中状态
+                document.querySelectorAll('.course-item-selected').forEach(el => {
+                    el.classList.remove('course-item-selected');
+                });
+                // 移除日期的选中状态
+                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                    el.classList.remove('calendar-cell-selected');
+                });
+                // 添加选中状态
+                element.classList.add('course-item-selected');
+                
+                // 显示右键菜单
+                const contextMenu = document.getElementById('context-menu');
+                
+                // 为课程元素恢复右键菜单选项
+                const menuItems = contextMenu.querySelectorAll('.context-menu-item');
+                menuItems.forEach(item => {
+                    if (item.dataset.action === 'add') {
+                        item.textContent = '详情';
+                        item.dataset.action = 'details';
+                        item.classList.remove('text-red-600');
+                    } else if (item.dataset.action === 'edit') {
+                        // 显示编辑选项
+                        item.style.display = 'block';
+                        item.classList.remove('text-red-600');
+                    } else {
+                        // 显示其他选项
+                        item.style.display = 'block';
+                        if (item.dataset.action === 'delete') {
+                            item.classList.add('text-red-600');
+                        } else {
+                            item.classList.remove('text-red-600');
+                        }
+                    }
+                });
+                
+                // 计算菜单位置，确保不会被遮挡
+                const menuWidth = contextMenu.offsetWidth || 200;
+                const menuHeight = contextMenu.offsetHeight || 200;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                let left = event.clientX;
+                let top = event.clientY;
+                
+                // 检查右侧是否会被遮挡
+                if (left + menuWidth > windowWidth) {
+                    left = windowWidth - menuWidth - 10;
+                }
+                
+                // 检查底部是否会被遮挡
+                if (top + menuHeight > windowHeight) {
+                    top = windowHeight - menuHeight - 10;
+                }
+                
+                // 确保菜单在视口内
+                left = Math.max(0, left);
+                top = Math.max(0, top);
+                
+                contextMenu.style.left = `${left}px`;
+                contextMenu.style.top = `${top}px`;
+                contextMenu.classList.remove('hidden');
+                
+                // 禁用滚轮事件，防止菜单跟随滚动
+                contextMenu.style.position = 'fixed';
+                contextMenu.style.zIndex = '50';
+                
+                // 点击菜单项时的处理
+                document.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.onclick = function() {
+                        const action = this.dataset.action;
+                        
+                        if (action === 'details') {
+                            // 显示课程详情
+                            modal.showCourseDetail(courseId);
+                        } else if (action === 'edit') {
+                            // 编辑课程
+                            const course = state.courses.find(c => c.id === courseId);
+                            if (course) {
+                                modal.showEditCourse(course);
+                            }
+                        } else if (action === 'copy') {
+                            // 复制选中的课程
+                            const course = state.courses.find(c => c.id === courseId);
+                            if (course) {
+                                utils.copyCourses([course]);
+                            }
+                        } else if (action === 'paste') {
+                            // 粘贴课程到当前课程所在的日期
+                            const currentCourse = state.courses.find(c => c.id === courseId);
+                            if (currentCourse) {
+                                utils.pasteCourses(currentCourse.date);
+                            }
+                        } else if (action === 'delete') {
+                            // 删除课程
+                            modal.showConfirm('确定要删除这节课程吗？', () => {
+                                state.courses = state.courses.filter(c => c.id !== courseId);
+                                utils.saveData();
+                                render.calendar();
+                                notification.show('课程删除成功');
+                            });
+                        }
+                        
+                        // 隐藏右键菜单
+                        contextMenu.classList.add('hidden');
+                    };
+                });
+            };
             
-            const studentFees = student.fees || (student.fee ? { '一对一': student.fee } : {});
-            const baseFee = studentFees['一对一'] || 0;
-            const baseDuration = studentFees['一对一_duration'] || 120; // 默认120分钟
-            const actualDuration = calculateDuration();
+            // 自定义下拉菜单功能
+            window.initCustomSelects = function() {
+                // 使用事件委托处理选项点击
+                document.querySelectorAll('.custom-select').forEach(select => {
+                    const trigger = select.querySelector('.custom-select-trigger');
+                    const options = select.querySelector('.custom-select-options');
+                    
+                    if (!trigger || !options) return;
+                    
+                    // 如果已经初始化过，跳过（防止重复绑定）
+                    if (select.dataset.initialized === 'true') return;
+                    select.dataset.initialized = 'true';
+                    
+                    // 点击触发器展开/收缩
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const isOpen = options.classList.contains('open');
+                        
+                        // 关闭所有其他下拉菜单
+                        document.querySelectorAll('.custom-select-options.open').forEach(opt => {
+                            opt.classList.remove('open');
+                            opt.previousElementSibling?.classList.remove('active');
+                        });
+                        
+                        // 切换当前下拉菜单
+                        if (!isOpen) {
+                            options.classList.add('open');
+                            trigger.classList.add('active');
+                        }
+                    });
+                    
+                    // 使用事件委托处理选项点击
+                    options.addEventListener('click', (e) => {
+                        const option = e.target.closest('.custom-option');
+                        if (!option) return;
+                        
+                        e.stopPropagation();
+                        
+                        // 更新选中状态
+                        options.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+                        
+                        // 更新触发器文本
+                        const value = option.dataset.value;
+                        const text = option.textContent;
+                        trigger.querySelector('span').textContent = text;
+                        
+                        // 关闭下拉菜单
+                        options.classList.remove('open');
+                        trigger.classList.remove('active');
+                        
+                        // 触发自定义事件
+                        select.dispatchEvent(new CustomEvent('change', { 
+                            detail: { value, text }
+                        }));
+                        
+                        // 如果是机构选择下拉菜单，自动刷新统计数据
+                        if (select.id === 'statistics-organization-wrapper') {
+                            const { year, month } = utils.getStatisticsParams();
+                            render.statistics(year, month, value);
+                        }
+                    });
+                });
+                
+                // 点击外部关闭所有下拉菜单（只绑定一次）
+                if (!window.customSelectOutsideClickBound) {
+                    window.customSelectOutsideClickBound = true;
+                    document.addEventListener('click', () => {
+                        document.querySelectorAll('.custom-select-options.open').forEach(options => {
+                            options.classList.remove('open');
+                            options.previousElementSibling?.classList.remove('active');
+                        });
+                    });
+                }
+            };
             
-            // 按学生预设时长的价格计算实际费用
-            const calculatedFee = (baseFee / baseDuration) * actualDuration;
+            // 辅助函数：获取自定义下拉菜单的选中值
+            window.getCustomSelectValue = function(wrapperId) {
+                const wrapper = document.getElementById(wrapperId);
+                if (!wrapper) return null;
+                const selected = wrapper.querySelector('.custom-option.selected');
+                return selected ? selected.dataset.value : null;
+            };
             
-            const feeInput = document.getElementById('course-fee');
-            if (feeInput) {
-                feeInput.value = calculatedFee.toFixed(2);
-            }
-        }
+            // 辅助函数：设置自定义下拉菜单的值
+            window.setCustomSelectValue = function(wrapperId, value) {
+                const wrapper = document.getElementById(wrapperId);
+                if (!wrapper) return;
+                const options = wrapper.querySelectorAll('.custom-option');
+                const trigger = wrapper.querySelector('.custom-select-trigger span');
+                options.forEach(opt => {
+                    if (opt.dataset.value === String(value)) {
+                        opt.classList.add('selected');
+                        if (trigger) trigger.textContent = opt.textContent;
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+            };
+            
+            // 日期选择器功能
+            window.toggleDatePicker = function(containerId) {
+                const container = document.getElementById(containerId);
+                container.classList.remove('hidden');
+                window.renderDateGrid();
+                // 添加点击外部关闭的监听
+                setTimeout(() => {
+                    document.addEventListener('click', window.closeDatePickerOnOutsideClick);
+                }, 100);
+            };
+            
+            // 点击外部关闭日期选择器
+            window.closeDatePickerOnOutsideClick = function(event) {
+                const dateContainer = document.getElementById('course-date-container');
+                const dateInput = document.querySelector('[data-action="toggle-date-picker"][data-target="course-date-container"]');
+                
+                if (dateContainer && !dateContainer.contains(event.target) && !dateInput.contains(event.target)) {
+                    dateContainer.classList.add('hidden');
+                    document.removeEventListener('click', window.closeDatePickerOnOutsideClick);
+                }
+            };
+            
+            window.renderDateGrid = function() {
+                const dateInput = document.getElementById('course-date');
+                const dateGrid = document.getElementById('date-grid');
+                const monthTitle = document.getElementById('current-date-month');
+                
+                if (!dateInput || !dateGrid || !monthTitle) return;
+                
+                const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                monthTitle.textContent = `${year}年${month + 1}月`;
+                
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                let html = '';
+                for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    
+                    const isCurrentMonth = date.getMonth() === month;
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    
+                    // 格式化为本地日期字符串，避免时区问题
+                    const dateString = window.formatDate(date);
+                    const isSelected = dateInput.value === dateString;
+                    
+                    // 确保今天的样式优先级高于选中的样式
+                    let classes = `py-1 text-center text-sm rounded ${isCurrentMonth ? '' : 'text-gray-300'}`;
+                    if (isToday) {
+                        classes += ' bg-primary text-white';
+                    } else if (isSelected) {
+                        classes += ' bg-primary/20';
+                    } else {
+                        classes += ' hover:bg-gray-100';
+                    }
+                    
+                    html += `
+                        <button type="button" class="${classes} date-grid-btn" data-date="${dateString}">
+                            ${date.getDate()}
+                        </button>
+                    `;
+                }
+                
+                dateGrid.innerHTML = html;
+                
+                // 事件委托：处理日期选择
+                dateGrid.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.date-grid-btn');
+                    if (btn) {
+                        window.selectDate(btn.dataset.date);
+                    }
+                });
+            };
+            
+            // 格式化日期为 YYYY-MM-DD 格式，使用本地时间
+            window.formatDate = function(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            window.selectDate = function(date) {
+                const dateInput = document.getElementById('course-date');
+                const dateContainer = document.getElementById('course-date-container');
+                if (dateInput) {
+                    dateInput.value = date;
+                }
+                if (dateContainer) {
+                    dateContainer.classList.add('hidden');
+                }
+            };
+            
+            window.changeDateMonth = function(inputId, delta) {
+                const dateInput = document.getElementById(inputId);
+                if (!dateInput) return;
+                
+                const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+                currentDate.setMonth(currentDate.getMonth() + delta);
+                dateInput.value = window.formatDate(currentDate);
+                window.renderDateGrid();
+            };
+            
+            // 时间选择器功能
+            window.toggleTimePicker = function(containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.classList.remove('hidden');
+                    // 添加点击外部关闭的监听
+                    setTimeout(() => {
+                        document.addEventListener('click', window.closeTimePickerOnOutsideClick);
+                    }, 100);
+                }
+            };
+            
+            // 点击外部关闭时间选择器
+            window.closeTimePickerOnOutsideClick = function(event) {
+                const startContainer = document.getElementById('start-time-container');
+                const endContainer = document.getElementById('end-time-container');
+                const startTimeInput = document.querySelector('[data-action="toggle-time-picker"][data-target="start-time-container"]');
+                const endTimeInput = document.querySelector('[data-action="toggle-time-picker"][data-target="end-time-container"]');
+                
+                if (startContainer && !startContainer.contains(event.target) && !startTimeInput.contains(event.target)) {
+                    startContainer.classList.add('hidden');
+                }
+                if (endContainer && !endContainer.contains(event.target) && !endTimeInput.contains(event.target)) {
+                    endContainer.classList.add('hidden');
+                }
+                
+                // 如果两个选择器都关闭了，移除监听
+                if ((!startContainer || startContainer.classList.contains('hidden')) && 
+                    (!endContainer || endContainer.classList.contains('hidden'))) {
+                    document.removeEventListener('click', window.closeTimePickerOnOutsideClick);
+                }
+            };
+            
+            window.setTime = function(inputId, time) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                
+                input.value = time;
+                
+                // 关闭时间选择器
+                if (inputId === 'course-start-time') {
+                    const startContainer = document.getElementById('start-time-container');
+                    if (startContainer) {
+                        startContainer.classList.add('hidden');
+                    }
+                    // 自动计算结束时间
+                    if (typeof window.calculateEndTime === 'function') {
+                        window.calculateEndTime('course-start-time', 'course-end-time', 120);
+                    }
+                } else {
+                    const endContainer = document.getElementById('end-time-container');
+                    if (endContainer) {
+                        endContainer.classList.add('hidden');
+                    }
+                }
+                
+                // 触发费用计算
+                if (typeof window.calculateFee === 'function') {
+                    window.calculateFee();
+                }
+            };
+            
+            // 选择小时
+            window.selectTimeHour = function(inputId, hour) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                
+                const currentValue = input.value || '00:00';
+                const [, minute] = currentValue.split(':');
+                input.value = `${hour}:${minute}`;
+                
+                // 触发费用计算
+                if (typeof window.calculateFee === 'function') {
+                    window.calculateFee();
+                }
+                
+                // 如果是开始时间，自动计算结束时间
+                if (inputId === 'course-start-time' && typeof window.calculateEndTime === 'function') {
+                    window.calculateEndTime('course-start-time', 'course-end-time', 120);
+                }
+            };
+            
+            // 选择分钟
+            window.selectTimeMinute = function(inputId, minute) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                
+                const currentValue = input.value || '00:00';
+                const [hour] = currentValue.split(':');
+                input.value = `${hour}:${minute}`;
+                
+                // 触发费用计算
+                if (typeof window.calculateFee === 'function') {
+                    window.calculateFee();
+                }
+                
+                // 如果是开始时间，自动计算结束时间
+                if (inputId === 'course-start-time' && typeof window.calculateEndTime === 'function') {
+                    window.calculateEndTime('course-start-time', 'course-end-time', 120);
+                }
+            };
+        })();
         
         // 通知系统
         const notification = {
             // 显示通知
-            show: (message, type = 'success') => {
+            show: (message, type = 'success', duration = APP_CONFIG.NOTIFICATION_DURATION) => {
                 const el = document.getElementById('notification');
                 const icon = document.getElementById('notification-icon');
                 const msgEl = document.getElementById('notification-message');
@@ -5693,7 +6141,7 @@
                 el.classList.remove('translate-x-full', 'opacity-0');
                 
                 // 自动隐藏
-                setTimeout(() => el.classList.add('translate-x-full', 'opacity-0'), 3000);
+                setTimeout(() => el.classList.add('translate-x-full', 'opacity-0'), duration);
             }
         };
 
@@ -5802,9 +6250,7 @@
                 if (yearWrapper) {
                     yearWrapper.addEventListener('change', (e) => {
                         selectedYear = parseInt(e.detail.value);
-                        const month = currentMonth;
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const organization = organizationValue || '';
+                        const { month, organization } = utils.getStatisticsParams();
                         render.statistics(selectedYear, month, organization);
                     });
                 }
@@ -5812,9 +6258,8 @@
                 if (monthWrapper) {
                     monthWrapper.addEventListener('change', (e) => {
                         const month = parseInt(e.detail.value);
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const organization = organizationValue || '';
-                        render.statistics(selectedYear, month, organization);
+                        const { year, organization } = utils.getStatisticsParams();
+                        render.statistics(year, month, organization);
                     });
                 }
                 
@@ -5822,9 +6267,8 @@
                 const studentSortSelect = document.getElementById('student-sort');
                 if (studentSortSelect) {
                     studentSortSelect.addEventListener('change', () => {
-                        const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                        const organization = organizationValue || '';
-                        render.statistics(selectedYear, currentMonth, organization);
+                        const { year, month, organization } = utils.getStatisticsParams();
+                        render.statistics(year, month, organization);
                     });
                 }
                 
@@ -5861,12 +6305,7 @@
                 
                 // 导出统计数据
                 document.getElementById('export-statistics').addEventListener('click', () => {
-                    const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                    const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                    const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-                    const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                    const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                    const organization = organizationValue || '';
+                    const { year, month, organization } = utils.getStatisticsParams();
                     utils.exportStatisticsData(year, month, organization);
                 });
                 
@@ -5876,95 +6315,75 @@
         };
 
         // 初始化应用
-        function init() {
-            
+        async function init() {
             // 初始化事件监听
             events.init();
-            
-            // 检查 Supabase 是否已加载
-            let supabaseCheckCount = 0;
-            const maxCheckCount = 30; // 最多检查30次（3秒）
-            
-            const checkSupabase = () => {
-                supabaseCheckCount++;
-                
-                if (window.supabaseClient) {
-                    // Supabase 已加载，检测登录状态
-                    const auth = window.supabaseAuth;
-                    if (auth) {
-                        // 主动检查当前会话状态
-                        auth.getSession()
-                            .then(({ data }) => {
-                                const session = data.session;
-                                if (session) {
-                                    // 用户已登录，更新UI并加载渲染系统
-                                    const user = session.user;
-                                    console.log('用户已登录，更新UI并加载渲染系统...');
-                                    updateUIForAuth(user);
-                                    loadSystem();
-                                } else {
-                                    // 用户未登录，只显示登录框，不加载渲染系统
-                                    console.log('用户未登录，只显示登录框');
-                                    updateUIForUnauth();
-                                }
-                            })
-                            .catch((error) => {
-                                console.error('获取会话失败:', error);
-                                updateUIForUnauth();
-                            });
-                        
-                        // 设置认证状态变化监听器
-                        let authStateChangeTimer = null;
-                        auth.onAuthStateChange(({ session }) => {
-                            if (session) {
-                                // 用户已登录，更新UI并加载渲染系统
-                                const user = session.user;
-                                console.log('用户已登录，更新UI并加载渲染系统...');
-                                updateUIForAuth(user);
-                                loadSystem();
-                            } else {
-                                // 用户未登录，添加防抖动，避免短暂的认证状态变化导致误触发
-                                console.log('检测到认证状态变化，等待确认...');
-                                if (authStateChangeTimer) {
-                                    clearTimeout(authStateChangeTimer);
-                                }
-                                authStateChangeTimer = setTimeout(() => {
-                                    // 再次检查会话状态
-                                    auth.getSession()
-                                        .then(({ data }) => {
-                                            const currentSession = data.session;
-                                            if (!currentSession) {
-                                                console.log('用户确实未登录，只显示登录框');
-                                                updateUIForUnauth();
-                                            } else {
-                                                console.log('认证状态已恢复，用户仍已登录');
-                                            }
-                                        })
-                                        .catch((error) => {
-                                            console.error('获取会话失败:', error);
-                                            updateUIForUnauth();
-                                        });
-                                }, 500); // 500ms 防抖动
-                            }
-                        });
-                    } else {
-                        // Supabase 加载失败，使用本地存储
-                        console.log('Supabase 加载失败，使用本地存储');
+
+            // 等待 Supabase 初始化完成（不再轮询）
+            await window.supabaseReady;
+
+            const auth = window.supabaseAuth;
+            if (auth) {
+                // 主动检查当前会话状态
+                auth.getSession()
+                    .then(({ data }) => {
+                        const session = data.session;
+                        if (session) {
+                            // 用户已登录，更新UI并加载渲染系统
+                            const user = session.user;
+                            console.log('用户已登录，更新UI并加载渲染系统...');
+                            updateUIForAuth(user);
+                            loadSystem();
+                        } else {
+                            // 用户未登录，只显示登录框，不加载渲染系统
+                            console.log('用户未登录，只显示登录框');
+                            updateUIForUnauth();
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('获取会话失败:', error);
                         updateUIForUnauth();
+                    });
+                
+                // 设置认证状态变化监听器
+                let authStateChangeTimer = null;
+                auth.onAuthStateChange(({ session }) => {
+                    if (session) {
+                        // 用户已登录，更新UI并加载渲染系统
+                        const user = session.user;
+                        console.log('用户已登录，更新UI并加载渲染系统...');
+                        updateUIForAuth(user);
+                        loadSystem();
+                    } else {
+                        // 用户未登录，添加防抖动，避免短暂的认证状态变化导致误触发
+                        console.log('检测到认证状态变化，等待确认...');
+                        if (authStateChangeTimer) {
+                            clearTimeout(authStateChangeTimer);
+                        }
+                        authStateChangeTimer = setTimeout(() => {
+                            // 再次检查会话状态
+                            auth.getSession()
+                                .then(({ data }) => {
+                                    const currentSession = data.session;
+                                    if (!currentSession) {
+                                        console.log('用户确实未登录，只显示登录框');
+                                        updateUIForUnauth();
+                                    } else {
+                                        console.log('认证状态已恢复，用户仍已登录');
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error('获取会话失败:', error);
+                                    updateUIForUnauth();
+                                });
+                        }, APP_CONFIG.AUTH_DEBOUNCE_TIME); // 防抖
                     }
-                } else if (supabaseCheckCount < maxCheckCount) {
-                    // Supabase 还未加载，等待后重试
-                    console.log('等待 Supabase 加载... (' + supabaseCheckCount + '/' + maxCheckCount + ')');
-                    setTimeout(checkSupabase, 100);
-                } else {
-                    // 超过最大检查次数，使用本地存储
-                    console.log('Supabase 加载超时，使用本地存储');
-                    updateUIForUnauth();
-                }
-            };
-            
-            // 开始检查 Supabase
-            checkSupabase();
+                });
+            } else {
+                // Supabase 不可用，显示登录框
+                console.log('Supabase 不可用，显示登录框');
+                updateUIForUnauth();
+            }
         }
         
         // 显示系统框架
@@ -5977,23 +6396,6 @@
                 nav.style.display = 'block';
                 main.style.display = 'block';
             }
-        }
-        
-        // 设置Supabase实时监听
-        async function setupSupabaseListeners() {
-            const auth = window.supabaseAuth;
-            let session = null;
-            
-            if (auth) {
-                try {
-                    const { data } = await auth.getSession();
-                    session = data.session;
-                } catch (error) {
-                    console.error('获取 session 失败:', error);
-                }
-            }
-            
-            // 实时监听器已在 loadData 函数中设置，这里不需要重复设置
         }
         
         // 从Supabase更新数据并重新渲染
@@ -6018,12 +6420,7 @@
             }
             
             // 重新渲染统计页面
-            const yearValue = getCustomSelectValue('statistics-year-wrapper');
-            const monthValue = getCustomSelectValue('statistics-month-wrapper');
-            const organizationValue = getCustomSelectValue('statistics-organization-wrapper');
-            const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-            const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-            const organization = organizationValue || '';
+            const { year, month, organization } = utils.getStatisticsParams();
             render.statistics(year, month, organization);
         }
         
@@ -6031,6 +6428,7 @@
         let originalSaveData = utils.saveData;
         let originalLoadData = utils.loadData;
         let originalLoadFromLocalStorage = utils.loadFromLocalStorage;
+        let isTrialModeActive = false;
         
         // 加载渲染系统
         function loadSystem(isTrialMode = false) {
@@ -6043,6 +6441,23 @@
             if (isTrialMode) {
                 // 试用模式：使用内存中的临时数据，不与服务器交互，不保存到本地
                 console.log('进入试用模式');
+                isTrialModeActive = true;
+                
+                // 取消订阅并清理实时监听器
+                if (window.realtimeChannel) {
+                    try {
+                        window.supabaseClient.channel('course-manager-channel').unsubscribe();
+                        window.realtimeChannel = null;
+                        console.log('试用模式：已取消实时监听器订阅');
+                    } catch (error) {
+                        console.error('取消实时监听器订阅失败:', error);
+                    }
+                }
+                
+                // 清理Supabase相关全局变量
+                window.supabaseClient = null;
+                window.supabaseAuth = null;
+                console.log('试用模式：已清理Supabase相关全局变量');
                 
                 // 重置状态为默认值
                 state.students = [];
@@ -6060,7 +6475,9 @@
                 render.statistics(year, month, organization);
                 
                 // 覆盖saveData方法，使其在试用模式下不保存数据
-                originalSaveData = utils.saveData;
+                if (originalSaveData === utils.saveData) {
+                    originalSaveData = utils.saveData;
+                }
                 utils.saveData = function() {
                     console.log('试用模式：数据不会被保存');
                     // 重新渲染页面
@@ -6071,13 +6488,17 @@
                 };
                 
                 // 覆盖loadData方法，使其在试用模式下不加载数据
-                originalLoadData = utils.loadData;
+                if (originalLoadData === utils.loadData) {
+                    originalLoadData = utils.loadData;
+                }
                 utils.loadData = function() {
                     console.log('试用模式：使用内存中的临时数据');
                 };
                 
                 // 覆盖loadFromLocalStorage方法，使其在试用模式下不加载数据
-                originalLoadFromLocalStorage = utils.loadFromLocalStorage;
+                if (originalLoadFromLocalStorage === utils.loadFromLocalStorage) {
+                    originalLoadFromLocalStorage = utils.loadFromLocalStorage;
+                }
                 utils.loadFromLocalStorage = function() {
                     console.log('试用模式：使用内存中的临时数据');
                 };
@@ -6087,306 +6508,17 @@
                 
             } else {
                 // 恢复原始方法
+                isTrialModeActive = false;
                 if (originalSaveData) utils.saveData = originalSaveData;
                 if (originalLoadData) utils.loadData = originalLoadData;
                 if (originalLoadFromLocalStorage) utils.loadFromLocalStorage = originalLoadFromLocalStorage;
                 // 正常模式：加载数据
                 console.log('开始加载数据...');
                 utils.loadData();
-                
-                // 添加Supabase实时监听
-                setupSupabaseListeners();
             }
         }
 
-        // 处理课程标签点击事件
-        function handleCourseClick(element, courseId, event) {
-            // 隐藏右键菜单
-            const contextMenu = document.getElementById('context-menu');
-            if (contextMenu) {
-                contextMenu.classList.add('hidden');
-            }
-            
-            // 只处理左键点击
-            if (event && event.button !== 0) {
-                return;
-            }
-            
-            // 重置所有课程元素的点击计数
-            document.querySelectorAll('.course-item').forEach(item => {
-                item._clickCount = 0;
-            });
-            
-            // 使用闭包保持clickCount状态
-            if (!element._clickCount) {
-                element._clickCount = 0;
-            }
-            element._clickCount++;
-            
-            // 保存当前课程ID，确保在setTimeout中使用正确的ID
-            const currentCourseId = courseId;
-            
-            setTimeout(() => {
-                // 无论是单击还是双击，都先触发选中效果
-                // 移除其他课程的选中状态
-                document.querySelectorAll('.course-item-selected').forEach(el => {
-                    el.classList.remove('course-item-selected');
-                });
-                // 移除日期的选中状态
-                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                    el.classList.remove('calendar-cell-selected');
-                });
-                // 添加选中状态
-                element.classList.add('course-item-selected');
-                // 使选中的课程标签获得焦点，以便响应键盘事件
-                element.tabIndex = 0;
-                element.focus();
-                
-                if (element._clickCount === 2) {
-                    // 双击 - 触发课程编辑
-                    const course = state.courses.find(c => c.id === currentCourseId);
-                    if (course) {
-                        modal.showEditCourse(course);
-                    }
-                }
-                element._clickCount = 0;
-            }, 300);
-            
-            // 检查是否已经添加了事件监听器
-            if (!element.dataset.keydownListenerAdded) {
-                // 保存当前课程ID，确保在事件监听器中使用正确的ID
-                const currentCourseId = courseId;
-                
-                // 支持复制粘贴和删除功能
-                element.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 'c') {
-                        // 复制选中的课程
-                        const course = state.courses.find(c => c.id === currentCourseId);
-                        if (course) {
-                            localStorage.setItem('copiedCourses', JSON.stringify([course]));
-                            notification.show('课程已复制');
-                        }
-                    } else if (e.ctrlKey && e.key === 'v') {
-                        // 粘贴课程到当前课程所在的日期
-                        const copiedCourses = localStorage.getItem('copiedCourses');
-                        if (copiedCourses) {
-                            try {
-                                const courses = JSON.parse(copiedCourses);
-                                const currentCourse = state.courses.find(c => c.id === currentCourseId);
-                                if (currentCourse) {
-                                    let addedCount = 0;
-                                    courses.forEach(course => {
-                                        // 检查是否已经存在相同的课程
-                                        const isDuplicate = state.courses.some(existingCourse => {
-                                            return existingCourse.date === currentCourse.date &&
-                                                   existingCourse.startTime === course.startTime &&
-                                                   existingCourse.endTime === course.endTime &&
-                                                   existingCourse.lessonType === course.lessonType &&
-                                                   JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
-                                        });
-                                        
-                                        if (!isDuplicate) {
-                                            const newCourse = {
-                                                ...course,
-                                                id: utils.generateId(),
-                                                date: currentCourse.date,
-                                                createdAt: new Date().toISOString()
-                                            };
-                                            state.courses.push(newCourse);
-                                            addedCount++;
-                                        }
-                                    });
-                                    
-                                    if (addedCount > 0) {
-                                        utils.saveData();
-                                        render.calendar();
-                                        notification.show(`成功粘贴 ${addedCount} 节课程`);
-                                    } else {
-                                        notification.show('没有可粘贴的课程或课程已存在', 'warning');
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('粘贴课程失败:', error);
-                                notification.show('粘贴课程失败', 'error');
-                            }
-                        } else {
-                            notification.show('没有可粘贴的课程', 'warning');
-                        }
-                    } else if (e.key === 'Delete' || e.key === 'Backspace') {
-                        // 删除选中的课程
-                        e.preventDefault();
-                        const course = state.courses.find(c => c.id === currentCourseId);
-                        if (course) {
-                            modal.showConfirm('确定要删除这节课程吗？', () => {
-                                state.courses = state.courses.filter(c => c.id !== currentCourseId);
-                                utils.saveData();
-                                render.calendar();
-                                notification.show('课程删除成功');
-                            });
-                        }
-                    }
-                });
-                element.dataset.keydownListenerAdded = 'true';
-            }
-        }
-        
-        // 处理课程右键菜单事件
-        function handleCourseContextMenu(element, courseId, event) {
-            event.preventDefault();
-            
-            // 重置点击计数，避免右键后左键点击触发双击
-            element._clickCount = 0;
-            
-            // 直接选择当前课程，不需要先左键点击
-            // 移除其他课程的选中状态
-            document.querySelectorAll('.course-item-selected').forEach(el => {
-                el.classList.remove('course-item-selected');
-            });
-            // 移除日期的选中状态
-            document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                el.classList.remove('calendar-cell-selected');
-            });
-            // 添加选中状态
-            element.classList.add('course-item-selected');
-            
-            // 显示右键菜单
-            const contextMenu = document.getElementById('context-menu');
-            
-            // 为课程元素恢复右键菜单选项
-            const menuItems = contextMenu.querySelectorAll('.context-menu-item');
-            menuItems.forEach(item => {
-                if (item.dataset.action === 'add') {
-                    item.textContent = '详情';
-                    item.dataset.action = 'details';
-                    item.classList.remove('text-red-600');
-                } else if (item.dataset.action === 'edit') {
-                    // 显示编辑选项
-                    item.style.display = 'block';
-                    item.classList.remove('text-red-600');
-                } else {
-                    // 显示其他选项
-                    item.style.display = 'block';
-                    if (item.dataset.action === 'delete') {
-                        item.classList.add('text-red-600');
-                    } else {
-                        item.classList.remove('text-red-600');
-                    }
-                }
-            });
-            
-            // 计算菜单位置，确保不会被遮挡
-            const menuWidth = contextMenu.offsetWidth || 200;
-            const menuHeight = contextMenu.offsetHeight || 200;
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            
-            let left = event.clientX;
-            let top = event.clientY;
-            
-            // 检查右侧是否会被遮挡
-            if (left + menuWidth > windowWidth) {
-                left = windowWidth - menuWidth - 10;
-            }
-            
-            // 检查底部是否会被遮挡
-            if (top + menuHeight > windowHeight) {
-                top = windowHeight - menuHeight - 10;
-            }
-            
-            // 确保菜单在视口内
-            left = Math.max(0, left);
-            top = Math.max(0, top);
-            
-            contextMenu.style.left = `${left}px`;
-            contextMenu.style.top = `${top}px`;
-            contextMenu.classList.remove('hidden');
-            
-            // 禁用滚轮事件，防止菜单跟随滚动
-            contextMenu.style.position = 'fixed';
-            contextMenu.style.zIndex = '50';
-            
-            // 点击菜单项时的处理
-            document.querySelectorAll('.context-menu-item').forEach(item => {
-                item.onclick = function() {
-                    const action = this.dataset.action;
-                    
-                    if (action === 'details') {
-                        // 显示课程详情
-                        modal.showCourseDetail(courseId);
-                    } else if (action === 'edit') {
-                        // 编辑课程
-                        const course = state.courses.find(c => c.id === courseId);
-                        if (course) {
-                            modal.showEditCourse(course);
-                        }
-                    } else if (action === 'copy') {
-                        // 复制选中的课程
-                        const course = state.courses.find(c => c.id === courseId);
-                        if (course) {
-                            localStorage.setItem('copiedCourses', JSON.stringify([course]));
-                            notification.show('课程已复制');
-                        }
-                    } else if (action === 'paste') {
-                        // 粘贴课程到当前课程所在的日期
-                        const copiedCourses = localStorage.getItem('copiedCourses');
-                        if (copiedCourses) {
-                            try {
-                                const courses = JSON.parse(copiedCourses);
-                                const currentCourse = state.courses.find(c => c.id === courseId);
-                                if (currentCourse) {
-                                    let addedCount = 0;
-                                    courses.forEach(course => {
-                                        // 检查是否已经存在相同的课程
-                                        const isDuplicate = state.courses.some(existingCourse => {
-                                            return existingCourse.date === currentCourse.date &&
-                                                   existingCourse.startTime === course.startTime &&
-                                                   existingCourse.endTime === course.endTime &&
-                                                   existingCourse.lessonType === course.lessonType &&
-                                                   JSON.stringify(existingCourse.studentIds) === JSON.stringify(course.studentIds);
-                                        });
-                                        
-                                        if (!isDuplicate) {
-                                            const newCourse = {
-                                                ...course,
-                                                id: utils.generateId(),
-                                                date: currentCourse.date,
-                                                createdAt: new Date().toISOString()
-                                            };
-                                            state.courses.push(newCourse);
-                                            addedCount++;
-                                        }
-                                    });
-                                    
-                                    if (addedCount > 0) {
-                                        utils.saveData();
-                                        render.calendar();
-                                        notification.show(`成功粘贴 ${addedCount} 节课程`);
-                                    } else {
-                                        notification.show('没有可粘贴的课程或课程已存在', 'warning');
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('粘贴课程失败:', error);
-                                notification.show('粘贴课程失败', 'error');
-                            }
-                        } else {
-                            notification.show('没有可粘贴的课程', 'warning');
-                        }
-                    } else if (action === 'delete') {
-                        // 删除课程
-                        modal.showConfirm('确定要删除这节课程吗？', () => {
-                            state.courses = state.courses.filter(c => c.id !== courseId);
-                            utils.saveData();
-                            render.calendar();
-                            notification.show('课程删除成功');
-                        });
-                    }
-                    
-                    // 隐藏右键菜单
-                    contextMenu.classList.add('hidden');
-                };
-            });
-        }
+
         
         // 启动应用
         init();
@@ -6419,6 +6551,12 @@
         
         // 程序关闭前同步数据（仅当用户已登录时）
         window.addEventListener('beforeunload', function() {
+            // 试用模式下不执行同步
+            if (isTrialModeActive) {
+                console.log('试用模式：跳过数据同步');
+                return;
+            }
+            
             // 检查用户是否已登录
             const auth = window.supabaseAuth;
             let isLoggedIn = false;
@@ -6426,14 +6564,58 @@
             
             if (auth) {
                 try {
-                    // 尝试同步获取 session
-                    const sessionData = auth.getSession();
-                    if (sessionData && sessionData.data && sessionData.data.session) {
-                        session = sessionData.data.session;
-                        isLoggedIn = !!session;
+                    // 尝试获取session（使用同步方式）
+                    // 注意：getSession()返回Promise，但在beforeunload中无法等待
+                    // 因此我们使用localStorage中可能存储的session信息
+                    // 尝试不同的存储键名
+                    const possibleKeys = [
+                        'sb-auth-token',
+                        'sb-session',
+                        'supabase-session',
+                        'auth-session'
+                    ];
+                    
+                    let storedSession = null;
+                    for (const key of possibleKeys) {
+                        storedSession = localStorage.getItem(key);
+                        if (storedSession) {
+                            break;
+                        }
+                    }
+                    
+                    // 也尝试从URL中提取（如果有）
+                    if (!storedSession) {
+                        try {
+                            // 检查是否有session存储在其他地方
+                            const allKeys = Object.keys(localStorage);
+                            const sessionKey = allKeys.find(key => 
+                                key.includes('auth') || key.includes('session') || key.includes('supabase')
+                            );
+                            if (sessionKey) {
+                                storedSession = localStorage.getItem(sessionKey);
+                            }
+                        } catch (e) {
+                            console.error('检查localStorage键失败:', e);
+                        }
+                    }
+                    
+                    if (storedSession) {
+                        try {
+                            const sessionData = JSON.parse(storedSession);
+                            if (sessionData && sessionData.session && sessionData.session.user) {
+                                session = sessionData.session;
+                                isLoggedIn = true;
+                            } else if (sessionData && sessionData.user) {
+                                // 可能是直接存储的session对象
+                                session = sessionData;
+                                isLoggedIn = true;
+                            }
+                        } catch (parseError) {
+                            console.error('解析存储的session失败:', parseError);
+                        }
                     }
                 } catch (error) {
-                    console.error('获取 session 失败:', error);
+                    console.error('获取session失败:', error);
                 }
             }
             
@@ -6449,6 +6631,9 @@
                         // 比较服务器数据时间戳
                         const userId = session.user.id;
                         
+                        // 注意：在beforeunload中执行异步操作不可靠
+                        // 但我们仍然尝试执行，因为这是最后的机会
+                        // 实际的同步应该在数据变更时就执行，而不是等到页面关闭
                         window.supabaseClient
                             .from('coursemanagerdata')
                             .select('*')
@@ -6970,22 +7155,6 @@
                     });
             });
             
-            // 监听认证状态变化 - 已在 checkSupabase 函数中设置，这里不再重复设置
-            // const auth = window.supabaseAuth;
-            // if (auth) {
-            //     auth.onAuthStateChange(({ session }) => {
-            //         if (session) {
-            //             // 用户已登录
-            //             const user = session.user;
-            //             console.log('用户已登录:', user);
-            //             updateUIForAuth(user);
-            //         } else {
-            //             // 用户未登录
-            //             console.log('用户未登录');
-            //             updateUIForUnauth();
-            //         }
-            //     });
-            // }
         }
         
         // 更新已登录用户的UI
@@ -7106,311 +7275,7 @@
             }
         }
         
-        // 自定义下拉菜单功能
-        function initCustomSelects() {
-            // 使用事件委托处理选项点击
-            document.querySelectorAll('.custom-select').forEach(select => {
-                const trigger = select.querySelector('.custom-select-trigger');
-                const options = select.querySelector('.custom-select-options');
-                
-                if (!trigger || !options) return;
-                
-                // 如果已经初始化过，跳过（防止重复绑定）
-                if (select.dataset.initialized === 'true') return;
-                select.dataset.initialized = 'true';
-                
-                // 点击触发器展开/收缩
-                trigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = options.classList.contains('open');
-                    
-                    // 关闭所有其他下拉菜单
-                    document.querySelectorAll('.custom-select-options.open').forEach(opt => {
-                        opt.classList.remove('open');
-                        opt.previousElementSibling?.classList.remove('active');
-                    });
-                    
-                    // 切换当前下拉菜单
-                    if (!isOpen) {
-                        options.classList.add('open');
-                        trigger.classList.add('active');
-                    }
-                });
-                
-                // 使用事件委托处理选项点击
-                options.addEventListener('click', (e) => {
-                    const option = e.target.closest('.custom-option');
-                    if (!option) return;
-                    
-                    e.stopPropagation();
-                    
-                    // 更新选中状态
-                    options.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
-                    option.classList.add('selected');
-                    
-                    // 更新触发器文本
-                    const value = option.dataset.value;
-                    const text = option.textContent;
-                    trigger.querySelector('span').textContent = text;
-                    
-                    // 关闭下拉菜单
-                    options.classList.remove('open');
-                    trigger.classList.remove('active');
-                    
-                    // 触发自定义事件
-                    select.dispatchEvent(new CustomEvent('change', { 
-                        detail: { value, text }
-                    }));
-                    
-                    // 如果是机构选择下拉菜单，自动刷新统计数据
-                    if (select.id === 'statistics-organization-wrapper') {
-                        const yearValue = getCustomSelectValue('statistics-year-wrapper');
-                        const monthValue = getCustomSelectValue('statistics-month-wrapper');
-                        const year = yearValue ? parseInt(yearValue) : new Date().getFullYear();
-                        const month = monthValue ? parseInt(monthValue) : new Date().getMonth();
-                        render.statistics(year, month, value);
-                    }
-                });
-            });
-            
-            // 点击外部关闭所有下拉菜单（只绑定一次）
-            if (!window.customSelectOutsideClickBound) {
-                window.customSelectOutsideClickBound = true;
-                document.addEventListener('click', () => {
-                    document.querySelectorAll('.custom-select-options.open').forEach(options => {
-                        options.classList.remove('open');
-                        options.previousElementSibling?.classList.remove('active');
-                    });
-                });
-            }
-        }
-        
-        // 辅助函数：获取自定义下拉菜单的选中值
-        function getCustomSelectValue(wrapperId) {
-            const wrapper = document.getElementById(wrapperId);
-            if (!wrapper) return null;
-            const selected = wrapper.querySelector('.custom-option.selected');
-            return selected ? selected.dataset.value : null;
-        }
-        
-        // 辅助函数：设置自定义下拉菜单的值
-        function setCustomSelectValue(wrapperId, value) {
-            const wrapper = document.getElementById(wrapperId);
-            if (!wrapper) return;
-            const options = wrapper.querySelectorAll('.custom-option');
-            const trigger = wrapper.querySelector('.custom-select-trigger span');
-            options.forEach(opt => {
-                if (opt.dataset.value === String(value)) {
-                    opt.classList.add('selected');
-                    if (trigger) trigger.textContent = opt.textContent;
-                } else {
-                    opt.classList.remove('selected');
-                }
-            });
-        }
-        
-        // 日期选择器功能
-        function toggleDatePicker(containerId) {
-            const container = document.getElementById(containerId);
-            container.classList.remove('hidden');
-            renderDateGrid();
-            // 添加点击外部关闭的监听
-            setTimeout(() => {
-                document.addEventListener('click', closeDatePickerOnOutsideClick);
-            }, 100);
-        }
-        
-        // 点击外部关闭日期选择器
-        function closeDatePickerOnOutsideClick(event) {
-            const dateContainer = document.getElementById('course-date-container');
-            const dateInput = document.querySelector('[onclick="toggleDatePicker(\'course-date-container\')"]');
-            
-            if (dateContainer && !dateContainer.contains(event.target) && !dateInput.contains(event.target)) {
-                dateContainer.classList.add('hidden');
-                document.removeEventListener('click', closeDatePickerOnOutsideClick);
-            }
-        }
-        
-        function renderDateGrid() {
-            const dateInput = document.getElementById('course-date');
-            const dateGrid = document.getElementById('date-grid');
-            const monthTitle = document.getElementById('current-date-month');
-            
-            if (!dateInput || !dateGrid || !monthTitle) return;
-            
-            const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            
-            monthTitle.textContent = `${year}年${month + 1}月`;
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            let html = '';
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                const isCurrentMonth = date.getMonth() === month;
-                const isToday = date.toDateString() === new Date().toDateString();
-                
-                // 格式化为本地日期字符串，避免时区问题
-                const dateString = formatDate(date);
-                const isSelected = dateInput.value === dateString;
-                
-                // 确保今天的样式优先级高于选中的样式
-                let classes = `py-1 text-center text-sm rounded ${isCurrentMonth ? '' : 'text-gray-300'}`;
-                if (isToday) {
-                    classes += ' bg-primary text-white';
-                } else if (isSelected) {
-                    classes += ' bg-primary/20';
-                } else {
-                    classes += ' hover:bg-gray-100';
-                }
-                
-                html += `
-                    <button type="button" class="${classes}" onclick="selectDate('${dateString}')">
-                        ${date.getDate()}
-                    </button>
-                `;
-            }
-            
-            dateGrid.innerHTML = html;
-        }
-        
-        // 格式化日期为 YYYY-MM-DD 格式，使用本地时间
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-        
-        function selectDate(date) {
-            const dateInput = document.getElementById('course-date');
-            const dateContainer = document.getElementById('course-date-container');
-            if (dateInput) {
-                dateInput.value = date;
-            }
-            if (dateContainer) {
-                dateContainer.classList.add('hidden');
-            }
-        }
-        
-        function changeDateMonth(inputId, delta) {
-            const dateInput = document.getElementById(inputId);
-            if (!dateInput) return;
-            
-            const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
-            currentDate.setMonth(currentDate.getMonth() + delta);
-            dateInput.value = formatDate(currentDate);
-            renderDateGrid();
-        }
-        
-        // 时间选择器功能
-        function toggleTimePicker(containerId) {
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.classList.remove('hidden');
-                // 添加点击外部关闭的监听
-                setTimeout(() => {
-                    document.addEventListener('click', closeTimePickerOnOutsideClick);
-                }, 100);
-            }
-        }
-        
-        // 点击外部关闭时间选择器
-        function closeTimePickerOnOutsideClick(event) {
-            const startContainer = document.getElementById('start-time-container');
-            const endContainer = document.getElementById('end-time-container');
-            const startTimeInput = document.querySelector('[onclick="toggleTimePicker(\'start-time-container\')"]');
-            const endTimeInput = document.querySelector('[onclick="toggleTimePicker(\'end-time-container\')"]');
-            
-            if (startContainer && !startContainer.contains(event.target) && !startTimeInput.contains(event.target)) {
-                startContainer.classList.add('hidden');
-            }
-            if (endContainer && !endContainer.contains(event.target) && !endTimeInput.contains(event.target)) {
-                endContainer.classList.add('hidden');
-            }
-            
-            // 如果两个选择器都关闭了，移除监听
-            if ((!startContainer || startContainer.classList.contains('hidden')) && 
-                (!endContainer || endContainer.classList.contains('hidden'))) {
-                document.removeEventListener('click', closeTimePickerOnOutsideClick);
-            }
-        }
-        
-        function setTime(inputId, time) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            input.value = time;
-            
-            // 关闭时间选择器
-            if (inputId === 'course-start-time') {
-                const startContainer = document.getElementById('start-time-container');
-                if (startContainer) {
-                    startContainer.classList.add('hidden');
-                }
-                // 自动计算结束时间
-                if (typeof calculateEndTime === 'function') {
-                    calculateEndTime('course-start-time', 'course-end-time', 120);
-                }
-            } else {
-                const endContainer = document.getElementById('end-time-container');
-                if (endContainer) {
-                    endContainer.classList.add('hidden');
-                }
-            }
-            
-            // 触发费用计算
-            if (typeof calculateFee === 'function') {
-                calculateFee();
-            }
-        }
-        
-        // 选择小时
-        function selectTimeHour(inputId, hour) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            const currentValue = input.value || '00:00';
-            const [, minute] = currentValue.split(':');
-            input.value = `${hour}:${minute}`;
-            
-            // 触发费用计算
-            if (typeof calculateFee === 'function') {
-                calculateFee();
-            }
-            
-            // 如果是开始时间，自动计算结束时间
-            if (inputId === 'course-start-time' && typeof calculateEndTime === 'function') {
-                calculateEndTime('course-start-time', 'course-end-time', 120);
-            }
-        }
-        
-        // 选择分钟
-        function selectTimeMinute(inputId, minute) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            const currentValue = input.value || '00:00';
-            const [hour] = currentValue.split(':');
-            input.value = `${hour}:${minute}`;
-            
-            // 触发费用计算
-            if (typeof calculateFee === 'function') {
-                calculateFee();
-            }
-            
-            // 如果是开始时间，自动计算结束时间
-            if (inputId === 'course-start-time' && typeof calculateEndTime === 'function') {
-                calculateEndTime('course-start-time', 'course-end-time', 120);
-            }
-        }
+
         
         // 页面加载完成后初始化自定义下拉菜单
         document.addEventListener('DOMContentLoaded', initCustomSelects);
