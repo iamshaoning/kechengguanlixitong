@@ -44,7 +44,6 @@
         window.APP_CONFIG = APP_CONFIG;
 
         // 安全检查：确保Supabase配置存在
-        console.log('Supabase配置:', supabaseConfig);
         if (!supabaseConfig.url || !supabaseConfig.key) {
             console.error('Supabase配置缺失');
         }
