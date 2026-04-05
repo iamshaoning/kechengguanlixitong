@@ -61,7 +61,14 @@
                         if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
                             const client = window.supabase.createClient(
                                 supabaseConfig.url,
-                                supabaseConfig.key
+                                supabaseConfig.key,
+                                {
+                                    auth: {
+                                        storageKey: 'sb-auth-token',
+                                        autoRefreshToken: true,
+                                        persistSession: true
+                                    }
+                                }
                             );
                             window.supabaseClient = client;
                             window.supabaseAuth = client.auth;
@@ -742,7 +749,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-md font-medium text-gray-700">机构课节分布</h4>
+                            <h4 class="text-md font-medium text-gray-700">机构课量分布</h4>
                         </div>
                         <div class="h-64">
                             <canvas id="organization-chart"></canvas>
@@ -774,14 +781,21 @@
 
 
 
-            <!-- 课型详细分布模块 -->
+            <!-- 机构课型数据模块 -->
             <div id="detailed-type-table-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-gray-800">课型详细分布</h3>
+                    <h3 class="text-lg font-medium text-gray-800">机构课型数据</h3>
                 </div>
                 <!-- 内容将通过JavaScript动态生成 -->
             </div>
 
+            <!-- 学生数据模块 -->
+            <div id="student-data-container" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-800">学生课量数据</h3>
+                </div>
+                <!-- 内容将通过JavaScript动态生成 -->
+            </div>
 
         </div>
     </main>
@@ -1363,57 +1377,34 @@
                         })
                         .catch((error) => {
                             console.error('从服务器加载数据失败:', error);
-                            // 其他错误，从localStorage加载
+                            // 服务器加载失败，显示错误状态
                             utils.updateSyncStatus('error', '同步失败');
-                            utils.loadFromLocalStorage();
-                            // 从localStorage加载后重新渲染页面
+                            // 初始化空数据
+                            utils.updateStateFromData({});
+                            // 显示错误通知
+                            notification.show('无法连接到服务器，请检查网络连接', 'error');
+                            // 重新渲染页面
                             utils.refreshAllViews(true);
                         });
                 } else {
-                    // 用户未登录或服务器不可用，从localStorage加载
+                    // 用户未登录或服务器不可用
                     if (!isLoggedIn) {
-                        console.log('用户未登录，从localStorage加载');
+                        console.log('用户未登录');
                         utils.updateSyncStatus('default', '未登录');
                     } else {
-                        console.log('服务器不可用，从localStorage加载');
+                        console.log('服务器不可用');
                         utils.updateSyncStatus('error', '服务器不可用');
                     }
-                    // 从localStorage加载
-                    utils.loadFromLocalStorage();
-                    // 从localStorage加载后重新渲染页面
-                    render.students();
-                    render.calendar();
+                    // 初始化空数据
+                    utils.updateStateFromData({});
+                    // 显示错误通知
+                    notification.show('无法连接到服务器，请检查网络连接', 'error');
+                    // 重新渲染页面
+                    utils.refreshAllViews(true);
                 }
             },
             
-            // 从localStorage加载数据（备用方法）
-            loadFromLocalStorage: () => {
-                const defaults = {
-                    organizations: [],
-                    grades: []
-                };
-                
-                try {
-                    const data = localStorage.getItem('coursemanagerdata');
-                    const parsed = data ? JSON.parse(data) : {};
-                    
-                    state.students = parsed.students || [];
-                    state.courses = parsed.courses || [];
-                    state.organizations = parsed.organizations || defaults.organizations;
-                    state.grades = parsed.grades || defaults.grades;
-                    console.log('数据从localStorage加载成功');
-                    // 显示加载本地数据成功的通知
-                    notification.show('本地数据加载成功', 'success');
-                } catch (error) {
-                    console.error('加载数据失败:', error);
-                    // 使用默认数据
-                    state.students = [];
-                    state.courses = [];
-                    state.organizations = defaults.organizations;
-                    // 显示加载本地数据失败的通知
-                    notification.show('本地数据加载失败，使用默认数据', 'error');
-                }
-            },
+
             
             // 复制粘贴功能
             copyCourses: (courses) => {
@@ -1431,6 +1422,7 @@
                     try {
                         const courses = JSON.parse(copiedCourses);
                         let addedCount = 0;
+                        let conflictCount = 0;
                         courses.forEach(course => {
                             // 检查是否已经存在相同的课程
                             const isDuplicate = state.courses.some(existingCourse => {
@@ -1448,15 +1440,27 @@
                                     date: dateStr,
                                     createdAt: new Date().toISOString()
                                 };
-                                state.courses.push(newCourse);
-                                addedCount++;
+                                
+                                // 检查时间冲突
+                                if (!window.checkTimeConflict(newCourse)) {
+                                    state.courses.push(newCourse);
+                                    addedCount++;
+                                } else {
+                                    conflictCount++;
+                                }
                             }
                         });
                         
                         if (addedCount > 0) {
                             utils.saveData();
                             render.calendar();
-                            notification.show(`成功粘贴 ${addedCount} 节课程`);
+                            if (conflictCount > 0) {
+                                notification.show(`成功粘贴 ${addedCount} 节课程，${conflictCount} 节课程因时间冲突未粘贴`, 'warning');
+                            } else {
+                                notification.show(`成功粘贴 ${addedCount} 节课程`);
+                            }
+                        } else if (conflictCount > 0) {
+                            notification.show(`所有课程因时间冲突未粘贴`, 'error');
                         } else {
                             notification.show('没有可粘贴的课程或课程已存在', 'warning');
                         }
@@ -1469,27 +1473,7 @@
                 }
             },
             
-            // 导出CSV
-            exportCSV: (data, filename) => {
-                const headers = Object.keys(data[0]);
-                const csvContent = [
-                    headers.join(','),
-                    ...data.map(row => headers.map(header => {
-                        const value = row[header];
-                        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-                    }).join(','))
-                ].join('\n');
-                
-                const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            },
+
             
             // 导出HTML
             exportHTML: (data, filename, year, month, organization) => {
@@ -1662,7 +1646,7 @@
                 data.forEach(row => {
                     if (row.日期 === '机构详细数据') {
                         currentSection = 'organization';
-                    } else if (row.日期 === '课型详细分布') {
+                    } else if (row.日期 === '机构课型数据') {
                         currentSection = 'other';
                     } else if (currentSection === 'organization' && row.日期 && row.时间) {
                         organizationData.push(row);
@@ -1716,22 +1700,25 @@
         </div>
         
         <div class="section">
-            <h2>课型详细分布</h2>
+            <h2>机构课型数据</h2>
                 `
                 
                 // 找出所有数据类型的范围
                 let courseData = [];
                 let oneOnOneData = [];
                 let groupData = [];
+                let studentData = [];
                 let typeSection = 'courses';
                 
                 data.forEach(row => {
                     if (row.日期 === '机构详细数据') {
                         typeSection = 'organization';
-                    } else if (row.日期 === '一对一课程详细分布') {
+                    } else if (row.日期 === '一对一分布数据') {
                         typeSection = 'oneOnOne';
-                    } else if (row.日期 === '多人课课程详细分布') {
+                    } else if (row.日期 === '多人课分布数据') {
                         typeSection = 'group';
+                    } else if (row.日期 === '学生课量数据') {
+                        typeSection = 'student';
                     } else if (row.日期 && row.时间) {
                         if (typeSection === 'courses') {
                             courseData.push(row);
@@ -1739,6 +1726,8 @@
                             oneOnOneData.push(row);
                         } else if (typeSection === 'group') {
                             groupData.push(row);
+                        } else if (typeSection === 'student') {
+                            studentData.push(row);
                         }
                     }
                 });
@@ -1752,10 +1741,15 @@
                     return row.日期 !== '机构' && row.时间 !== '年级';
                 });
                 
+                // 移除学生数据中的表头行
+                studentData = studentData.filter(row => {
+                    return row.日期 !== '学生姓名' && row.时间 !== '所属机构';
+                });
+                
                 // 生成一对一课程详细分布表格
                 if (oneOnOneData.length > 0) {
                     htmlContent += `
-            <h3>一对一课程详细分布</h3>
+            <h3>一对一分布数据</h3>
             <table class="stats-table">
                 <thead>
                     <tr>
@@ -1790,7 +1784,7 @@
                 // 生成多人课课程详细分布表格
                 if (groupData.length > 0) {
                     htmlContent += `
-            <h3>多人课课程详细分布</h3>
+            <h3>多人课分布数据</h3>
             <table class="stats-table">
                 <thead>
                     <tr>
@@ -1826,51 +1820,48 @@
         </div>
         
         <div class="section">
-            <h2>课程明细</h2>
-            <table>
+            <h2>学生课量数据</h2>
+                `;
+                
+                // 生成学生数据表格
+                if (studentData.length > 0) {
+                    htmlContent += `
+            <table class="stats-table">
                 <thead>
                     <tr>
-                        <th>日期</th>
-                        <th>时间</th>
                         <th>学生姓名</th>
                         <th>所属机构</th>
                         <th>年级</th>
-                        <th>课型</th>
-                        <th>上课人数</th>
+                        <th>上课节数</th>
                         <th>课时费</th>
-                        <th>备注</th>
                     </tr>
                 </thead>
                 <tbody>
-                `;
-                
-                if (courseData.length > 0) {
-                    courseData.forEach(row => {
+                    `;
+                    
+                    studentData.forEach(row => {
                         htmlContent += `
                     <tr>
-                        <td>${String(row.日期 || '')}</td>
-                        <td>${String(row.时间 || '')}</td>
-                        <td>${String(row.学生姓名 || '')}</td>
-                        <td>${String(row.所属机构 || '')}</td>
-                        <td>${String(row.年级 || '')}</td>
-                        <td>${String(row.课型 || '')}</td>
-                        <td>${String(row.上课人数 || '')}</td>
-                        <td>¥${String(row.课时费 || '0')}</td>
-                        <td>${String(row.备注 || '')}</td>
+                        <td>${row.日期 || ''}</td>
+                        <td>${row.时间 || ''}</td>
+                        <td>${row.学生姓名 || ''}</td>
+                        <td>${row.所属机构 || ''}</td>
+                        <td>¥${row.年级 || '0'}</td>
                     </tr>
                         `;
                     });
+                    
+                    htmlContent += `
+                </tbody>
+            </table>
+                    `;
                 } else {
                     htmlContent += `
-                    <tr>
-                        <td colspan="9" class="empty">暂无课程数据</td>
-                    </tr>
+            <div class="empty">暂无学生课量数据</div>
                     `;
                 }
                 
                 htmlContent += `
-                </tbody>
-            </table>
         </div>
     </div>
 </body>
@@ -1901,6 +1892,9 @@
                 
                 // 计算机构详细数据
                 const organizationStats = {};
+                
+                // 计算学生详细数据
+                const studentStats = {};
                 
                 // 计算课型详细分布数据
                 const detailedStats = {
@@ -1999,6 +1993,28 @@
                             }
                             detailedStats['多人课'][studentCount][grade][org].students.add(studentId);
                         }
+                        
+                        // 统计学生数据
+                        if (!studentStats[studentId]) {
+                            studentStats[studentId] = {
+                                courses: 0,
+                                fee: 0
+                            };
+                        }
+                        studentStats[studentId].courses += 1;
+                        let studentFee;
+                        if (isGroupLesson) {
+                            // 多人课：单节课时费/学生人数
+                            const totalFee = course.fees && course.fees[0] !== undefined ? course.fees[0] : 0;
+                            const studentCount = course.studentIds ? course.studentIds.length : 1;
+                            studentFee = studentCount > 0 ? totalFee / studentCount : 0;
+                            // 四舍五入保留两位小数
+                            studentFee = Math.round(studentFee * 100) / 100;
+                        } else {
+                            // 一对一：直接使用课程费用
+                            studentFee = utils.getCourseFee(course, student, index);
+                        }
+                        studentStats[studentId].fee += studentFee;
                     };
                     
                     if (course.studentIds && Array.isArray(course.studentIds)) {
@@ -2025,13 +2041,13 @@
                     });
                 });
                 
-                // 添加课型详细分布数据到导出数据
+                // 添加机构课型数据到导出数据
                 exportData.push({}); // 空行分隔
-                exportData.push({ 日期: '课型详细分布' }); // 标题
+                exportData.push({ 日期: '机构课型数据' }); // 标题
                 exportData.push({}); // 空行
                 
-                // 添一对一课程详细分布
-                exportData.push({ 日期: '一对一课程详细分布' });
+                // 添一对一分布数据
+                exportData.push({ 日期: '一对一分布数据' });
                 exportData.push({ 日期: '机构', 时间: '年级', 学生姓名: '学生数', 所属机构: '课节数', 年级: '课时费' });
                 
                 const orgGradeStats = {};
@@ -2058,8 +2074,8 @@
                 
                 exportData.push({}); // 空行
                 
-                // 添加多人课课程详细分布
-                exportData.push({ 日期: '多人课课程详细分布' });
+                // 添加多人课分布数据
+                exportData.push({ 日期: '多人课分布数据' });
                 exportData.push({ 日期: '机构', 时间: '年级', 学生姓名: '上课人数', 所属机构: '课节数', 年级: '课时费' });
                 
                 const orgGradeCountStats = {};
@@ -2091,6 +2107,36 @@
                     });
                 });
                 
+                // 添加学生数据
+                exportData.push({}); // 空行
+                exportData.push({ 日期: '学生课量数据' });
+                exportData.push({ 日期: '学生姓名', 时间: '所属机构', 学生姓名: '年级', 所属机构: '上课节数', 年级: '课时费' });
+                
+                // 按课程数量排序学生
+                const sortedStudents = Object.entries(studentStats)
+                    .map(([studentId, stats]) => {
+                        const student = state.students.find(s => s.id === studentId);
+                        return {
+                            id: studentId,
+                            name: student ? student.name : '未知学生',
+                            organization: student ? student.organization : '未分配',
+                            grade: student ? student.grade : '未设置',
+                            courses: stats.courses,
+                            fee: stats.fee
+                        };
+                    })
+                    .sort((a, b) => b.courses - a.courses);
+                
+                sortedStudents.forEach(student => {
+                    exportData.push({
+                        日期: student.name,
+                        时间: student.organization,
+                        学生姓名: student.grade,
+                        所属机构: student.courses,
+                        年级: student.fee.toFixed(2)
+                    });
+                });
+                
                 if (exportData.length > 0) {
                     const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
                     const monthName = monthNames[month];
@@ -2099,39 +2145,13 @@
                     const htmlFilename = `${year}年${monthName}课时费统计.html`;
                     utils.exportHTML(exportData, htmlFilename, year, month, organization);
                     
-                    notification.show('数据导出成功（HTML格式）');
+                    notification.show('数据导出成功');
                 } else {
                     notification.show('暂无数据可导出', 'error');
                 }
             },
             
-            // 导出所有数据
-            exportAllData: () => {
-                try {
-                    const exportData = {
-                        students: state.students,
-                        courses: state.courses,
-                        organizations: state.organizations,
-                        exportDate: new Date().toISOString()
-                    };
-                    
-                    const jsonString = JSON.stringify(exportData, null, 2);
-                    const blob = new Blob([jsonString], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', `课程系统数据_${new Date().toISOString().split('T')[0]}.json`);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    notification.show('数据导出成功');
-                } catch (error) {
-                    console.error('导出数据失败:', error);
-                    notification.show('导出数据失败: ' + error.message, 'error');
-                }
-            },
+
             
 
         };
@@ -2262,7 +2282,7 @@
                             const primaryColor = course.colors[0] || '#6b7280';
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
-                                     style="background-color: ${primaryColor}10; border-left: 3px solid ${primaryColor};"
+                                     style="background-color: ${primaryColor}10; border-left: 3px solid ${primaryColor}; outline: none; box-shadow: none;"
                                      data-course-id="${course.id}"
                                      draggable="true">
                                     <div class="flex flex-wrap gap-1 mb-1">
@@ -2287,7 +2307,7 @@
                             const color = student ? utils.generateColor(student.organization) : '#9ca3af';
                             return `
                                 <div class="course-item mt-1 p-1 rounded text-xs focus:outline-none" 
-                                     style="background-color: ${color}20; border-left: 3px solid ${color};"
+                                     style="background-color: ${color}20; border-left: 3px solid ${color}; outline: none; box-shadow: none;"
                                      data-course-id="${course.id}"
                                      draggable="true">
                                     <div class="font-medium truncate text-sm" title="${student ? `${utils.escapeHtml(student.name)} (${utils.escapeHtml(student.organization)})` : '未知学生'}">
@@ -2303,12 +2323,12 @@
                 
                 cell.innerHTML = `
                     <div class="text-right ${textClass}">${day}</div>
-                    <div class="mt-1 space-y-1 max-h-[calc(100%-1rem)] overflow-y-auto">
+                    <div class="mt-1 space-y-1 max-h-[calc(100%-1rem)] overflow-y-auto overflow-x-hidden">
                         ${coursesHTML}
                     </div>
                 `;
                 
-                // 单击选择日期，双击添加课程
+                // 单击选择日期，显示加号按钮
                 cell.onclick = function(e) {
                     // 只处理左键点击
                     if (e && e.button !== 0) {
@@ -2322,34 +2342,66 @@
                         return;
                     }
                     
-                    // 使用元素的属性保持clickCount状态
-                    if (!this._clickCount) {
-                        this._clickCount = 0;
-                    }
-                    this._clickCount++;
-                    
                     const currentCell = this;
                     const currentDateStr = dateStr;
                     
-                    setTimeout(() => {
-                        // 无论是单击还是双击，都先触发选中效果
-                        // 移除其他单元格的选中状态
-                        document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                            el.classList.remove('calendar-cell-selected');
-                        });
-                        // 移除课程的选中状态
-                        document.querySelectorAll('.course-item-selected').forEach(el => {
-                            el.classList.remove('course-item-selected');
-                        });
-                        // 添加选中状态
-                        currentCell.classList.add('calendar-cell-selected');
-                        
-                        if (currentCell._clickCount === 2) {
-                            // 双击 - 添加课程
-                            modal.showAddCourse(currentDateStr);
+                    // 移除其他单元格的选中状态
+                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                        el.classList.remove('calendar-cell-selected');
+                        // 移除其他日期的加号按钮
+                        const existingAddBtn = el.querySelector('.calendar-add-btn');
+                        if (existingAddBtn) {
+                            existingAddBtn.remove();
                         }
-                        currentCell._clickCount = 0;
-                    }, 300);
+                    });
+                    
+                    // 移除课程的选中状态
+                    document.querySelectorAll('.course-item-selected').forEach(el => {
+                        el.classList.remove('course-item-selected');
+                        // 移除课程的编辑按钮
+                        const existingEditBtn = el.querySelector('.course-edit-btn');
+                        if (existingEditBtn) {
+                            existingEditBtn.remove();
+                        }
+                    });
+                    
+                    // 添加选中状态
+                    currentCell.classList.add('calendar-cell-selected');
+                    
+                    // 移除之前的加号按钮（如果有）
+                    const existingAddBtn = currentCell.querySelector('.calendar-add-btn');
+                    if (existingAddBtn) {
+                        existingAddBtn.remove();
+                    }
+                    
+                    // 添加加号按钮
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'calendar-add-btn w-9 h-9 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg transform translate-y-full opacity-0 transition-all duration-300 hover:bg-gray-100 active:bg-gray-200 active:scale-95';
+                    addBtn.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                    addBtn.innerHTML = '<i class="fa fa-plus"></i>';
+                    addBtn.style.position = 'absolute';
+                    addBtn.style.bottom = '8px';
+                    addBtn.style.left = '50%';
+                    addBtn.style.transform = 'translate(-50%, 100%)';
+                    addBtn.style.zIndex = '10';
+                    
+                    // 设置日期单元格为相对定位
+                    currentCell.style.position = 'relative';
+                    
+                    // 添加加号按钮
+                    currentCell.appendChild(addBtn);
+                    
+                    // 触发动画
+                    setTimeout(() => {
+                        addBtn.style.transform = 'translate(-50%, 0)';
+                        addBtn.style.opacity = '1';
+                    }, 10);
+                    
+                    // 加号按钮点击事件
+                    addBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        modal.showAddCourse(currentDateStr);
+                    });
                 };
                 // 添加选中样式
                 cell.classList.add('calendar-cell');
@@ -2444,10 +2496,16 @@
                                             date: dateStr,
                                             createdAt: new Date().toISOString()
                                         };
-                                        state.courses.push(newCourse);
-                                        utils.saveData();
-                                        render.calendar();
-                                        notification.show('课程复制成功');
+                                        
+                                        // 检查时间冲突
+                                        if (!window.checkTimeConflict(newCourse)) {
+                                            state.courses.push(newCourse);
+                                            utils.saveData();
+                                            render.calendar();
+                                            notification.show('课程复制成功');
+                                        } else {
+                                            notification.show('课程时间与当天其他课程冲突，请修改时间', 'error');
+                                        }
                                     } else {
                                         notification.show('课程已存在', 'warning');
                                     }
@@ -2674,12 +2732,14 @@
                             ${feeDisplay}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-primary hover:text-primary/80 mr-3 edit-student" data-id="${id}">
-                                <i class="fa fa-pencil"></i> 编辑
-                            </button>
-                            <button class="text-danger hover:text-red-700 delete-student" data-id="${id}">
-                                <i class="fa fa-trash"></i> 删除
-                            </button>
+                            <div class="flex items-center">
+                                <button class="edit-student w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg mr-2 hover:bg-gray-100 active:bg-gray-200 active:scale-95" data-id="${id}" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                                    <i class="fa fa-pencil text-xs"></i>
+                                </button>
+                                <button class="delete-student w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95" data-id="${id}" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                                    <i class="fa fa-trash text-xs"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `}).join('');
@@ -2809,7 +2869,7 @@
                             return;
                         }
                         
-                        // 对于一对一课程，计算学生的费用；对于多人课，不重复计算费用
+                        // 计算学生费用
                         let fee = 0;
                         if (!isGroupLesson) {
                             // 一对一使用学生预设费用
@@ -2820,6 +2880,11 @@
                                 stats.totalCourses++;
                                 shouldCountCourse = true;
                             }
+                        } else {
+                            // 多人课：按人数均分费用
+                            const groupFee = course.fees && course.fees[0] !== undefined ? course.fees[0] : 0;
+                            const studentCount = course.studentIds ? course.studentIds.length : 1;
+                            fee = Math.round((groupFee / studentCount) * 100) / 100; // 四舍五入到两位小数
                         }
                         
                         stats.uniqueStudents.add(studentId);
@@ -2834,7 +2899,7 @@
                                 courses: 0
                             };
                         }
-                        // 一对一课程计算学生费用，多人课不计算学生费用
+                        // 计算学生费用
                         stats.byStudent[studentId].fee += fee;
                         stats.byStudent[studentId].courses += 1;
                         
@@ -2944,13 +3009,16 @@
                 if (studentTableInfo) studentTableInfo.textContent = `${stats.uniqueStudents.size}名学生`;
                 
                 // 渲染图表
-                render.chart('organization-chart', stats.byOrganization, '机构课节分布');
+                render.chart('organization-chart', stats.byOrganization, '机构课量分布');
                 
                 // 渲染表格
                 render.orgTable(stats.byOrganization, stats.totalCourses);
                 
                 // 渲染详细课型分布表格
                 render.detailedTypeTable(stats.detailedStats);
+                
+                // 渲染学生数据模块
+                render.studentData(stats.byStudent);
             },
             
             // 渲染图表
@@ -3197,7 +3265,7 @@
                 if (Object.keys(oneOnOneStats).length > 0) {
                     oneOnOneHTML = `
                         <div class="mb-6">
-                            <h4 class="text-md font-medium text-gray-800 mb-3">一对一课程详细分布</h4>
+                            <h4 class="text-md font-medium text-gray-800 mb-3">一对一分布数据</h4>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead>
@@ -3255,7 +3323,7 @@
                 } else {
                     oneOnOneHTML = `
                         <div class="mb-6">
-                            <h4 class="text-md font-medium text-gray-800 mb-3">一对一课程详细分布</h4>
+                            <h4 class="text-md font-medium text-gray-800 mb-3">一对一分布数据</h4>
                             <div class="text-center py-8 text-gray-500">
                                 <i class="fa fa-user text-4xl mb-2 text-gray-300"></i>
                                 <p>暂无一对一课程数据</p>
@@ -3270,7 +3338,7 @@
                 if (Object.keys(groupStats).length > 0) {
                     groupHTML = `
                         <div>
-                            <h4 class="text-md font-medium text-gray-800 mb-3">多人课课程详细分布</h4>
+                            <h4 class="text-md font-medium text-gray-800 mb-3">多人课分布数据</h4>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead>
@@ -3339,7 +3407,7 @@
                 } else {
                     groupHTML = `
                         <div>
-                            <h4 class="text-md font-medium text-gray-800 mb-3">多人课课程详细分布</h4>
+                            <h4 class="text-md font-medium text-gray-800 mb-3">多人课分布数据</h4>
                             <div class="text-center py-8 text-gray-500">
                                 <i class="fa fa-users text-4xl mb-2 text-gray-300"></i>
                                 <p>暂无多人课课程数据</p>
@@ -3351,11 +3419,95 @@
                 // 组装完整的HTML
                 detailedTableContainer.innerHTML = `
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-800">课型详细分布</h3>
+                        <h3 class="text-lg font-medium text-gray-800">机构课型数据</h3>
                     </div>
                     ${oneOnOneHTML}
                     ${groupHTML}
                 `;
+            },
+            
+            // 渲染学生数据模块
+            studentData: (studentStats) => {
+                const container = document.getElementById('student-data-container');
+                if (!container) return;
+                
+                // 按课程数量排序学生
+                const sortedStudents = Object.entries(studentStats)
+                    .map(([studentId, stats]) => {
+                        const student = state.students.find(s => s.id === studentId);
+                        return {
+                            id: studentId,
+                            name: student ? student.name : '未知学生',
+                            organization: student ? student.organization : '未分配',
+                            grade: student ? student.grade : '未设置',
+                            courses: stats.courses,
+                            fee: stats.fee
+                        };
+                    })
+                    .sort((a, b) => b.courses - a.courses);
+                
+                if (sortedStudents.length > 0) {
+                    let html = `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">学生姓名</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">所属机构</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">年级</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">上课节数</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">课时费</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                    `;
+                    
+                    sortedStudents.forEach(student => {
+                        const orgColor = utils.generateColor(student.organization);
+                        const gradeColor = utils.generateColor(student.grade);
+                        
+                        html += `
+                                    <tr>
+                                        <td class="px-4 py-3 text-left text-gray-900">${student.name}</td>
+                                        <td class="px-4 py-3 text-left">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full" style="background-color: ${orgColor}20; color: ${orgColor}">
+                                                ${student.organization}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-left">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full" style="background-color: ${gradeColor}20; color: ${gradeColor}">
+                                                ${student.grade}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-left text-gray-900">${student.courses}节</td>
+                                        <td class="px-4 py-3 text-left text-gray-900">¥${student.fee.toFixed(2)}</td>
+                                    </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    container.innerHTML = `
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-800">学生课量数据</h3>
+                        </div>
+                        ${html}
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-800">学生课量数据</h3>
+                        </div>
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fa fa-user-circle text-4xl mb-2 text-gray-300"></i>
+                            <p>暂无学生课量数据</p>
+                        </div>
+                    `;
+                }
             },
             
             // 渲染页面
@@ -3835,71 +3987,86 @@
                 // 初始化学生选择区域
                 updateStudentSelection();
                 
-                // 事件委托：处理学生选择按钮点击（绑定到模态框内容容器，确保课型切换后仍然有效）
-                const modalContent = document.getElementById('modal-content');
-                if (modalContent) {
-                    // 移除之前的事件监听器（防止重复绑定）
-                    modalContent.onclick = null;
-                    
-                    modalContent.onclick = function(e) {
-                        const btn = e.target.closest('.student-btn');
-                        if (!btn) return;
+                // 事件委托：处理学生选择按钮点击（绑定到学生按钮容器，确保课型切换后仍然有效）
+                const bindStudentButtonEvents = () => {
+                    const studentButtonsContainer = document.getElementById('student-buttons');
+                    if (studentButtonsContainer) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        const newContainer = studentButtonsContainer.cloneNode(true);
+                        studentButtonsContainer.parentNode.replaceChild(newContainer, studentButtonsContainer);
                         
-                        const lessonType = btn.dataset.lessonType;
-                        const color = btn.dataset.color;
-                        
-                        if (lessonType === '一对一') {
-                            // 一对一课型只能选择一个学生
-                            document.querySelectorAll('.student-btn').forEach(b => {
-                                b.classList.remove('selected', 'bg-opacity-40');
-                                b.style.backgroundColor = 'transparent';
-                            });
-                            btn.classList.add('selected', 'bg-opacity-40');
-                            btn.style.backgroundColor = color + '40';
+                        newContainer.addEventListener('click', function(e) {
+                            const btn = e.target.closest('.student-btn');
+                            if (!btn) return;
                             
-                            // 触发费用计算
-                            setTimeout(() => {
-                                if (typeof calculateFee === 'function') {
-                                    calculateFee();
-                                }
-                            }, 10);
-                        } else {
-                            // 多人课型可以多选，但必须同一年级且同一机构
-                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
-                            const currentOrganization = btn.dataset.organization;
-                            const currentGrade = btn.dataset.grade;
+                            const lessonType = btn.dataset.lessonType;
+                            const color = btn.dataset.color;
                             
-                            // 检查是否与已选中学生机构一致
-                            let organizationMatch = true;
-                            let gradeMatch = true;
-                            selectedStudents.forEach(selectedBtn => {
-                                if (selectedBtn.dataset.organization !== currentOrganization) {
-                                    organizationMatch = false;
-                                }
-                                if (selectedBtn.dataset.grade !== currentGrade) {
-                                    gradeMatch = false;
-                                }
-                            });
-                            
-                            if (!organizationMatch) {
-                                // 机构不一致，显示错误提示
-                                if (typeof notification !== 'undefined') {
-                                    notification.show('多人课只能选择同一机构的学生', 'error');
-                                }
-                            } else if (!gradeMatch) {
-                                // 年级不一致，显示错误提示
-                                if (typeof notification !== 'undefined') {
-                                    notification.show('多人课只能选择同一年级的学生', 'error');
-                                }
+                            if (lessonType === '一对一') {
+                                // 一对一课型只能选择一个学生
+                                document.querySelectorAll('.student-btn').forEach(b => {
+                                    b.classList.remove('selected', 'bg-opacity-40');
+                                    b.style.backgroundColor = 'transparent';
+                                });
+                                btn.classList.add('selected', 'bg-opacity-40');
+                                btn.style.backgroundColor = color + '40';
+                                
+                                // 触发费用计算
+                                setTimeout(() => {
+                                    if (typeof calculateFee === 'function') {
+                                        calculateFee();
+                                    }
+                                }, 10);
                             } else {
-                                // 机构和年级都一致，允许选择
-                                btn.classList.toggle('selected');
-                                btn.classList.toggle('bg-opacity-40');
-                                btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                                // 多人课型可以多选，但必须同一年级且同一机构
+                                const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                                const currentOrganization = btn.dataset.organization;
+                                const currentGrade = btn.dataset.grade;
+                                
+                                // 检查是否与已选中学生机构一致
+                                let organizationMatch = true;
+                                let gradeMatch = true;
+                                selectedStudents.forEach(selectedBtn => {
+                                    if (selectedBtn.dataset.organization !== currentOrganization) {
+                                        organizationMatch = false;
+                                    }
+                                    if (selectedBtn.dataset.grade !== currentGrade) {
+                                        gradeMatch = false;
+                                    }
+                                });
+                                
+                                if (!organizationMatch) {
+                                    // 机构不一致，显示错误提示
+                                    if (typeof notification !== 'undefined') {
+                                        notification.show('多人课只能选择同一机构的学生', 'error');
+                                    }
+                                } else if (!gradeMatch) {
+                                    // 年级不一致，显示错误提示
+                                    if (typeof notification !== 'undefined') {
+                                        notification.show('多人课只能选择同一年级的学生', 'error');
+                                    }
+                                } else {
+                                    // 机构和年级都一致，允许选择
+                                    btn.classList.toggle('selected');
+                                    btn.classList.toggle('bg-opacity-40');
+                                    btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                                }
                             }
-                        }
-                    };
-                }
+                        });
+                    }
+                };
+                
+                // 初始化时绑定事件
+                bindStudentButtonEvents();
+                
+                // 监听课型变化，重新绑定事件
+                document.querySelectorAll('input[name="course-lesson-type"]').forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        updateStudentSelection();
+                        // 课型变化后重新绑定事件
+                        setTimeout(bindStudentButtonEvents, 10);
+                    });
+                });
                 
                 // 加载课程中存储的费用数据
                 if (course.fees && course.fees[0] !== undefined) {
@@ -3998,6 +4165,12 @@
                         updatedAt: new Date().toISOString()
                     };
                     
+                    // 检查时间冲突
+                    if (window.checkTimeConflict(updatedCourse)) {
+                        notification.show('课程时间与当天其他课程冲突，请修改时间', 'error');
+                        return;
+                    }
+                    
                     const courseIndex = state.courses.findIndex(c => c.id === courseId);
                     if (courseIndex !== -1) {
                         state.courses[courseIndex] = updatedCourse;
@@ -4026,7 +4199,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
                                     <div class="relative">
                                         <div class="relative border border-gray-300 rounded-md overflow-hidden cursor-pointer" data-action="toggle-date-picker" data-target="course-date-container">
-                                            <input type="text" id="course-date" value="${date}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
+                                            <input type="text" id="course-date" value="${date || ''}" class="w-full px-3 py-2 border-0 focus:ring-2 focus:ring-primary pr-10" readonly>
                                             <button type="button" class="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                                                 <i class="fa fa-calendar"></i>
                                             </button>
@@ -4250,73 +4423,86 @@
                 // 初始化学生选择区域
                 updateStudentSelection();
                 
-                // 事件委托：处理学生选择按钮点击
-                const studentButtonsContainer = document.getElementById('student-buttons');
-                if (studentButtonsContainer) {
-                    studentButtonsContainer.addEventListener('click', function(e) {
-                        const btn = e.target.closest('.student-btn');
-                        if (!btn) return;
+                // 事件委托：处理学生选择按钮点击（绑定到学生按钮容器，确保课型切换后仍然有效）
+                const bindStudentButtonEvents = () => {
+                    const studentButtonsContainer = document.getElementById('student-buttons');
+                    if (studentButtonsContainer) {
+                        // 移除之前的事件监听器（防止重复绑定）
+                        const newContainer = studentButtonsContainer.cloneNode(true);
+                        studentButtonsContainer.parentNode.replaceChild(newContainer, studentButtonsContainer);
                         
-                        const lessonType = btn.dataset.lessonType;
-                        const color = btn.dataset.color;
-                        
-                        if (lessonType === '一对一') {
-                            // 一对一课型只能选择一个学生
-                            document.querySelectorAll('.student-btn').forEach(b => {
-                                b.classList.remove('selected', 'bg-opacity-40');
-                                b.style.backgroundColor = 'transparent';
-                            });
-                            btn.classList.add('selected', 'bg-opacity-40');
-                            btn.style.backgroundColor = color + '40';
+                        newContainer.addEventListener('click', function(e) {
+                            const btn = e.target.closest('.student-btn');
+                            if (!btn) return;
                             
-                            // 显示选中学生的预设费用
-                            const fee = btn.dataset.fee;
-                            const feeInput = document.getElementById('course-fee');
-                            if (feeInput) {
-                                feeInput.value = fee;
-                                feeInput.classList.remove('text-red-500');
-                            }
-                        } else {
-                            // 多人课型可以多选，但必须同一年级且同一机构
-                            const selectedStudents = document.querySelectorAll('.student-btn.selected');
-                            const currentOrganization = btn.dataset.organization;
-                            const currentGrade = btn.dataset.grade;
+                            const lessonType = btn.dataset.lessonType;
+                            const color = btn.dataset.color;
                             
-                            // 检查是否与已选中学生机构一致
-                            let organizationMatch = true;
-                            let gradeMatch = true;
-                            selectedStudents.forEach(selectedBtn => {
-                                if (selectedBtn.dataset.organization !== currentOrganization) {
-                                    organizationMatch = false;
-                                }
-                                if (selectedBtn.dataset.grade !== currentGrade) {
-                                    gradeMatch = false;
-                                }
-                            });
-                            
-                            if (!organizationMatch) {
-                                // 机构不一致，显示错误提示
-                                if (typeof notification !== 'undefined') {
-                                    notification.show('多人课只能选择同一机构的学生', 'error');
-                                }
-                            } else if (!gradeMatch) {
-                                // 年级不一致，显示错误提示
-                                if (typeof notification !== 'undefined') {
-                                    notification.show('多人课只能选择同一年级的学生', 'error');
+                            if (lessonType === '一对一') {
+                                // 一对一课型只能选择一个学生
+                                document.querySelectorAll('.student-btn').forEach(b => {
+                                    b.classList.remove('selected', 'bg-opacity-40');
+                                    b.style.backgroundColor = 'transparent';
+                                });
+                                btn.classList.add('selected', 'bg-opacity-40');
+                                btn.style.backgroundColor = color + '40';
+                                
+                                // 显示选中学生的预设费用
+                                const fee = btn.dataset.fee;
+                                const feeInput = document.getElementById('course-fee');
+                                if (feeInput) {
+                                    feeInput.value = fee;
+                                    feeInput.classList.remove('text-red-500');
                                 }
                             } else {
-                                // 机构和年级都一致，允许选择
-                                btn.classList.toggle('selected');
-                                btn.classList.toggle('bg-opacity-40');
-                                btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                                // 多人课型可以多选，但必须同一年级且同一机构
+                                const selectedStudents = document.querySelectorAll('.student-btn.selected');
+                                const currentOrganization = btn.dataset.organization;
+                                const currentGrade = btn.dataset.grade;
+                                
+                                // 检查是否与已选中学生机构一致
+                                let organizationMatch = true;
+                                let gradeMatch = true;
+                                selectedStudents.forEach(selectedBtn => {
+                                    if (selectedBtn.dataset.organization !== currentOrganization) {
+                                        organizationMatch = false;
+                                    }
+                                    if (selectedBtn.dataset.grade !== currentGrade) {
+                                        gradeMatch = false;
+                                    }
+                                });
+                                
+                                if (!organizationMatch) {
+                                    // 机构不一致，显示错误提示
+                                    if (typeof notification !== 'undefined') {
+                                        notification.show('多人课只能选择同一机构的学生', 'error');
+                                    }
+                                } else if (!gradeMatch) {
+                                    // 年级不一致，显示错误提示
+                                    if (typeof notification !== 'undefined') {
+                                        notification.show('多人课只能选择同一年级的学生', 'error');
+                                    }
+                                } else {
+                                    // 机构和年级都一致，允许选择
+                                    btn.classList.toggle('selected');
+                                    btn.classList.toggle('bg-opacity-40');
+                                    btn.style.backgroundColor = btn.classList.contains('selected') ? color + '40' : 'transparent';
+                                }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
+                };
                 
-                // 监听课型变化
+                // 初始化时绑定事件
+                bindStudentButtonEvents();
+                
+                // 监听课型变化，重新绑定事件
                 document.querySelectorAll('input[name="course-lesson-type"]').forEach(radio => {
-                    radio.addEventListener('change', updateStudentSelection);
+                    radio.addEventListener('change', () => {
+                        updateStudentSelection();
+                        // 课型变化后重新绑定事件
+                        setTimeout(bindStudentButtonEvents, 10);
+                    });
                 });
                 
                 // 绑定保存按钮事件
@@ -4364,6 +4550,12 @@
                         note,
                         createdAt: new Date().toISOString()
                     };
+                    
+                    // 检查时间冲突
+                    if (window.checkTimeConflict(course)) {
+                        notification.show('课程时间与当天其他课程冲突，请修改时间', 'error');
+                        return;
+                    }
                     
                     state.courses.push(course);
                     utils.saveData();
@@ -4704,7 +4896,7 @@
                     const name = e.target.value.trim();
                     if (name.length > 20) {
                         e.target.value = name.substring(0, 20);
-                        notification.show('姓名长度不能超过20个字符', 'warning');
+                        notification.show('姓名长度应在2-20个字符之间', 'error');
                     }
                 });
                 
@@ -4876,8 +5068,18 @@
                     }
                     
                     // 验证输入
-                    if (!name || !organization) {
-                        notification.show('请填写完整信息', 'error');
+                    if (!name) {
+                        notification.show('请输入学生姓名', 'error');
+                        return;
+                    }
+                    
+                    if (name.length < 2 || name.length > 20) {
+                        notification.show('姓名长度应在2-20个字符之间', 'error');
+                        return;
+                    }
+                    
+                    if (!organization) {
+                        notification.show('请选择机构', 'error');
                         return;
                     }
                     
@@ -4967,12 +5169,12 @@
                                     ${items.map(item => `
                                         <div class="flex items-center justify-between p-2 bg-gray-50 rounded" data-${itemName}="${utils.escapeHtml(item)}">
                                             <span class="${itemName}-name">${utils.escapeHtml(item)}</span>
-                                            <div class="flex items-center space-x-2">
-                                                <button class="text-primary hover:text-blue-700 edit-${itemName}" data-${itemName}="${utils.escapeHtml(item)}">
-                                                    <i class="fa fa-pencil"></i>
+                                            <div class="flex items-center">
+                                                <button class="edit-${itemName} w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg mr-2 hover:bg-gray-100 active:bg-gray-200 active:scale-95" data-${itemName}="${utils.escapeHtml(item)}" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                                                    <i class="fa fa-pencil text-xs"></i>
                                                 </button>
-                                                <button class="text-danger hover:text-red-700 delete-${itemName}" data-${itemName}="${utils.escapeHtml(item)}">
-                                                    <i class="fa fa-trash"></i>
+                                                <button class="delete-${itemName} w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95" data-${itemName}="${utils.escapeHtml(item)}" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                                                    <i class="fa fa-trash text-xs"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -5542,8 +5744,12 @@
                     const time = timeInput.value;
                     if (time) {
                         const [hours, minutes] = time.split(':').map(Number);
-                        const totalMinutes = hours * 60 + minutes + minutesToAdd;
-                        const endHours = Math.floor(totalMinutes / 60) % 24;
+                        let totalMinutes = hours * 60 + minutes + minutesToAdd;
+                        
+                        // 确保总分钟数在有效范围内（0-1439）
+                        totalMinutes = (totalMinutes + 1440) % 1440;
+                        
+                        const endHours = Math.floor(totalMinutes / 60);
                         const endMinutes = totalMinutes % 60;
                         
                         const formattedTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
@@ -5557,6 +5763,30 @@
                         }, 10);
                     }
                 }
+            };
+            
+            // 检查课程时间冲突
+            window.checkTimeConflict = function(newCourse) {
+                // 获取当天的所有课程
+                const sameDayCourses = state.courses.filter(course => {
+                    // 排除当前编辑的课程
+                    if (newCourse.id && course.id === newCourse.id) {
+                        return false;
+                    }
+                    return course.date === newCourse.date;
+                });
+                
+                // 检查每门课程是否与新课程时间冲突
+                for (const course of sameDayCourses) {
+                    // 检查时间是否有交集
+                    if (
+                        (newCourse.startTime < course.endTime && newCourse.endTime > course.startTime)
+                    ) {
+                        return true; // 有冲突
+                    }
+                }
+                
+                return false; // 无冲突
             };
 
             // 计算课程时长（分钟）
@@ -5616,48 +5846,78 @@
                     return;
                 }
                 
-                // 清除之前的定时器，避免多次触发
-                if (element._clickTimer) {
-                    clearTimeout(element._clickTimer);
-                }
-                
-                // 使用闭包保持clickCount状态
-                if (!element._clickCount) {
-                    element._clickCount = 0;
-                }
-                element._clickCount++;
-                
-                // 保存当前课程ID，确保在setTimeout中使用正确的ID
-                const currentCourseId = courseId;
-                
-                element._clickTimer = setTimeout(() => {
-                    // 无论是单击还是双击，都先触发选中效果
-                    // 移除其他课程的选中状态
-                    document.querySelectorAll('.course-item-selected').forEach(el => {
-                        el.classList.remove('course-item-selected');
-                    });
-                    // 移除日期的选中状态
-                    document.querySelectorAll('.calendar-cell-selected').forEach(el => {
-                        el.classList.remove('calendar-cell-selected');
-                    });
-                    // 添加选中状态
-                    element.classList.add('course-item-selected');
-                    // 使选中的课程标签获得焦点，以便响应键盘事件
-                    element.tabIndex = 0;
-                    element.focus();
-                    
-                    if (element._clickCount >= 2) {
-                        // 双击 - 触发课程编辑
-                        const course = state.courses.find(c => c.id === currentCourseId);
-                        if (course) {
-                            modal.showEditCourse(course);
-                        }
+                // 移除其他课程的选中状态
+                document.querySelectorAll('.course-item-selected').forEach(el => {
+                    el.classList.remove('course-item-selected');
+                    // 移除其他课程的编辑按钮
+                    const existingEditBtn = el.querySelector('.course-edit-btn');
+                    if (existingEditBtn) {
+                        existingEditBtn.remove();
                     }
-                    // 重置点击计数
-                    element._clickCount = 0;
-                    // 清除定时器引用
-                    element._clickTimer = null;
-                }, 300);
+                });
+                
+                // 移除日期的选中状态
+                document.querySelectorAll('.calendar-cell-selected').forEach(el => {
+                    el.classList.remove('calendar-cell-selected');
+                    // 移除其他日期的加号按钮
+                    const existingAddBtn = el.querySelector('.calendar-add-btn');
+                    if (existingAddBtn) {
+                        existingAddBtn.remove();
+                    }
+                });
+                
+                // 添加选中状态
+                element.classList.add('course-item-selected');
+                // 使选中的课程标签获得焦点，以便响应键盘事件
+                element.tabIndex = 0;
+                element.focus();
+                
+                // 移除之前的编辑按钮（如果有）
+                const existingEditBtn = element.querySelector('.course-edit-btn');
+                if (existingEditBtn) {
+                    existingEditBtn.remove();
+                }
+                
+                // 记录课程标签的原始高度
+                const originalHeight = element.offsetHeight;
+                
+                // 先设置课程标签的样式
+                element.style.position = 'relative';
+                // 修复灰色框bug：确保课程标签有明确的背景色
+                element.style.backgroundColor = element.style.backgroundColor || 'transparent';
+                element.style.outline = 'none';
+                element.style.overflow = 'visible';
+                // 保持课程标签的原始高度，避免布局变化
+                element.style.height = `${originalHeight}px`;
+                
+                // 然后创建并添加编辑按钮
+                const editBtn = document.createElement('div');
+                editBtn.className = 'course-edit-btn w-6 h-6 rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer shadow-lg transform translate-x-full opacity-0 transition-all duration-300 hover:bg-gray-100 active:bg-gray-200 active:scale-95';
+                editBtn.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                editBtn.innerHTML = '<i class="fa fa-pencil"></i>';
+                editBtn.style.position = 'absolute';
+                editBtn.style.right = '4px';
+                editBtn.style.top = '50%';
+                editBtn.style.transform = 'translate(100%, -50%)';
+                editBtn.style.zIndex = '10';
+                
+                // 添加编辑按钮
+                element.appendChild(editBtn);
+                
+                // 触发动画
+                setTimeout(() => {
+                    editBtn.style.transform = 'translate(0, -50%)';
+                    editBtn.style.opacity = '1';
+                }, 10);
+                
+                // 编辑按钮点击事件
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const course = state.courses.find(c => c.id === courseId);
+                    if (course) {
+                        modal.showEditCourse(course);
+                    }
+                });
                 
                 // 检查是否已经添加了事件监听器
                 if (!element.dataset.keydownListenerAdded) {
@@ -6188,9 +6448,7 @@
                 
                 // 添加课程按钮
                 document.getElementById('add-course-btn').addEventListener('click', () => {
-                    const today = new Date();
-                    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                    modal.showAddCourse(dateStr);
+                    modal.showAddCourse('');
                 });
                 
                 // 添加学生按钮
@@ -6326,14 +6584,27 @@
             // 初始化事件监听
             events.init();
 
-            // 等待 Supabase 初始化完成（不再轮询）
+            // 初始化认证
+            initAuth();
+
+            // 等待 DOM 完全加载
+            await new Promise(resolve => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', resolve);
+                } else {
+                    resolve();
+                }
+            });
+
+            // 等待 Supabase 初始化完成
             await window.supabaseReady;
 
             const auth = window.supabaseAuth;
             if (auth) {
-                // 主动检查当前会话状态
-                auth.getSession()
-                    .then(({ data }) => {
+                // 认证状态检查函数
+                const checkAuthStatus = async (retries = 5) => {
+                    try {
+                        const { data } = await auth.getSession();
                         const session = data.session;
                         if (session) {
                             // 用户已登录，更新UI并加载渲染系统
@@ -6341,16 +6612,34 @@
                             console.log('用户已登录，更新UI并加载渲染系统...');
                             updateUIForAuth(user);
                             loadSystem();
+                            return true;
                         } else {
-                            // 用户未登录，只显示登录框，不加载渲染系统
-                            console.log('用户未登录，只显示登录框');
-                            updateUIForUnauth();
+                            // 会话为 null，可能是会话还未初始化，进行重试
+                            if (retries > 0) {
+                                console.log('会话未初始化，重试中...', 6 - retries);
+                                // 增加重试间隔，给 Supabase 更多时间恢复会话
+                                setTimeout(() => checkAuthStatus(retries - 1), 800);
+                            } else {
+                                // 重试次数用完，确认用户未登录
+                                console.log('用户未登录，只显示登录框');
+                                updateUIForUnauth();
+                                return false;
+                            }
                         }
-                    })
-                    .catch((error) => {
+                    } catch (error) {
                         console.error('获取会话失败:', error);
-                        updateUIForUnauth();
-                    });
+                        if (retries > 0) {
+                            console.log('获取会话失败，重试中...', 6 - retries);
+                            setTimeout(() => checkAuthStatus(retries - 1), 800);
+                        } else {
+                            updateUIForUnauth();
+                            return false;
+                        }
+                    }
+                };
+
+                // 主动检查当前会话状态，最多重试5次
+                checkAuthStatus();
                 
                 // 设置认证状态变化监听器
                 let authStateChangeTimer = null;
@@ -6377,6 +6666,8 @@
                                         updateUIForUnauth();
                                     } else {
                                         console.log('认证状态已恢复，用户仍已登录');
+                                        updateUIForAuth(currentSession.user);
+                                        loadSystem();
                                     }
                                 })
                                 .catch((error) => {
@@ -6442,8 +6733,16 @@
             // 显示系统框架
             showSystemFrame();
             
-            // 渲染初始页面框架
-            render.page('calendar-page');
+            // 检查当前是否已经在系统内部（即系统框架是否已经显示）
+            const body = document.body;
+            const nav = document.querySelector('nav');
+            const main = document.querySelector('main');
+            const isSystemVisible = body && body.style.opacity === '1' && nav && nav.style.display === 'block' && main && main.style.display === 'block';
+            
+            // 只有在系统首次加载时才切换到日历页面
+            if (!isSystemVisible) {
+                render.page('calendar-page');
+            }
             
             if (isTrialMode) {
                 // 试用模式：使用内存中的临时数据，不与服务器交互，不保存到本地
@@ -6529,7 +6828,6 @@
         
         // 启动应用
         init();
-        initAuth();
 
         
         // 全局点击事件，点击其他地方时隐藏右键菜单
