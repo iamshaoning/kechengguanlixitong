@@ -1,18 +1,22 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-primary: #3b82f6;
-  --color-primary-90: rgba(59, 130, 246, 0.9);
-  --color-secondary: #64748b;
-  --color-secondary-90: rgba(100, 116, 139, 0.9);
-  --color-success: #10b981;
-  --color-success-90: rgba(16, 185, 129, 0.9);
-  --color-danger: #ef4444;
-  --color-danger-90: rgba(239, 68, 68, 0.9);
-  --color-warning: #f59e0b;
-  --color-warning-90: rgba(245, 158, 11, 0.9);
-  --color-info: #06b6d4;
-  --color-info-90: rgba(6, 182, 212, 0.9);
+@layer base {
+  :root {
+    --color-primary: #3b82f6;
+    --color-primary-90: rgba(59, 130, 246, 0.9);
+    --color-secondary: #64748b;
+    --color-secondary-90: rgba(100, 116, 139, 0.9);
+    --color-success: #10b981;
+    --color-success-90: rgba(16, 185, 129, 0.9);
+    --color-danger: #ef4444;
+    --color-danger-90: rgba(239, 68, 68, 0.9);
+    --color-warning: #f59e0b;
+    --color-warning-90: rgba(245, 158, 11, 0.9);
+    --color-info: #06b6d4;
+    --color-info-90: rgba(6, 182, 212, 0.9);
+  }
 }
 
 /* 滚动条样式 */

@@ -1,73 +1,88 @@
-# React + TypeScript + Vite
+# 课程管理系统
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[本项目](https://iamshaoning.github.io/kechengguanlixitong/) 是一个适用于课外辅导老师的基于 Web 的课程管理系统，支持学生管理、课程安排、数据统计等功能，数据可同步到云端。
 
-Currently, two official plugins are available:
+```diff
+! 因为本程序通过个人api实现同步数据，所以为防止滥用需要登录（未开放注册）
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
++ 您可联系我使用，或根据index.html文件自行二次开发 +
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
++ 也可以账号"test"无密码的方式登录系统进入试用模式，此模式不连接服务器，本地也不保留数据
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 预览截图
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 日历排课
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+![日历排课](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览1.png)
+
+### 学生管理
+
+![学生管理](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览2.png)
+
+### 数据统计
+
+![数据统计](https://github.com/iamshaoning/kechengguanlixitong/raw/master/public/screenshots/预览3.png)
+
+## 功能特性
+
+### 核心功能
+
+- **日历视图**：直观的月历展示，快捷添加课程，查看课程详情，支持修改、复制、粘贴。
+- **学生管理**：添加、编辑、删除学生信息，可预设一对一课时费，机构管理，年级管理。
+- **课程管理**：支持一对一、一对多课程安排，课时费可按整节课自定义，也可加载预设根据时长自动计算。
+- **数据统计**：按月、按机构统计课程和收入。支持按机构课型年级学生人数详细展示课节分布，支持导出直观的数据。
+
+### 数据管理
+
+- **机构管理**：自定义机构名称，支持增删改
+- **年级管理**：自定义年级名称，支持增删改
+- **数据同步**：本地数据自动同步到云端，跨设备同步，跟账号绑定
+- **数据冲突处理**：智能比较本地和服务器数据，支持手动选择
+
+## 使用指南
+
+### 登录/注册
+
+- 首次使用需要注册账号
+- 支持邮箱密码登录
+- 登录后可自动同步数据到云端
+
+### 添加年级和机构数据
+
+- 先添加年级和机构数据
+
+### 添加学生
+
+1. 进入"学生管理"页面
+2. 点击"添加学生"按钮
+3. 填写姓名、选择机构和年级
+4. 设置课型费用
+5. 保存
+
+### 安排课程
+
+1. 在日历视图中点击日期
+2. 选择学生、时间、时长
+3. 保存课程
+
+### 数据统计
+
+1. 进入"统计"页面
+2. 选择年份、月份、机构
+3. 查看课程数量、收入统计
+4. 导出HTML文件报表
+
+## 数据存储
+
+- 登录后自动同步
+- 支持多设备同步
+
+## 注意事项
+
+1. **网络要求**：登录加载和同步都需要网络连接
+2. **浏览器支持**：建议使用现代浏览器获得最佳体验
+
+## 联系方式
+
+如有问题或建议，欢迎联系
