@@ -5616,7 +5616,12 @@
                     return;
                 }
                 
-                // 使用闭包保持clickCount状态（不要重置其他元素的计数，以免干扰双击检测）
+                // 清除之前的定时器，避免多次触发
+                if (element._clickTimer) {
+                    clearTimeout(element._clickTimer);
+                }
+                
+                // 使用闭包保持clickCount状态
                 if (!element._clickCount) {
                     element._clickCount = 0;
                 }
@@ -5625,7 +5630,7 @@
                 // 保存当前课程ID，确保在setTimeout中使用正确的ID
                 const currentCourseId = courseId;
                 
-                setTimeout(() => {
+                element._clickTimer = setTimeout(() => {
                     // 无论是单击还是双击，都先触发选中效果
                     // 移除其他课程的选中状态
                     document.querySelectorAll('.course-item-selected').forEach(el => {
@@ -5648,7 +5653,10 @@
                             modal.showEditCourse(course);
                         }
                     }
+                    // 重置点击计数
                     element._clickCount = 0;
+                    // 清除定时器引用
+                    element._clickTimer = null;
                 }, 300);
                 
                 // 检查是否已经添加了事件监听器
