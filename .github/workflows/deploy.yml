@@ -27,11 +27,17 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Installing dependencies..."
+          ls -la
+          cat package.json
           npm install --verbose
           echo "Dependencies installed successfully"
           echo "Node version: $(node -v)"
           echo "npm version: $(npm -v)"
           echo "Checking if vite is available: $(which vite || echo 'vite not found')"
+          echo "Checking node_modules directory..."
+          ls -la node_modules/ || echo "node_modules directory not found"
+          echo "Checking vite in node_modules..."
+          ls -la node_modules/vite/ || echo "vite not found in node_modules"
         env:
           NODE_ENV: production
 
