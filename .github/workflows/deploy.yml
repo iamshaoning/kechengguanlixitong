@@ -29,7 +29,10 @@ jobs:
           echo "Installing dependencies..."
           ls -la
           cat package.json
-          npm install --verbose
+          echo "Clearing npm cache..."
+          npm cache clean --force
+          echo "Installing dependencies with npm ci..."
+          npm ci --verbose
           echo "Dependencies installed successfully"
           echo "Node version: $(node -v)"
           echo "npm version: $(npm -v)"
@@ -58,7 +61,7 @@ jobs:
       - name: Build project
         run: |
           echo "Building project..."
-          npx vite build
+          npm run build
           echo "Build completed successfully"
         env:
           NODE_ENV: production
