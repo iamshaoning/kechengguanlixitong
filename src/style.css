@@ -46,3 +46,171 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 响应式设计优化 */
+@media (max-width: 768px) {
+  /* 导航栏优化 */
+  .nav-links {
+    gap: 0.5rem;
+  }
+  
+  .nav-links a {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* 统计卡片优化 */
+  .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  /* 表格优化 */
+  table {
+    font-size: 0.875rem;
+  }
+  
+  th, td {
+    padding: 0.5rem;
+  }
+  
+  /* 按钮优化 */
+  button {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* 输入框优化 */
+  input, select, textarea {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+  
+  /* 课程卡片优化 */
+  .course-item {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* 模态框优化 */
+  #modal-content {
+    max-width: 90%;
+    margin: 0 0.5rem;
+  }
+  
+  /* 登录模态框优化 */
+  #auth-container {
+    max-width: 90%;
+    margin: 0 0.5rem;
+  }
+  
+  /* 学生列表优化 */
+  #students-list {
+    font-size: 0.875rem;
+  }
+  
+  /* 日历优化 */
+  .calendar-cell {
+    padding: 0.25rem;
+  }
+  
+  /* 统计图表优化 */
+  canvas {
+    max-height: 200px;
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  /* 导航栏优化 */
+  .nav-links {
+    gap: 0.25rem;
+  }
+  
+  .nav-links a {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  /* 统计卡片优化 */
+  .bg-white.p-5 {
+    padding: 1rem;
+  }
+  
+  /* 按钮优化 */
+  button {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  /* 输入框优化 */
+  input, select, textarea {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+  
+  /* 课程卡片优化 */
+  .course-item {
+    padding: 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  /* 学生列表优化 */
+  #students-list {
+    font-size: 0.75rem;
+  }
+  
+  /* 日历优化 */
+  .calendar-cell {
+    padding: 0.125rem;
+  }
+  
+  /* 统计图表优化 */
+  canvas {
+    max-height: 150px;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 按钮触摸反馈 */
+  button {
+    touch-action: manipulation;
+  }
+  
+  /* 防止双击缩放 */
+  input, select, textarea {
+    touch-action: manipulation;
+  }
+  
+  /* 增大触摸目标 */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 导航栏触摸优化 */
+  .nav-links a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* 横屏设备优化 */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* 调整统计卡片高度 */
+  .bg-white.p-5 {
+    padding: 0.75rem;
+  }
+  
+  /* 调整图表高度 */
+  canvas {
+    max-height: 150px;
+  }
+  
+  /* 调整模态框大小 */
+  #modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
