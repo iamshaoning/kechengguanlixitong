@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,79 +23,21 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          echo "Installing dependencies..."
-          ls -la
-          cat package.json
-          echo "Installing dependencies with npm install..."
-          npm install --verbose
-          echo "Dependencies installed successfully"
-          echo "Node version: $(node -v)"
-          echo "npm version: $(npm -v)"
-          echo "Checking if vite is available: $(which vite || echo 'vite not found')"
-          echo "Checking node_modules directory..."
-          ls -la node_modules/ || echo "node_modules directory not found"
-          echo "Checking vite in node_modules..."
-          ls -la node_modules/vite/ || echo "vite not found in node_modules"
-        env:
-          NODE_ENV: production
-
-      - name: Validate environment variables
-        run: |
-          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ] || [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
-            echo "Error: Missing required environment variables"
-            exit 1
-          fi
-          echo "Environment variables validated successfully"
+        run: npm install
 
       - name: Create .env file
         run: |
           echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > .env
           echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
-          echo "Created .env file with necessary environment variables"
 
       - name: Build project
-        run: |
-          echo "Building project..."
-          echo "Trying to run vite with npx..."
-          npx vite build
-          echo "Build completed successfully"
-        env:
-          NODE_ENV: production
-
-      - name: Verify build
-        run: |
-          if [ ! -d "./dist" ]; then
-            echo "Error: Build directory not found"
-            exit 1
-          fi
-          if [ -z "$(ls -A ./dist)" ]; then
-            echo "Error: Build directory is empty"
-            exit 1
-          fi
-          echo "Build verified successfully"
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true
-          commit_message: "Deploy: ${{ github.sha }}"
 
       - name: Cleanup
-        run: |
-          rm -f .env
-          echo "Cleanup completed"
-
-      - name: Deployment status
-        if: success()
-        run: |
-          echo "Deployment successful!"
-          echo "Site will be available at: https://${{ github.repository_owner }}.github.io/${{ github.repository.name }}"
-
-      - name: Deployment failed
-        if: failure()
-        run: |
-          echo "Deployment failed!"
-          echo "Please check the workflow logs for details"
+        run: rm -f .env
