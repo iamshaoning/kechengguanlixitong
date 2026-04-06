@@ -59,7 +59,8 @@ jobs:
       - name: Build project
         run: |
           echo "Building project..."
-          npm run build
+          echo "Trying to run vite with npx..."
+          npx vite build
           echo "Build completed successfully"
         env:
           NODE_ENV: production
