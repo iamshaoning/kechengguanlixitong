@@ -29,10 +29,8 @@ jobs:
           echo "Installing dependencies..."
           ls -la
           cat package.json
-          echo "Clearing npm cache..."
-          npm cache clean --force
-          echo "Installing dependencies with npm ci..."
-          npm ci --verbose
+          echo "Installing dependencies with npm install..."
+          npm install --verbose
           echo "Dependencies installed successfully"
           echo "Node version: $(node -v)"
           echo "npm version: $(npm -v)"
