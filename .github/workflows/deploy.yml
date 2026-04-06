@@ -50,7 +50,10 @@ jobs:
           echo "Created .env file with necessary environment variables"
 
       - name: Build project
-        run: npm run build
+        run: |
+          echo "Building project..."
+          npx vite build
+          echo "Build completed successfully"
         env:
           NODE_ENV: production
 
