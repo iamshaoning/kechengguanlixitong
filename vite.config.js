@@ -21,8 +21,8 @@ export default defineConfig({
     hmr: {
       overlay: true
     },
-    port: 3000,
-    open: true,
+    port: 9000,
+    open: false,
     strictPort: false
   },
   optimizeDeps: {
