@@ -33,9 +33,6 @@
             key: import.meta.env.VITE_SUPABASE_ANON_KEY
         };
 
-        // 将配置暴露到全局，供HTML模板使用
-        window.APP_CONFIG = {};
-
         // 安全检查：确保Supabase配置存在
         if (!window.supabaseConfig.url || !window.supabaseConfig.key) {
             if (window.GLOBAL_DEBUG) console.error('Supabase配置缺失');
@@ -1919,8 +1916,6 @@
             exportAndDelete: document.getElementById('export-and-delete'),
             deleteDirectly: document.getElementById('delete-directly'),
             cancelDelete: document.getElementById('cancel-delete'),
-            uploadData: document.getElementById('upload-data'),
-            downloadData: document.getElementById('download-data'),
             
             // 其他
             studentSort: document.getElementById('student-sort')
@@ -2955,7 +2950,7 @@
                         return inputValue;
                     }
                 }
-                return window.APP_CONFIG?.DEFAULT_COURSE_DURATION || 120; // 默认2小时
+                return 120; // 默认2小时
             },
 
             /**
@@ -2976,7 +2971,7 @@
                 const studentFees = student.fees || {};
                 const baseFee = studentFees['一对一'] || 0;
                 // 使用 Math.max 确保分母永远至少是 1，防止 Infinity 错误
-                const rawDuration = studentFees['一对一_duration'] || window.APP_CONFIG?.DEFAULT_COURSE_DURATION || 120;
+                const rawDuration = studentFees['一对一_duration'] || 120;
                 const baseDuration = Math.max(1, rawDuration);
                 const actualDuration = utils.calculateDuration();
 
@@ -3643,8 +3638,8 @@
                         utils.handleError(error, '保存数据到本地失败', true);
                     }
                     
-                    // 检查当前服务器状态
-                    const isOffline = elements.syncStatus && elements.syncStatus.classList.contains('bg-red-500');
+                    // 检查当前服务器状态（检查syncIcon的text-red-500类，与updateServerStatus保持一致）
+                    const isOffline = elements.syncIcon && elements.syncIcon.classList.contains('text-red-500');
                     
                     // 只有在非离线状态下才尝试同步到服务器
                     if (!isOffline) {
@@ -3682,7 +3677,13 @@
                                             utils.handleError(error, '数据同步到服务器失败', true);
                                             utils.updateServerStatus('offline');
                                         } else {
-                                            // 同步成功
+                                            // 同步成功，更新本地存储的userid以便离线时正确判断数据归属
+                                            const localDataStr = localStorage.getItem('coursemanagerdata');
+                                            if (localDataStr) {
+                                                const localData = JSON.parse(localDataStr);
+                                                localData.userid = userId;
+                                                localStorage.setItem('coursemanagerdata', JSON.stringify(localData));
+                                            }
                                             utils.updateServerStatus('online');
                                         }
                                     } catch (syncError) {
@@ -3752,11 +3753,11 @@
                     
                     if (auth) {
                         try {
-                            const { data } = await utils.withTimeout(() => auth.getSession(), 5000, '获取会话超时');
+                            const { data } = await utils.withTimeout(() => auth.getSession(), 10000, '获取会话超时');
                             session = data.session;
                             isLoggedIn = !!session;
                         } catch (error) {
-                            utils.handleError(error, '获取 session 失败', true);
+                            utils.handleError(error, '获取 session 失败');
                         }
                     }
                     
@@ -3837,7 +3838,7 @@
                         
                         if (error) {
                             // 从服务器加载数据失败
-                            utils.handleError(error, '从服务器加载数据失败', true);
+                            utils.handleError(error, '从服务器加载数据失败');
                             
                             // 检查是否是新用户（无数据）的情况
                             if (error.code === 'PGRST116' && error.details === 'The result contains 0 rows') {
@@ -3856,10 +3857,10 @@
                                         window.supabaseClient
                                             .from('coursemanagerdata')
                                             .insert(defaultData)
-                                    , 5000, '创建初始数据超时');
+                                    , 10000, '创建初始数据超时');
                                     utils.updateServerStatus('online');
                                 } catch (insertError) {
-                                    utils.handleError(insertError, '创建初始数据失败', true);
+                                    utils.handleError(insertError, '创建初始数据失败');
                                     utils.updateServerStatus('offline');
                                 }
                                 
@@ -3867,7 +3868,8 @@
                                 notification.show('欢迎使用课程管理系统！请添加您的第一条数据', 'info', 5000);
                             } else {
                                 // 其他错误，保持使用本地数据
-                                utils.updateServerStatus('offline');
+                                // 不显示离线通知，因为可能只是暂时的网络问题
+                                // utils.updateServerStatus('offline');
                             }
                             
                             return;
@@ -4829,6 +4831,7 @@
                 if (dateInfo && dateInfo.isHoliday && dateInfo.name) {
                     const holidayName = dateInfo.name;
                     let tagClass = '';
+                    let holidayTagStyle = '';
                     
                     if (holidayName.includes('元旦')) {
                         // 元旦：半透明浅红色背景，红字
@@ -5828,17 +5831,19 @@
             },
             
             // 显示通知
-            show: (message, type = 'success', duration = window.APP_CONFIG?.NOTIFICATION_DURATION || 3000) => {
+            show: (message, type = 'success', duration) => {
                 const container = elements.notificationContainer;
                 if (!container) return;
-                
-                // 根据通知类型设置不同的显示时长
-                if (type === 'error') {
-                    duration = 5000; // 错误通知显示5秒
-                } else if (type === 'warning') {
-                    duration = 4000; // 警告通知显示4秒
-                } else {
-                    duration = 3000; // 其他通知显示3秒
+
+                // 如果未传duration，则根据通知类型设置默认时长
+                if (duration === undefined) {
+                    if (type === 'error') {
+                        duration = 5000; // 错误通知显示5秒
+                    } else if (type === 'warning') {
+                        duration = 4000; // 警告通知显示4秒
+                    } else {
+                        duration = 3000; // 其他通知显示3秒
+                    }
                 }
                 
                 const config = notification.icons[type] || notification.icons.success;
@@ -7872,32 +7877,6 @@
                     utils.generateMonthDropdowns();
                 }
                 
-                // 统计页面筛选 - 自定义下拉菜单事件
-                if (elements.statisticsYearWrapper) {
-                    elements.statisticsYearWrapper.addEventListener('change', (e) => {
-                        selectedYear = parseInt(e.detail.value);
-                        const { month, organization } = utils.getStatisticsParams();
-                        render.statistics(selectedYear, month, organization);
-                    });
-                }
-                
-                if (elements.statisticsMonthWrapper) {
-                    elements.statisticsMonthWrapper.addEventListener('change', (e) => {
-                        const month = parseInt(e.detail.value);
-                        const { year, organization } = utils.getStatisticsParams();
-                        render.statistics(year, month, organization);
-                    });
-                }
-                
-                // 统计页面机构选择 - 自定义下拉菜单事件
-                if (elements.statisticsOrganizationWrapper) {
-                    elements.statisticsOrganizationWrapper.addEventListener('change', (e) => {
-                        const organization = e.detail.value || '';
-                        const { year, month } = utils.getStatisticsParams();
-                        render.statistics(year, month, organization);
-                    });
-                }
-                
                 // 学生排序
                 const studentSortSelect = document.getElementById('student-sort');
                 if (studentSortSelect) {
@@ -8111,43 +8090,25 @@
                     
                     // 设置认证状态变化监听器
                     let authStateChangeTimer = null;
-                    auth.onAuthStateChange(({ session, user }) => {
+                    auth.onAuthStateChange((event, session) => {
                         try {
-                            if (session && user) {
+                            if (event === 'SIGNED_IN' && session) {
                                 // 用户已登录，更新UI并加载渲染系统
-                                updateUIForAuth(user);
+                                updateUIForAuth(session.user);
                                 loadSystem();
                                 
                                 // 存储登录时间，用于会话管理
                                 localStorage.setItem('sb-login-time', Date.now().toString());
-                            } else {
+                            } else if (event === 'SIGNED_OUT') {
                                 // 用户未登录，添加防抖动，避免短暂的认证状态变化导致误触发
                                 if (authStateChangeTimer) {
                                     clearTimeout(authStateChangeTimer);
                                 }
                                 authStateChangeTimer = setTimeout(() => {
-                                    // 再次检查会话状态
-                                    utils.withTimeout(() => auth.getSession(), 5000, '获取会话超时')
-                                        .then(({ data }) => {
-                                            const currentSession = data.session;
-                                            if (!currentSession) {
-                                                // 清理会话相关数据
-                                                localStorage.removeItem('sb-login-time');
-                                                updateUIForUnauth();
-                                            } else {
-                                                updateUIForAuth(currentSession.user);
-                                                loadSystem();
-                                                // 存储登录时间，用于会话管理
-                                                localStorage.setItem('sb-login-time', Date.now().toString());
-                                            }
-                                        })
-                                        .catch((error) => {
-                                            utils.handleError(error, '获取会话失败');
-                                            // 清理会话相关数据
-                                            localStorage.removeItem('sb-login-time');
-                                            updateUIForUnauth();
-                                        });
-                                }, window.APP_CONFIG?.AUTH_DEBOUNCE_TIME || 500); // 防抖
+                                    // 清理会话相关数据
+                                    localStorage.removeItem('sb-login-time');
+                                    updateUIForUnauth();
+                                }, 500); // 防抖
                             }
                         } catch (error) {
                             utils.handleError(error, '处理认证状态变化失败');
@@ -8207,30 +8168,7 @@
                 elements.main.style.display = 'block';
             }
         }
-        
-        // 从Supabase更新数据并重新渲染
-        function updateFromSupabase(data) {
-            state.students = data.students || [];
-            state.courses = data.courses || [];
-            state.organizations = data.organizations || [];
-            state.grades = data.grades || [];
-            
-            // 保存到本地存储
-            localStorage.setItem('coursemanagerdata', JSON.stringify(data));
-            
-            // 重新渲染页面 - 只渲染当前可见的页面
-            if (elements.studentsPage && !elements.studentsPage.classList.contains('hidden')) {
-                render.students();
-            }
-            if (elements.calendarPage && !elements.calendarPage.classList.contains('hidden')) {
-                render.calendar();
-            }
-            
-            // 重新渲染统计页面
-            const { year, month, organization } = utils.getStatisticsParams();
-            render.statistics(year, month, organization);
-        }
-        
+
         // 存储原始方法
         let originalSaveData = utils.saveData;
         let originalLoadData = utils.loadData;

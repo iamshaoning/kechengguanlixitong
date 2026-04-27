@@ -21,7 +21,7 @@ export default defineConfig({
     hmr: {
       overlay: true
     },
-    port: 9000,
+    port: 5173,
     open: false,
     strictPort: false
   },
